@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DARSO — Financial Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#04020e; --glass:rgba(255,255,255,.04); --border:rgba(168,85,247,.18);
+  --purple:#a855f7; --purple2:#7c3aed; --cyan:#22d3ee; --green:#00ff88;
+  --pink:#ec4899; --gold:#f59e0b; --red:#ef4444; --white:#f0eeff;
+  --muted:rgba(200,185,255,.5); --fh:'Space Grotesk',sans-serif;
+  --fb:'Inter',sans-serif; --fm:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--white);font-family:var(--fb);overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:rgba(168,85,247,.4);border-radius:2px;}
+
+/* CANVAS */
+#sc{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* SCANLINES */
+.sl{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(139,92,246,.015) 2px,rgba(139,92,246,.015) 3px);}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2.5rem;height:60px;
+  background:rgba(4,2,14,.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);}
+.logo{font-family:var(--fh);font-size:1.4rem;font-weight:800;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-links{display:flex;gap:1.75rem;}
+.nav-links a{font-size:.8rem;font-weight:500;color:var(--muted);text-decoration:none;
+  letter-spacing:.06em;text-transform:uppercase;transition:color .2s;}
+.nav-links a:hover{color:var(--white);}
+.nav-cta{padding:.45rem 1.25rem;background:linear-gradient(135deg,var(--purple),var(--purple2));
+  border:none;border-radius:2rem;color:white;font-family:var(--fb);font-size:.82rem;
+  font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 0 20px rgba(168,85,247,.3);}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 0 35px rgba(168,85,247,.5);}
+.mob-btn{display:none;background:none;border:1px solid var(--border);
+  border-radius:.4rem;padding:.35rem .55rem;cursor:pointer;color:var(--white);}
+.mob-menu{display:none;position:fixed;top:60px;left:0;right:0;z-index:99;
+  background:rgba(4,2,14,.97);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);padding:1.25rem 2rem;flex-direction:column;gap:.875rem;}
+.mob-menu.open{display:flex;}
+.mob-menu a{font-size:.95rem;font-weight:500;color:var(--muted);text-decoration:none;
+  text-transform:uppercase;letter-spacing:.05em;padding:.4rem 0;
+  border-bottom:1px solid rgba(255,255,255,.05);transition:color .2s;}
+.mob-menu a:hover{color:var(--white);}
+
+/* TICKER */
+.ticker{position:fixed;top:60px;left:0;right:0;z-index:90;height:26px;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);overflow:hidden;display:flex;align-items:center;}
+.tick-inner{display:flex;gap:2.5rem;white-space:nowrap;animation:tick 32s linear infinite;}
+@keyframes tick{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.ti{display:flex;align-items:center;gap:.5rem;font-family:var(--fm);font-size:.75rem;}
+.tn{color:rgba(255,255,255,.35);}
+.tv{color:var(--white);font-weight:600;}
+.tu{color:var(--green);font-size:.68rem;}
+.td{color:var(--red);font-size:.68rem;}
+
+/* SECTIONS */
+section{position:relative;z-index:2;padding:7rem 0 5rem;overflow:hidden;}
+.container{max-width:1180px;margin:0 auto;padding:0 2.5rem;}
+
+/* NEBULA */
+.nb{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;
+  animation:nbf 18s ease-in-out infinite;}
+@keyframes nbf{0%,100%{transform:scale(1);}50%{transform:scale(1.12) translate(25px,-18px);}}
+
+/* PLANETS — individual decorative structures */
+.planet-deco{position:absolute;width:var(--size);height:var(--size);border-radius:50%;
+  pointer-events:none;z-index:1;opacity:var(--opacity,.8);
+  animation:pflt var(--fd,10s) ease-in-out infinite;}
+.planet-atmosphere{position:absolute;inset:var(--atmo-inset,-18px);border-radius:50%;
+  background:radial-gradient(ellipse,var(--atmo-color) 0%,transparent 65%);
+  filter:blur(var(--atmo-blur,15px));animation:atmpulse var(--atmo-speed,4s) ease-in-out infinite;}
+.planet-body{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;
+  box-shadow:inset var(--shadow-x,-20px) var(--shadow-y,-20px) var(--shadow-blur,40px) rgba(0,0,0,.65),0 0 var(--glow-size,55px) var(--glow-color);
+  animation:prot var(--spin,22s) linear infinite;}
+.planet-surface,.planet-bands,.planet-highlight{position:absolute;inset:0;}
+.planet-surface{background:var(--surface);}
+.planet-bands{background:var(--bands);mix-blend-mode:overlay;}
+.planet-highlight{background:radial-gradient(circle at 28% 22%,rgba(255,255,255,var(--highlight,.28)) 0%,transparent 45%);}
+.planet-spot,.planet-cloud,.planet-crater,.planet-cap{position:absolute;}
+.planet-spot,.planet-cloud,.planet-cap{border-radius:50%;filter:blur(var(--feature-blur,5px));}
+.planet-orbit,.planet-ring{position:absolute;border-radius:50%;top:50%;left:50%;}
+.planet-ring{width:var(--ring-size);height:var(--ring-size);border:var(--ring-border);transform:translate(-50%,-50%) var(--ring-tilt,rotateX(75deg));}
+.planet-orbit{width:var(--orbit-size);height:var(--orbit-size);border:var(--orbit-border);transform:translate(-50%,-50%);animation:orbspin var(--orbit-speed,18s) linear infinite;}
+.planet-moon{position:absolute;width:var(--moon-size,11px);height:var(--moon-size,11px);
+  border-radius:50%;top:calc(var(--moon-size,11px) / -2);left:50%;
+  transform:translateX(-50%);background:var(--moon-bg);box-shadow:0 0 9px var(--moon-glow);}
+.planet-neptune{--fd:12s;--size:320px;top:12%;right:7%;--atmo-inset:-28px;
+  --atmo-color:rgba(139,92,246,.3);--atmo-blur:20px;--surface:radial-gradient(circle at 35% 30%,#c084fc,#9333ea 30%,#6d28d9 55%,#4c1d95 75%,#1e1b4b);
+  --bands:repeating-linear-gradient(20deg,transparent,transparent 18px,rgba(255,255,255,.045) 18px,rgba(255,255,255,.045) 22px);
+  --glow-color:rgba(139,92,246,.3);--glow-size:80px;--shadow-x:-35px;--shadow-y:-35px;--shadow-blur:70px;--spin:24s;}
+.planet-neptune .planet-spot{width:75px;height:46px;background:radial-gradient(ellipse,rgba(236,72,153,.6),transparent 70%);top:45%;left:55%;animation:sporbit 8s ease-in-out infinite;}
+.planet-neptune .ring-main{--ring-size:450px;--ring-border:6px solid rgba(168,85,247,.16);--ring-tilt:rotateX(78deg);box-shadow:0 0 22px rgba(168,85,247,.12);}
+.planet-neptune .ring-inner{--ring-size:390px;--ring-border:2.5px solid rgba(200,150,255,.1);--ring-tilt:rotateX(78deg);}
+.planet-neptune .planet-orbit{--orbit-size:480px;--orbit-border:1px dashed rgba(168,85,247,.07);--moon-size:13px;--moon-bg:radial-gradient(circle at 35% 30%,#e9d5ff,#a855f7);--moon-glow:rgba(168,85,247,.6);}
+.planet-ice{--fd:14s;--size:220px;--opacity:.85;top:5%;right:2%;--atmo-inset:-20px;
+  --atmo-color:rgba(34,211,238,.25);--atmo-blur:16px;--atmo-speed:5s;--surface:radial-gradient(circle at 38% 32%,#67e8f9,#22d3ee 25%,#0891b2 55%,#155e75 75%,#083344);
+  --bands:repeating-linear-gradient(-15deg,transparent,transparent 14px,rgba(255,255,255,.05) 14px,rgba(255,255,255,.05) 17px);
+  --glow-color:rgba(34,211,238,.28);--glow-size:55px;--shadow-x:-22px;--shadow-y:-22px;--shadow-blur:44px;--spin:28s;}
+.planet-ice .ring-main{--ring-size:310px;--ring-border:4px solid rgba(34,211,238,.18);--ring-tilt:rotateX(20deg) rotateZ(97deg);}
+.planet-earth{--fd:11s;--size:200px;--opacity:.8;top:8%;right:2%;--atmo-color:rgba(0,255,136,.22);
+  --surface:radial-gradient(circle at 38% 32%,#4ade80,#16a34a 28%,#15803d 55%,#052e16 80%);
+  --glow-color:rgba(0,255,136,.25);--glow-size:55px;--spin:20s;}
+.planet-earth .cloud-a{width:70px;height:45px;background:rgba(0,200,80,.4);border-radius:30% 70% 60% 40%;top:25%;left:20%;}
+.planet-earth .cloud-b{width:85px;height:55px;background:rgba(0,180,70,.35);border-radius:50% 40% 60% 50%;top:45%;left:50%;}
+.planet-earth .planet-orbit{--orbit-size:280px;--orbit-border:1px dashed rgba(0,255,136,.1);--orbit-speed:16s;--moon-size:10px;--moon-bg:radial-gradient(circle at 35% 30%,#d1fae5,#6ee7b7);--moon-glow:rgba(0,255,136,.5);}
+.planet-saturn{--fd:13s;--size:190px;--opacity:.8;top:10%;right:2%;--atmo-color:rgba(245,158,11,.24);
+  --surface:radial-gradient(circle at 35% 28%,#fde68a,#f59e0b 30%,#b45309 60%,#78350f 80%);
+  --bands:repeating-linear-gradient(8deg,transparent,transparent 12px,rgba(255,255,255,.06) 12px,rgba(255,255,255,.06) 16px);
+  --glow-color:rgba(245,158,11,.28);--glow-size:58px;--spin:26s;}
+.planet-saturn .planet-spot{width:55px;height:35px;background:radial-gradient(ellipse,rgba(251,191,36,.7),transparent 70%);top:38%;left:38%;}
+.planet-saturn .ring-main{--ring-size:340px;--ring-border:10px solid rgba(245,158,11,.2);}
+.planet-saturn .ring-inner{--ring-size:295px;--ring-border:5px solid rgba(245,158,11,.12);}
+.planet-mars{--fd:9s;--size:180px;--opacity:.8;top:8%;right:2%;--atmo-inset:-16px;
+  --atmo-color:rgba(239,68,68,.25);--atmo-blur:14px;--atmo-speed:5s;--surface:radial-gradient(circle at 38% 32%,#fca5a5,#ef4444 25%,#b91c1c 55%,#7f1d1d 80%,#450a0a);
+  --glow-color:rgba(239,68,68,.26);--glow-size:52px;--shadow-x:-18px;--shadow-y:-18px;--shadow-blur:36px;--spin:18s;}
+.planet-mars .crater-a{width:32px;height:32px;border:2.5px solid rgba(0,0,0,.3);border-radius:50%;top:30%;left:35%;opacity:.5;}
+.planet-mars .crater-b{width:20px;height:20px;border:2px solid rgba(0,0,0,.25);border-radius:50%;top:55%;left:60%;opacity:.4;}
+.planet-mars .planet-cap{width:55px;height:28px;background:radial-gradient(ellipse,rgba(255,255,255,.6),transparent 70%);top:5%;left:50%;transform:translateX(-50%);}
+.planet-jupiter{--fd:16s;--size:210px;--opacity:.78;top:6%;right:2%;--atmo-inset:-20px;
+  --atmo-color:rgba(59,130,246,.24);--atmo-blur:16px;--atmo-speed:6s;--surface:radial-gradient(circle at 35% 30%,#93c5fd,#3b82f6 22%,#1d4ed8 50%,#1e3a8a 72%,#172554);
+  --glow-color:rgba(59,130,246,.28);--glow-size:65px;--shadow-x:-22px;--shadow-y:-22px;--shadow-blur:44px;--spin:32s;}
+.planet-jupiter .band-a{position:absolute;width:100%;height:16%;background:rgba(147,197,253,.1);top:20%;}
+.planet-jupiter .band-b{position:absolute;width:100%;height:12%;background:rgba(96,165,250,.07);top:42%;}
+.planet-jupiter .planet-spot{width:75px;height:48px;background:radial-gradient(ellipse,rgba(147,197,253,.65),rgba(59,130,246,.35) 50%,transparent 80%);top:37%;left:52%;}
+.planet-jupiter .planet-orbit{--orbit-size:310px;--orbit-border:2px solid rgba(59,130,246,.1);--orbit-speed:24s;--moon-size:13px;--moon-bg:radial-gradient(circle at 35% 30%,#bfdbfe,#3b82f6);--moon-glow:rgba(59,130,246,.6);}
+.planet-sun{--fd:8s;--size:180px;--opacity:.75;top:8%;left:3%;--atmo-inset:-35px;
+  --atmo-color:rgba(0,255,136,.38);--atmo-blur:22px;--atmo-speed:3s;--surface:radial-gradient(circle at 38% 32%,#d1fae5,#6ee7b7 20%,#10b981 45%,#065f46 70%,#022c22);
+  --glow-color:rgba(0,255,136,.5);--glow-size:80px;--shadow-x:-18px;--shadow-y:-18px;--shadow-blur:36px;--spin:14s;}
+.planet-sun .planet-body{box-shadow:inset -18px -18px 36px rgba(0,40,15,.5),0 0 80px rgba(0,255,136,.5),0 0 150px rgba(0,255,136,.18);}
+.planet-sun .planet-spot{width:100px;height:50px;background:radial-gradient(ellipse,rgba(110,231,183,.8),transparent 70%);top:35%;left:30%;animation:sporbit 6s ease-in-out infinite;}
+.planet-sun .ring-main{--ring-size:270px;--ring-border:1px solid rgba(0,255,136,.12);}
+.planet-sun .planet-orbit{--orbit-size:310px;--orbit-border:1px solid rgba(0,255,136,.07);--orbit-speed:10s;--moon-size:11px;--moon-bg:radial-gradient(circle at 35% 30%,#a7f3d0,#34d399);--moon-glow:rgba(0,255,136,.6);}
+@keyframes pflt{0%,100%{transform:translateY(0);}50%{transform:translateY(-22px);}}
+
+/* SCROLL REVEAL */
+.rv{opacity:0;transform:translateY(32px);transition:opacity .75s ease,transform .75s ease;}
+.rv.in{opacity:1;transform:none;}
+.d1{transition-delay:.1s;}.d2{transition-delay:.2s;}.d3{transition-delay:.3s;}.d4{transition-delay:.4s;}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:.4rem;
+  padding:.3rem .9rem;border-radius:2rem;font-size:.72rem;
+  font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  border:1px solid;margin-bottom:1.25rem;}
+
+/* HEADINGS */
+h1{font-family:var(--fh);font-size:clamp(2.8rem,6vw,5rem);font-weight:800;
+  line-height:1.06;letter-spacing:-.03em;margin-bottom:1.25rem;}
+h2{font-family:var(--fh);font-size:clamp(2rem,4vw,3.2rem);font-weight:800;
+  line-height:1.08;letter-spacing:-.025em;margin-bottom:.875rem;}
+.lead{font-size:1.05rem;color:var(--muted);max-width:520px;line-height:1.78;margin-bottom:2rem;}
+
+/* GRADIENTS */
+.gp{background:linear-gradient(135deg,var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.gc{background:linear-gradient(135deg,var(--cyan),var(--green));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.gg{background:linear-gradient(135deg,var(--green),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.ggd{background:linear-gradient(135deg,var(--gold),var(--pink));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.gr{background:linear-gradient(135deg,var(--red),var(--pink));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.gb{background:linear-gradient(135deg,#60a5fa,var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+
+/* CARDS */
+.card{background:rgba(255,255,255,.03);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:1.2rem;
+  padding:1.5rem;position:relative;overflow:hidden;transition:all .3s;}
+.card:hover{border-color:rgba(168,85,247,.38);transform:translateY(-3px);
+  box-shadow:0 18px 45px -10px rgba(168,85,247,.2);}
+.card-shine{position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.045) 0%,transparent 60%);pointer-events:none;}
+.card-corner::before{content:'';position:absolute;top:-1px;left:-1px;width:11px;height:11px;border-top:1.5px solid var(--purple);border-left:1.5px solid var(--purple);}
+.card-corner::after{content:'';position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-bottom:1.5px solid var(--purple);border-right:1.5px solid var(--purple);}
+.cc::before,.cc::after{border-color:var(--cyan);}
+.cg::before,.cg::after{border-color:var(--green);}
+.cgd::before,.cgd::after{border-color:var(--gold);}
+.cr::before,.cr::after{border-color:var(--red);}
+.cbl::before,.cbl::after{border-color:#60a5fa;}
+.card.cbl{width:auto;flex-shrink:1;}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:.875rem;}
+
+/* STAT */
+.stat{background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:1rem;padding:1.1rem 1.25rem;position:relative;overflow:hidden;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--purple),transparent);}
+.stat.sg::before{background:linear-gradient(90deg,transparent,var(--green),transparent);}
+.stat.sc::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.stat.sgd::before{background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.stat.sr::before{background:linear-gradient(90deg,transparent,var(--red),transparent);}
+.sl2{font-family:var(--fm);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem;}
+.sv{font-family:var(--fh);font-size:1.75rem;font-weight:700;color:var(--white);}
+.sv.purple{color:var(--purple);}
+.sv.green{color:var(--green);}
+.sv.red{color:var(--red);}
+.sv.gold{color:var(--gold);}
+.sv.cyan{color:var(--cyan);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.6rem;
+  border-radius:2rem;border:none;font-family:var(--fb);font-size:.875rem;
+  font-weight:600;cursor:pointer;transition:all .22s;text-decoration:none;}
+.btn-p{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;
+  box-shadow:0 0 22px rgba(168,85,247,.3);}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 0 38px rgba(168,85,247,.5);}
+.btn-o{background:transparent;border:1px solid var(--border);color:var(--white);}
+.btn-o:hover{border-color:rgba(168,85,247,.45);background:rgba(168,85,247,.07);}
+.btn-g{background:rgba(0,255,136,.12);border:1px solid rgba(0,255,136,.3);color:var(--green);}
+.btn-g:hover{background:rgba(0,255,136,.22);box-shadow:0 0 18px rgba(0,255,136,.25);}
+.bsm{padding:.42rem .95rem;border-radius:1.5rem;border:none;
+  font-family:var(--fb);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.bsm-p{background:rgba(168,85,247,.18);border:1px solid rgba(168,85,247,.3);color:var(--purple);}
+.bsm-p:hover{background:rgba(168,85,247,.32);}
+.bsm-s{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;}
+.bsm-s:hover{transform:translateY(-1px);}
+.bsm-c{background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.3);color:var(--cyan);}
+.bsm-c:hover{background:rgba(34,211,238,.25);}
+
+/* DIVIDER */
+.div-line{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);
+  position:relative;margin:0 2.5rem;}
+.div-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:7px;height:7px;border-radius:50%;background:var(--purple);
+  box-shadow:0 0 10px var(--purple);animation:dpop 2s ease-in-out infinite;}
+@keyframes dpop{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.6);}}
+
+/* SCROLL HINT */
+.scroll-hint{display:flex;flex-direction:column;align-items:center;gap:.4rem;
+  position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);z-index:10;
+  animation:shint 3s ease-in-out infinite;}
+@keyframes shint{0%,100%{opacity:.5;transform:translateX(-50%) translateY(0);}50%{opacity:1;transform:translateX(-50%) translateY(6px);}}
+.sm{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);}
+.smouse{width:20px;height:32px;border:1.5px solid rgba(168,85,247,.4);border-radius:10px;
+  display:flex;justify-content:center;padding-top:5px;}
+.sdot{width:3px;height:5px;background:var(--purple);border-radius:2px;
+  animation:sdrop 2s ease-in-out infinite;}
+@keyframes sdrop{0%,100%{transform:translateY(0);opacity:1;}50%{transform:translateY(7px);opacity:.3;}}
+
+/* ═══ VOICE ORB ═══ */
+.orb-wrap{display:flex;flex-direction:column;align-items:center;gap:1rem;}
+.orb-rings{position:relative;width:180px;height:180px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.orb-ring-el{position:absolute;border-radius:50%;border:1px solid rgba(168,85,247,.12);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:rpulse 3s ease-in-out infinite;}
+@keyframes rpulse{0%,100%{opacity:.3;transform:translate(-50%,-50%) scale(1);}50%{opacity:.65;transform:translate(-50%,-50%) scale(1.04);}}
+.orb{width:118px;height:118px;border-radius:50%;
+  background:radial-gradient(circle at 34% 28%,rgba(168,85,247,.3),rgba(139,92,246,.08));
+  border:1.5px solid rgba(168,85,247,.45);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;z-index:2;transition:all .32s;
+  box-shadow:0 0 35px rgba(168,85,247,.22);
+  animation:orbp 3s ease-in-out infinite;}
+@keyframes orbp{0%,100%{box-shadow:0 0 28px rgba(168,85,247,.18);}50%{box-shadow:0 0 52px rgba(168,85,247,.42);}}
+.orb:hover{border-color:var(--purple);box-shadow:0 0 55px rgba(168,85,247,.4);}
+.orb.listening{border-color:var(--green);background:radial-gradient(circle at 34% 28%,rgba(0,255,136,.3),rgba(0,255,136,.07));
+  animation:orbg 1.4s ease-in-out infinite;}
+@keyframes orbg{0%,100%{box-shadow:0 0 40px rgba(0,255,136,.3);transform:scale(1);}50%{box-shadow:0 0 70px rgba(0,255,136,.55);transform:scale(1.05);}}
+.orb.speaking{border-color:var(--cyan);animation:orbs .45s ease-in-out infinite;}
+@keyframes orbs{0%,100%{transform:scale(1);}50%{transform:scale(1.07);}}
+.orb svg{width:42px;height:42px;color:var(--purple);transition:color .3s;}
+.orb.listening svg{color:var(--green);}
+.orb.speaking svg{color:var(--cyan);}
+
+/* WAVE BARS */
+.wave{display:flex;align-items:center;gap:3px;height:28px;transition:opacity .3s;}
+.wb{width:3px;border-radius:2px;animation:wba .8s ease-in-out infinite;transform-origin:bottom;}
+@keyframes wba{0%,100%{transform:scaleY(.3);}50%{transform:scaleY(1);}}
+.wb:nth-child(1){height:6px;animation-delay:0s}
+.wb:nth-child(2){height:15px;animation-delay:.1s}
+.wb:nth-child(3){height:26px;animation-delay:.2s}
+.wb:nth-child(4){height:15px;animation-delay:.3s}
+.wb:nth-child(5){height:9px;animation-delay:.4s}
+.wb:nth-child(6){height:20px;animation-delay:.12s}
+.wb:nth-child(7){height:12px;animation-delay:.26s}
+
+/* CHAT */
+.chat-box{background:rgba(0,0,0,.45);backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:1.2rem;
+  display:flex;flex-direction:column;overflow:hidden;}
+.chat-hd{padding:.875rem 1.1rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(168,85,247,.05);}
+.chat-title{font-family:var(--fm);font-size:.7rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--purple);display:flex;align-items:center;gap:.45rem;}
+.ping{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pblnk 1.5s infinite;}
+@keyframes pblnk{0%,100%{opacity:1;}50%{opacity:.2;}}
+.chat-msgs{flex:1;overflow-y:auto;padding:.875rem;display:flex;flex-direction:column;gap:.65rem;height:310px;}
+.chat-msgs::-webkit-scrollbar{width:3px;}
+.chat-msgs::-webkit-scrollbar-thumb{background:rgba(168,85,247,.28);}
+.mu{align-self:flex-end;max-width:76%;padding:.65rem .95rem;
+  background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);
+  border-radius:.85rem .85rem 0 .85rem;font-size:.85rem;
+  color:rgba(200,185,255,.9);line-height:1.55;animation:min .28s ease;}
+.ma{padding:.8rem .95rem;background:rgba(255,255,255,.035);
+  border:1px solid var(--border);border-radius:.85rem;
+  font-size:.85rem;color:#d4d0f0;line-height:1.65;animation:min .28s ease;}
+.ma.green{border-left:2px solid var(--green);}
+.ma.red{border-left:2px solid var(--red);}
+.ma.gold{border-left:2px solid var(--gold);}
+.ma.cyan{border-left:2px solid var(--cyan);}
+.ma.purple{border-left:2px solid var(--purple);}
+@keyframes min{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+.vtag{display:inline-block;font-family:var(--fm);font-size:.62rem;letter-spacing:.1em;
+  text-transform:uppercase;padding:.18rem .55rem;border-radius:.22rem;margin-bottom:.5rem;}
+.vtp{background:rgba(168,85,247,.14);border:1px solid rgba(168,85,247,.28);color:var(--purple);}
+.vtg{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.28);color:var(--green);}
+.vtr{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.28);color:var(--red);}
+.vtgd{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.28);color:var(--gold);}
+.mpart{margin-top:.5rem;}
+.mpl{font-family:var(--fm);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.2rem;}
+.tyind{display:flex;align-items:center;gap:.6rem;padding:.75rem .95rem;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:2px solid var(--purple);
+  border-radius:.85rem;font-family:var(--fm);font-size:.68rem;letter-spacing:.1em;color:var(--muted);}
+.tdots{display:flex;gap:3px;}
+.td2{width:4px;height:4px;border-radius:50%;background:var(--purple);animation:tdb 1.2s infinite;}
+.td2:nth-child(2){animation-delay:.2s;}.td2:nth-child(3){animation-delay:.4s;}
+@keyframes tdb{0%,80%,100%{opacity:.2;}40%{opacity:1;}}
+.chat-in{border-top:1px solid var(--border);padding:.7rem .875rem;
+  display:flex;gap:.5rem;background:rgba(0,0,0,.25);}
+.chat-in input{flex:1;background:transparent;border:none;outline:none;
+  border-bottom:1px solid rgba(168,85,247,.22);padding:.35rem .2rem;
+  font-family:var(--fb);font-size:.875rem;color:var(--white);transition:border-color .2s;}
+.chat-in input:focus{border-bottom-color:var(--purple);}
+.chat-in input::placeholder{color:var(--muted);}
+
+/* FEE SLIDERS */
+.fsl{display:flex;align-items:center;gap:.875rem;margin-bottom:.8rem;}
+.fsl label{font-size:.72rem;color:var(--muted);width:115px;flex-shrink:0;font-family:var(--fm);letter-spacing:.03em;}
+.fsl input[type=range]{flex:1;-webkit-appearance:none;height:3px;
+  background:rgba(168,85,247,.18);border-radius:2px;outline:none;cursor:pointer;}
+.fsl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;
+  border-radius:50%;background:var(--purple);box-shadow:0 0 7px rgba(168,85,247,.5);cursor:pointer;}
+.fv{font-family:var(--fm);font-size:.78rem;color:var(--purple);min-width:38px;text-align:right;}
+
+/* CONFLICT BARS */
+.cbar{display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem;}
+.cbl{font-size:.7rem;color:var(--muted);width:88px;flex-shrink:0;font-family:var(--fm);}
+.cbt{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;}
+.cbf{height:100%;border-radius:2px;transition:width .75s ease;}
+.cbv{font-family:var(--fm);font-size:.7rem;min-width:27px;text-align:right;}
+
+/* PORTFOLIO TABLE */
+.pt{width:100%;border-collapse:collapse;}
+.pt th{font-family:var(--fm);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);padding:.7rem .95rem;text-align:left;border-bottom:1px solid var(--border);}
+.pt td{padding:.7rem .95rem;border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:.85rem;transition:background .15s;}
+.pt tr:hover td{background:rgba(168,85,247,.04);}
+.td-r{color:var(--red)!important;} .td-g{color:var(--green)!important;}
+.td-gd{color:var(--gold)!important;} .td-m{color:var(--muted)!important;}
+.flag{font-family:var(--fm);font-size:.62rem;padding:.18rem .55rem;border-radius:.22rem;}
+.fhi{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.28);color:var(--red);}
+.flo{background:rgba(0,255,136,.09);border:1px solid rgba(0,255,136,.24);color:var(--green);}
+
+/* SPIN MARKS */
+mark.mr{background:rgba(239,68,68,.2);color:#fca5a5;padding:1px 3px;
+  border-radius:2px;border-bottom:1px dashed var(--red);}
+mark.ma2{background:rgba(245,158,11,.18);color:#fcd34d;padding:1px 3px;
+  border-radius:2px;border-bottom:1px dashed var(--gold);}
+
+/* PROGRESS */
+.prog{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+.progf{height:100%;border-radius:3px;transition:width 1s ease;}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.75rem;left:50%;transform:translateX(-50%) translateY(10px);
+  background:rgba(4,2,14,.97);border:1px solid var(--purple);border-radius:.75rem;
+  padding:.65rem 1.4rem;font-family:var(--fm);font-size:.78rem;
+  letter-spacing:.07em;color:var(--purple);opacity:0;transition:all .28s;z-index:9999;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* SETTINGS INPUTS */
+.si{width:100%;background:rgba(0,0,0,.45);border:1px solid var(--border);
+  border-radius:.6rem;padding:.5rem .85rem;font-family:var(--fm);font-size:.8rem;
+  color:var(--white);outline:none;margin-bottom:.65rem;transition:border-color .2s;}
+.si:focus{border-color:rgba(168,85,247,.5);}
+.si::placeholder{color:var(--muted);}
+select.si option{background:#0a0518;}
+
+/* VERDICT STRIP */
+.vstrip{padding:.875rem 1rem;border-left:2px solid var(--purple);
+  background:rgba(168,85,247,.06);border-radius:.65rem;font-size:.85rem;
+  color:#e0d8ff;line-height:1.68;}
+.vstrip.green{border-left-color:var(--green);background:rgba(0,255,136,.06);color:#c8f7dc;}
+.vstrip.red{border-left-color:var(--red);background:rgba(239,68,68,.06);color:#fecaca;}
+.vstrip.gold{border-left-color:var(--gold);background:rgba(245,158,11,.06);color:#fef3c7;}
+
+/* STOCKTOWER HERO */
+.stocktower-hero{min-height:92vh;padding:120px 1rem 5rem;display:grid;place-items:center;background:#020604;isolation:isolate;}
+.stocktower-frame{position:relative;width:min(100%,1200px);min-height:min(760px,72vh);border:1px solid rgba(0,255,136,.24);border-radius:1.1rem;overflow:hidden;background:radial-gradient(circle at 50% 15%,rgba(0,255,136,.13),transparent 32%),linear-gradient(180deg,#06100b 0%,#020604 72%);box-shadow:0 0 55px rgba(0,255,136,.14),0 0 90px rgba(239,68,68,.08);}
+.stocktower-scene{position:absolute;inset:-4% 0 0;z-index:0;overflow:hidden;transform:translateY(var(--st-parallax,0px));will-change:transform;}
+.stocktower-scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.stocktower-css-city{position:absolute;left:50%;bottom:-2%;width:min(1020px,124vw);height:72%;transform:translateX(-50%) perspective(900px) rotateX(58deg) rotateZ(-4deg);transform-style:preserve-3d;transition:opacity .35s ease;}
+.stocktower-frame.three-ready .stocktower-css-city{opacity:0;}
+.st-grid{position:absolute;inset:40% -8% -18%;background:linear-gradient(rgba(0,255,136,.13) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,.13) 1px,transparent 1px);background-size:44px 44px;transform:translateZ(-90px);box-shadow:0 0 40px rgba(0,255,136,.18) inset;}
+.st-b{position:absolute;bottom:17%;left:50%;width:var(--w);height:var(--h);transform:translateX(var(--x)) translateZ(var(--z)) rotateX(-58deg);background:linear-gradient(90deg,rgba(4,12,18,.94),rgba(16,28,46,.88));border:1px solid rgba(0,255,136,.34);box-shadow:0 0 22px rgba(0,255,136,.2),inset 8px 0 14px rgba(0,255,136,.08),inset -8px 0 14px rgba(239,68,68,.08);animation:stgrow 4.8s ease-in-out infinite;}
+.st-b::before{content:'';position:absolute;inset:8px 9px;background:repeating-linear-gradient(0deg,transparent 0 13px,rgba(0,255,136,.42) 13px 15px),repeating-linear-gradient(90deg,transparent 0 14px,rgba(255,255,255,.11) 14px 16px);opacity:.7;}
+.st-b::after{content:'';position:absolute;left:10%;right:10%;top:-8px;height:8px;background:linear-gradient(90deg,rgba(0,255,136,.65),rgba(239,68,68,.42));filter:blur(.4px);box-shadow:0 0 18px currentColor;}
+.st-b.red{border-color:rgba(239,68,68,.42);box-shadow:0 0 24px rgba(239,68,68,.22),inset 8px 0 14px rgba(239,68,68,.08);}
+.st-b.red::before{background:repeating-linear-gradient(0deg,transparent 0 13px,rgba(239,68,68,.42) 13px 15px),repeating-linear-gradient(90deg,transparent 0 14px,rgba(255,255,255,.1) 14px 16px);}
+.st-b:nth-child(2){animation-delay:-.7s}.st-b:nth-child(3){animation-delay:-1.3s}.st-b:nth-child(4){animation-delay:-2s}.st-b:nth-child(5){animation-delay:-2.8s}.st-b:nth-child(6){animation-delay:-3.4s}.st-b:nth-child(7){animation-delay:-4s}.st-b:nth-child(8){animation-delay:-1.8s}.st-b:nth-child(9){animation-delay:-3.1s}
+.st-stream{position:absolute;bottom:22%;left:50%;width:2px;height:50%;transform:translateX(var(--x)) rotate(var(--r));background:linear-gradient(0deg,transparent,var(--c),transparent);filter:drop-shadow(0 0 12px var(--c));animation:ststream 2.8s linear infinite;}
+.st-stream::after{content:'';position:absolute;left:-4px;top:0;width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 18px var(--c);}
+.stocktower-glow{position:absolute;inset:0;z-index:1;background:radial-gradient(circle at 24% 38%,rgba(0,255,136,.25),transparent 34%),radial-gradient(circle at 76% 45%,rgba(239,68,68,.25),transparent 36%),linear-gradient(180deg,rgba(2,6,4,.04),rgba(2,6,4,.78));pointer-events:none;}
+.stocktower-glow::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.028) 0,rgba(255,255,255,.028) 1px,transparent 1px,transparent 4px);mix-blend-mode:screen;opacity:.4;}
+.stocktower-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:inherit;padding:clamp(3rem,7vh,5.5rem) 1rem 3rem;text-align:center;opacity:0;transform:translateY(18px);animation:stfade 1.1s ease .15s forwards;pointer-events:none;}
+.stocktower-kicker{margin-bottom:.9rem;font-family:var(--fm);font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--green);text-shadow:0 0 18px rgba(0,255,136,.75);}
+.stocktower-content h1{max-width:980px;margin:0 auto 1.8rem;font-size:clamp(2.25rem,7vw,5.6rem);line-height:.98;letter-spacing:0;text-shadow:0 0 18px rgba(0,255,136,.45),0 0 38px rgba(239,68,68,.3);}
+.stocktower-btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:.85rem 1.35rem;border:1px solid rgba(0,255,136,.72);border-radius:999px;background:linear-gradient(135deg,var(--green),#73ffd0);color:#041008;font-weight:800;text-decoration:none;box-shadow:0 0 18px rgba(0,255,136,.52),inset 0 0 10px rgba(255,255,255,.35);transition:transform .2s ease,box-shadow .2s ease;pointer-events:auto;}
+.stocktower-btn:hover{transform:translateY(-2px);box-shadow:0 0 28px rgba(0,255,136,.78),0 0 44px rgba(239,68,68,.24),inset 0 0 10px rgba(255,255,255,.35);}
+@keyframes stfade{to{opacity:1;transform:translateY(0);}}
+@keyframes stgrow{0%,100%{height:var(--h);}50%{height:calc(var(--h) + 34px);}}
+@keyframes ststream{from{background-position:0 140px;transform:translateX(var(--x)) rotate(var(--r)) translateY(42px);}to{background-position:0 0;transform:translateX(var(--x)) rotate(var(--r)) translateY(-52px);}}
+
+/* 3D PLANET STYLES */
+@keyframes prot{from{transform:rotateY(0deg);}to{transform:rotateY(360deg);}}
+@keyframes sporbit{0%,100%{transform:translate(0,0);}50%{transform:translate(-18px,10px);}}
+@keyframes atmpulse{0%,100%{opacity:.4;}50%{opacity:.78;}}
+@keyframes orbspin{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+@media(max-width:1180px){
+  .nav-links{gap:1rem;}
+  .nav-links a{font-size:.72rem;}
+}
+
+@media(max-width:900px){
+  .g2,.g3,.g4{grid-template-columns:1fr;}
+  .container{padding:0 1.25rem;}
+  nav{padding:0 1.25rem;}
+  .nav-links{display:none;}
+  .mob-btn{display:block;}
+  .planet-deco{display:none;}
+  .stocktower-hero{min-height:80vh;padding:104px .75rem 3.5rem;}
+  .stocktower-frame{min-height:66vh;border-radius:.85rem;}
+  .stocktower-content h1{max-width:22rem;}
+}
+</style>
+</head>
+<body>
+<canvas id="sc"></canvas>
+<div class="sl"></div>
+<div class="toast" id="toast"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">DARSO</div>
+  <div class="nav-links">
+    <a href="#hero">Home</a>
+    <a href="#stocktower">StockTower</a>
+    <a href="#stock-dashboard">Dashboard</a>
+    <a href="#ai-invest">Auto-Invest</a>
+    <a href="#stock-portfolio">Stock Portfolio</a>
+    <a href="#voice">Voice AI</a>
+    <a href="#fees">Fee X-Ray</a>
+    <a href="#spin">Spin Filter</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <button class="nav-cta" onclick="document.getElementById('voice').scrollIntoView({behavior:'smooth'})">Try Free</button>
+    <button class="mob-btn" onclick="document.getElementById('mm').classList.toggle('open')">
+      <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+        <rect width="18" height="2" rx="1" fill="white"/>
+        <rect y="6" width="18" height="2" rx="1" fill="white"/>
+        <rect y="12" width="18" height="2" rx="1" fill="white"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+<div class="mob-menu" id="mm">
+  <a href="#hero" onclick="document.getElementById('mm').classList.remove('open')">Home</a>
+  <a href="#stocktower" onclick="document.getElementById('mm').classList.remove('open')">StockTower</a>
+  <a href="#stock-dashboard" onclick="document.getElementById('mm').classList.remove('open')">Dashboard</a>
+  <a href="#ai-invest" onclick="document.getElementById('mm').classList.remove('open')">Auto-Invest</a>
+  <a href="#stock-portfolio" onclick="document.getElementById('mm').classList.remove('open')">Stock Portfolio</a>
+  <a href="#voice" onclick="document.getElementById('mm').classList.remove('open')">Voice AI</a>
+  <a href="#fees" onclick="document.getElementById('mm').classList.remove('open')">Fee X-Ray</a>
+  <a href="#spin" onclick="document.getElementById('mm').classList.remove('open')">Spin Filter</a>
+</div>
+
+<!-- TICKER -->
+<div class="ticker" id="stock-ticker">
+  <div class="tick-inner" id="tkEl">
+    <div class="ti"><span class="tn">NIKKEI</span><span class="tv" id="tNK">38,421</span><span class="tu" id="tcNK">+0.82%</span></div>
+    <div class="ti"><span class="tn">S&P500</span><span class="tv" id="tSP">5,298</span><span class="tu" id="tcSP">+0.31%</span></div>
+    <div class="ti"><span class="tn">BTC</span><span class="tv" id="tBT">67,841</span><span class="tu" id="tcBT">+1.22%</span></div>
+    <div class="ti"><span class="tn">ETH</span><span class="tv" id="tET">3,481</span><span class="tu" id="tcET">+1.8%</span></div>
+    <div class="ti"><span class="tn">USD/JPY</span><span class="tv" id="tJP">157.23</span><span class="td" id="tcJP">-0.14%</span></div>
+    <div class="ti"><span class="tn">GOLD</span><span class="tv" id="tGL">2,341</span><span class="td" id="tcGL">-0.08%</span></div>
+    <div class="ti"><span class="tn">SOL</span><span class="tv" id="tSL">178.50</span><span class="tu" id="tcSL">+6.8%</span></div>
+    <div class="ti"><span class="tn">USD/INR</span><span class="tv" id="tIN">83.42</span><span class="td" id="tcIN">-0.06%</span></div>
+    <div class="ti"><span class="tn">NIKKEI</span><span class="tv">38,421</span><span class="tu">+0.82%</span></div>
+    <div class="ti"><span class="tn">S&P500</span><span class="tv">5,298</span><span class="tu">+0.31%</span></div>
+    <div class="ti"><span class="tn">BTC</span><span class="tv">67,841</span><span class="tu">+1.22%</span></div>
+    <div class="ti"><span class="tn">ETH</span><span class="tv">3,481</span><span class="tu">+1.8%</span></div>
+    <div class="ti"><span class="tn">USD/JPY</span><span class="tv">157.23</span><span class="td">-0.14%</span></div>
+    <div class="ti"><span class="tn">GOLD</span><span class="tv">2,341</span><span class="td">-0.08%</span></div>
+    <div class="ti"><span class="tn">SOL</span><span class="tv">178.50</span><span class="tu">+6.8%</span></div>
+    <div class="ti"><span class="tn">USD/INR</span><span class="tv">83.42</span><span class="td">-0.06%</span></div>
+  </div>
+</div>
+
+<!-- STOCKTOWER HERO -->
+<section class="stocktower-hero" id="stocktower" aria-labelledby="stocktower-title">
+  <div class="stocktower-frame">
+    <div class="stocktower-scene" id="stocktowerScene" aria-hidden="true">
+      <div class="stocktower-css-city">
+        <div class="st-grid"></div>
+        <span class="st-b" style="--x:-410px;--z:-100px;--w:54px;--h:190px;"></span>
+        <span class="st-b red" style="--x:-305px;--z:-42px;--w:62px;--h:245px;"></span>
+        <span class="st-b" style="--x:-205px;--z:35px;--w:70px;--h:325px;"></span>
+        <span class="st-b" style="--x:-80px;--z:90px;--w:84px;--h:430px;"></span>
+        <span class="st-b" style="--x:55px;--z:130px;--w:96px;--h:520px;"></span>
+        <span class="st-b red" style="--x:190px;--z:55px;--w:72px;--h:300px;"></span>
+        <span class="st-b" style="--x:310px;--z:-20px;--w:64px;--h:255px;"></span>
+        <span class="st-b" style="--x:420px;--z:-108px;--w:52px;--h:175px;"></span>
+        <span class="st-stream" style="--x:-185px;--r:-13deg;--c:var(--green);"></span>
+        <span class="st-stream" style="--x:12px;--r:8deg;--c:var(--green);animation-delay:-.8s;"></span>
+        <span class="st-stream" style="--x:188px;--r:15deg;--c:var(--red);animation-delay:-1.5s;"></span>
+      </div>
+    </div>
+    <div class="stocktower-glow" aria-hidden="true"></div>
+    <div class="stocktower-content">
+      <p class="stocktower-kicker">Live Market Skyline</p>
+      <h1 id="stocktower-title">Welcome to StockTower - Where Stocks Bound to the Sky</h1>
+      <div class="g2" style="max-width:720px;margin-top:1.4rem;gap:.85rem;align-items:center;">
+        <input id="stockQuery" class="si" placeholder="Enter symbol e.g. AAPL, TSLA, N225" style="flex:1;min-width:220px;">
+        <button type="button" class="btn btn-g" onclick="searchStock()" style="white-space:nowrap;">Get Quote</button>
+      </div>
+      <div class="card card-corner cg" style="margin-top:1.25rem;max-width:720px;min-height:96px;">
+        <div class="card-shine"></div>
+        <div id="stockSearchResult" style="color:#d4d0f0;font-size:.95rem;min-height:72px;display:flex;align-items:center;">Live stock quotes refresh automatically every minute.</div>
+      </div>
+      <a class="stocktower-btn" href="#stock-ticker">Live Demo</a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ STOCK DASHBOARD ════════════════ -->
+<section id="stock-dashboard" style="padding:5rem 0;">
+  <div class="nb" style="width:500px;height:400px;background:radial-gradient(ellipse,rgba(0,255,136,.15) 0%,transparent 70%);bottom:-150px;left:-100px;"></div>
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(0,255,136,.35);background:rgba(0,255,136,.08);color:var(--green);margin-bottom:1.5rem;">
+      <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>
+      Market Dashboard
+    </div>
+    <h2 class="rv d1">Global Market Overview</h2>
+    <p class="lead rv d2" style="margin-bottom:2.5rem;">Real-time stock prices, market trends, and analysis.</p>
+    
+    <div class="g2 rv d3" style="margin-bottom:2.5rem;">
+      <div class="card card-corner cg">
+        <div class="card-shine"></div>
+        <div style="margin-bottom:1rem;"><div class="sl2">Market Indices</div></div>
+        <div id="dashboardIndices" style="display:flex;flex-direction:column;gap:0.8rem;"></div>
+      </div>
+      <div class="card card-corner cc">
+        <div class="card-shine"></div>
+        <div style="margin-bottom:1rem;"><div class="sl2">Cryptocurrencies</div></div>
+        <div id="dashboardCrypto" style="display:flex;flex-direction:column;gap:0.8rem;"></div>
+      </div>
+    </div>
+
+    <div class="card card-corner cgd rv d4" style="padding:1.75rem;">
+      <div class="card-shine"></div>
+      <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:1.25rem;color:var(--gold);">Stock Analysis</h3>
+      <div class="g2" style="gap:1.25rem;">
+        <div>
+          <input class="si" id="analyzeSymbol" placeholder="Enter symbol (AAPL, TSLA...)" style="margin-bottom:.75rem;">
+          <button class="btn btn-p" onclick="analyzeStock()" style="width:100%;">Analyze Stock</button>
+        </div>
+        <div id="analysisResult" style="min-height:120px;display:flex;align-items:center;color:#d4d0f0;font-size:.9rem;">AI analysis will appear here...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ AI AUTO-INVEST ════════════════ -->
+<section id="ai-invest" style="padding:5rem 0;">
+  <div class="nb" style="width:500px;height:400px;background:radial-gradient(ellipse,rgba(89,42,220,.2) 0%,transparent 70%);bottom:-120px;left:-80px;"></div>
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(139,92,246,.35);background:rgba(139,92,246,.08);color:var(--purple);margin-bottom:1.5rem;">
+      <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>
+      AI Auto-Invest
+    </div>
+    <h2 class="rv d1"><span class="gb">AI-Powered</span> Auto-Invest</h2>
+    <p class="lead rv d2">Tell me your budget. I analyze the entire market, pick the best 3-5 stocks, and execute the trades automatically — all using AI.</p>
+
+    <div class="g3" style="gap:1rem;">
+      <div class="card card-corner cbl">
+        <div class="card-shine"></div>
+        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#60a5fa;margin-bottom:.6rem;">Investment Amount</div>
+        <div style="display:flex;align-items:center;gap:.75rem;">
+          <input type="range" id="aiInvestAmount" min="100" max="100000" step="100" value="10000" oninput="document.getElementById('aiInvestAmountLabel').textContent='$'+parseInt(this.value).toLocaleString()" style="flex:1;">
+          <span class="fv" id="aiInvestAmountLabel" style="min-width:70px;font-size:1rem;">$10,000</span>
+        </div>
+      </div>
+      <div class="card card-corner cbl">
+        <div class="card-shine"></div>
+        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#60a5fa;margin-bottom:.6rem;">Risk Tolerance</div>
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap;">
+          <button class="bsm bsm-p" style="font-size:.72rem;padding:.35rem .75rem;" id="aiRiskCons" onclick="setAIRisk('conservative',this)">Conservative</button>
+          <button class="bsm bsm-c" style="font-size:.72rem;padding:.35rem .75rem;" id="aiRiskMod" onclick="setAIRisk('moderate',this)">Moderate</button>
+          <button class="bsm bsm-p" style="font-size:.72rem;padding:.35rem .75rem;" id="aiRiskAgg" onclick="setAIRisk('aggressive',this)">Aggressive</button>
+          <button class="bsm bsm-p" style="font-size:.72rem;padding:.35rem .75rem;" id="aiRiskSpec" onclick="setAIRisk('speculative',this)">Speculative</button>
+        </div>
+      </div>
+      <div class="card card-corner cbl">
+        <div class="card-shine"></div>
+        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#60a5fa;margin-bottom:.6rem;">Stocks & Execute</div>
+        <div style="display:flex;gap:.35rem;margin-bottom:.6rem;">
+          <button class="bsm bsm-p" style="font-size:.72rem;padding:.35rem .65rem;" id="aiN3" onclick="setAINumStocks(3,this)">3</button>
+          <button class="bsm bsm-c" style="font-size:.72rem;padding:.35rem .65rem;" id="aiN4" onclick="setAINumStocks(4,this)">4</button>
+          <button class="bsm bsm-p" style="font-size:.72rem;padding:.35rem .65rem;" id="aiN5" onclick="setAINumStocks(5,this)">5</button>
+        </div>
+        <button class="btn btn-p" onclick="runAIAutoInvest()" id="aiInvestBtn" style="width:100%;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Auto-Invest
+        </button>
+      </div>
+    </div>
+
+    <div id="aiInvestLoading" style="display:none;">
+      <div class="card" style="padding:2rem;text-align:center;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;">
+          <div class="spinner" style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite;"></div>
+          <div style="font-family:var(--fm);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);" id="aiInvestStatus">AI is analyzing the market...</div>
+          <div style="font-size:.82rem;color:var(--muted);max-width:380px;">Scanning fundamentals, valuation, momentum, sector rotation, and risk-adjusted returns across thousands of stocks.</div>
+        </div>
+      </div>
+    </div>
+    <div id="aiInvestResult" style="display:none;">
+      <div class="card cbl card-corner" style="padding:1.1rem;margin-bottom:1rem;" id="aiStrategySummary"></div>
+      <div id="aiInvestStocks" style="display:flex;flex-direction:column;gap:.875rem;"></div>
+      <div class="g2" style="gap:.75rem;margin-top:1rem;">
+        <div class="stat sg"><div class="sl2">Total Invested</div><div class="sv green" id="aiTotalInvested">—</div></div>
+        <div class="stat"><div class="sl2">Cash Remaining</div><div class="sv purple" id="aiCashRemaining">—</div></div>
+      </div>
+      <div class="vstrip purple" id="aiVerdict" style="margin-top:1rem;"></div>
+    </div>
+  </div>
+</section>
+
+<div class="div-line"><div class="div-dot" style="background:#60a5fa;box-shadow:0 0 10px #60a5fa;"></div></div>
+
+<!-- ════════════════ PORTFOLIO TRACKER ════════════════ -->
+<section id="stock-portfolio" style="padding:5rem 0;">
+  <div class="nb" style="width:600px;height:500px;background:radial-gradient(ellipse,rgba(236,72,153,.15) 0%,transparent 70%);top:-100px;right:-120px;animation-delay:-5s;"></div>
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:var(--gold);margin-bottom:1.5rem;">
+      <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>
+      Portfolio Management
+    </div>
+    <h2 class="rv d1">Your Investment Portfolio</h2>
+    <p class="lead rv d2" style="margin-bottom:2.5rem;">Track holdings, manage trades, and receive AI-powered analysis.</p>
+
+    <div class="g2 rv d3" style="margin-bottom:2rem;gap:1.5rem;">
+      <div class="stat sgd">
+        <div class="sl2">Total Portfolio Value</div>
+        <div class="sv gold" id="totalValue">$100,000</div>
+      </div>
+      <div class="stat sg">
+        <div class="sl2">Available Cash</div>
+        <div class="sv green" id="availableCash">$100,000</div>
+      </div>
+      <div class="stat sc">
+        <div class="sl2">Holdings</div>
+        <div class="sv cyan" id="holdingsCount">0</div>
+      </div>
+      <div class="stat">
+        <div class="sl2">Total Return</div>
+        <div class="sv purple" id="totalReturn">+0%</div>
+      </div>
+    </div>
+
+    <div class="g2 rv d3" style="gap:1.5rem;margin-bottom:2rem;">
+      <div class="card card-corner cc">
+        <div class="card-shine"></div>
+        <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1.25rem;color:var(--cyan);">Execute Trade</h3>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+          <input class="si" id="tradeSymbol" placeholder="Symbol (AAPL)" style="margin-bottom:0.5rem;">
+          <input class="si" id="tradeQuantity" type="number" placeholder="Quantity" min="1" style="margin-bottom:0.5rem;">
+          <select class="si" id="tradeType" style="margin-bottom:0.75rem;"><option value="buy">Buy</option><option value="sell">Sell</option></select>
+          <button class="btn btn-g" onclick="executeTrade()" style="width:100%;">Execute Trade</button>
+        </div>
+      </div>
+      <div class="card card-corner cg">
+        <div class="card-shine"></div>
+        <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1.25rem;color:var(--green);">Portfolio AI Analysis</h3>
+        <button class="btn btn-p" onclick="analyzePortfolio()" style="width:100%;margin-bottom:1rem;">Get Analysis</button>
+        <div id="portfolioAnalysis" style="min-height:100px;overflow-y:auto;font-size:.85rem;color:#d4d0f0;line-height:1.6;">Click to analyze your portfolio...</div>
+      </div>
+    </div>
+
+    <div class="card card-corner rv d4" style="overflow-x:auto;">
+      <div class="card-shine"></div>
+      <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1.25rem;color:var(--white);">Current Holdings</h3>
+      <table class="pt" id="holdingsTable" style="margin-bottom:1rem;">
+        <thead>
+          <tr><th>Symbol</th><th>Quantity</th><th>Avg Cost</th><th>Current Price</th><th>Value</th><th>Gain/Loss</th></tr>
+        </thead>
+        <tbody id="holdingsBody">
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">No holdings yet. Start trading!</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ HERO ════════════════ -->
+<section id="hero" style="min-height:100vh;padding-top:120px;">
+  <div class="nb" style="width:700px;height:600px;background:radial-gradient(ellipse,rgba(139,92,246,.2) 0%,transparent 70%);top:-200px;left:-200px;"></div>
+  <div class="nb" style="width:500px;height:400px;background:radial-gradient(ellipse,rgba(236,72,153,.13) 0%,transparent 70%);bottom:-100px;right:-100px;animation-delay:-7s;"></div>
+
+  <!-- Purple Neptune Planet -->
+  <div class="planet-deco planet-neptune" aria-hidden="true">
+    <div class="planet-atmosphere"></div>
+    <div class="planet-body">
+      <div class="planet-surface"></div>
+      <div class="planet-bands"></div>
+      <div class="planet-spot"></div>
+      <div class="planet-highlight"></div>
+    </div>
+    <div class="planet-ring ring-main"></div>
+    <div class="planet-ring ring-inner"></div>
+    <div class="planet-orbit"><div class="planet-moon"></div></div>
+  </div>
+
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.08);color:var(--purple);">
+      <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>
+      AI-Powered Financial Intelligence
+    </div>
+    <h1 class="rv d1">Your <span class="gp">Financial Truth</span><br>Detector</h1>
+    <p class="lead rv d2">Darso cuts through marketing spin, exposes hidden fees, detects advisor conflicts — and speaks the truth back to you in real time.</p>
+    <div style="display:flex;gap:.875rem;flex-wrap:wrap;" class="rv d3">
+      <button class="btn btn-p" onclick="document.getElementById('voice').scrollIntoView({behavior:'smooth'})">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+        Talk to Darso
+      </button>
+      <button class="btn btn-o" onclick="document.getElementById('portfolio').scrollIntoView({behavior:'smooth'})">View Portfolio →</button>
+    </div>
+    <div class="g4 rv d4" style="margin-top:3rem;max-width:680px;">
+      <div class="stat sg"><div class="sl2">Fees Exposed</div><div class="sv green">¥4.2M</div></div>
+      <div class="stat sc"><div class="sl2">Conflicts Found</div><div class="sv cyan">1,847</div></div>
+      <div class="stat"><div class="sl2">Spin Detected</div><div class="sv purple">92%</div></div>
+      <div class="stat sgd"><div class="sl2">Users Protected</div><div class="sv gold">12K+</div></div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span class="sm">Scroll</span>
+    <div class="smouse"><div class="sdot"></div></div>
+  </div>
+</section>
+
+<div class="div-line"><div class="div-dot"></div></div>
+
+<!-- ════════════════ VOICE AI ════════════════ -->
+<section id="voice">
+  <div class="nb" style="width:600px;height:500px;background:radial-gradient(ellipse,rgba(34,211,238,.16) 0%,transparent 70%);top:-100px;right:-120px;animation-delay:-5s;"></div>
+  <div class="nb" style="width:400px;height:350px;background:radial-gradient(ellipse,rgba(0,255,136,.1) 0%,transparent 70%);bottom:-80px;left:-80px;animation-delay:-12s;"></div>
+
+  <!-- Cyan Ice Giant Planet -->
+  <div class="planet-deco planet-ice" aria-hidden="true">
+    <div class="planet-atmosphere"></div>
+    <div class="planet-body">
+      <div class="planet-surface"></div>
+      <div class="planet-bands"></div>
+      <div class="planet-highlight"></div>
+    </div>
+    <div class="planet-ring ring-main"></div>
+  </div>
+
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.08);color:var(--cyan);">Voice Intelligence · ElevenLabs · Multi-Model AI</div>
+    <h2 class="rv d1"><span class="gc">Voice-First</span> Financial AI</h2>
+    <p class="lead rv d2">Speak naturally. Darso responds to finance questions across investing, budgeting, debt, fees, risk, taxes, and advisor conflicts.</p>
+
+    <!-- AI BACKEND STATUS -->
+    <div class="card card-corner cc rv d2" style="margin-bottom:1.5rem;max-width:600px;">
+      <div class="card-shine"></div>
+      <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin-bottom:.65rem;">AI Backend</div>
+      <div style="font-size:.86rem;color:#d4d0f0;line-height:1.65;">Darso is configured to use your server-side keys automatically. Visitors can ask finance questions without entering an API key.</div>
+      <div style="display:flex;align-items:center;gap:.75rem;margin-top:.75rem;flex-wrap:wrap;">
+        <span style="font-family:var(--fm);font-size:.68rem;color:var(--green);" id="keyStatus">Proxy mode · /api/chat + /api/tts</span>
+      </div>
+    </div>
+
+    <!-- VOICE PROFILES -->
+    <div class="rv d3" style="margin-bottom:1.5rem;">
+      <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;">Voice Profile</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <button class="bsm bsm-c" id="v0" onclick="setVoice('21m00Tcm4TlvDq8ikWAM','Aria-7',this)">Aria-7 F·GB</button>
+        <button class="bsm bsm-p" id="v1" onclick="setVoice('pNInz6obpgDQGcFmaJgB','Axiom',this)">Axiom M·US</button>
+        <button class="bsm bsm-p" id="v2" onclick="setVoice('EXAVITQu4vr4xnSDxMaL','Nova-3',this)">Nova-3 F·US</button>
+        <button class="bsm bsm-p" id="v3" onclick="setVoice('onwK4e9ZLuTAKqWW03F9','Daniel',this)">Daniel M·GB</button>
+      </div>
+    </div>
+
+    <div class="g2 rv d4" style="gap:1.5rem;align-items:start;">
+      <!-- ORB COLUMN -->
+      <div class="card card-corner cc" style="display:flex;flex-direction:column;align-items:center;gap:1.1rem;padding:2rem 1.5rem;">
+        <div class="card-shine"></div>
+        <!-- THE ORB -->
+        <div class="orb-wrap">
+          <div class="orb-rings" id="orbWrap" onclick="toggleListen()">
+            <div class="orb-ring-el" style="width:178px;height:178px;animation-delay:0s;"></div>
+            <div class="orb-ring-el" style="width:152px;height:152px;animation-delay:.6s;"></div>
+            <div class="orb" id="mainOrb">
+              <svg id="orbIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </div>
+          </div>
+          <div class="wave" id="waveEl" style="opacity:0;">
+            <div class="wb" style="background:var(--cyan);"></div>
+            <div class="wb" style="background:var(--cyan);"></div>
+            <div class="wb" style="background:var(--cyan);"></div>
+            <div class="wb" style="background:var(--cyan);"></div>
+            <div class="wb" style="background:var(--cyan);"></div>
+            <div class="wb" style="background:var(--cyan);"></div>
+            <div class="wb" style="background:var(--cyan);"></div>
+          </div>
+          <div id="orbLbl" style="font-family:var(--fm);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-align:center;">Tap orb to speak</div>
+        </div>
+        <button class="btn btn-p" id="micBtn" onclick="toggleListen()" style="width:100%;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+          Activate Voice
+        </button>
+        <!-- Quick prompts -->
+        <div style="width:100%;display:flex;flex-direction:column;gap:.4rem;">
+          <div style="font-family:var(--fm);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.2rem;">Quick Analysis</div>
+          <button class="bsm bsm-p" style="text-align:left;border-radius:.5rem;padding:.45rem .75rem;font-size:.75rem;" onclick="sendQ('Is the Nippon Active Value Fund worth investing in?')">▸ Nippon Active Value Fund</button>
+          <button class="bsm bsm-p" style="text-align:left;border-radius:.5rem;padding:.45rem .75rem;font-size:.75rem;" onclick="sendQ('My advisor recommends Nomura Global Equity Fund by Nomura Asset Management — detect conflicts')">▸ Advisor conflict scan</button>
+          <button class="bsm bsm-p" style="text-align:left;border-radius:.5rem;padding:.45rem .75rem;font-size:.75rem;" onclick="sendQ('Is a 2 percent management fee reasonable?')">▸ 2% fee — normal?</button>
+          <button class="bsm bsm-p" style="text-align:left;border-radius:.5rem;padding:.45rem .75rem;font-size:.75rem;" onclick="sendQ('Compare eMAXIS Slim All Country versus iShares MSCI Japan fees')">▸ eMAXIS vs iShares</button>
+          <button class="bsm bsm-p" style="text-align:left;border-radius:.5rem;padding:.45rem .75rem;font-size:.75rem;" onclick="sendQ('What is SoftBank Vision Fund 2 risk?')">▸ SoftBank Vision Fund 2</button>
+          <button class="bsm bsm-p" style="text-align:left;border-radius:.5rem;padding:.45rem .75rem;font-size:.75rem;" onclick="sendQ('Should I pay off high interest debt or invest first?')">▸ Debt vs investing</button>
+          <button class="bsm bsm-p" style="text-align:left;border-radius:.5rem;padding:.45rem .75rem;font-size:.75rem;" onclick="sendQ('How big should my emergency fund be?')">▸ Emergency fund</button>
+          <button class="bsm bsm-p" style="text-align:left;border-radius:.5rem;padding:.45rem .75rem;font-size:.75rem;" onclick="sendQ('How should a beginner allocate a long term portfolio?')">▸ Portfolio allocation</button>
+        </div>
+      </div>
+
+      <!-- CHAT COLUMN -->
+      <div class="chat-box">
+        <div class="chat-hd">
+          <div class="chat-title"><div class="ping"></div>Darso Intelligence</div>
+          <button onclick="clearChat()" style="background:none;border:none;font-family:var(--fm);font-size:.62rem;letter-spacing:.1em;color:var(--muted);cursor:pointer;text-transform:uppercase;">Clear</button>
+        </div>
+        <div class="chat-msgs" id="chatMsgs"></div>
+        <div class="chat-in">
+          <input id="qi" type="text" placeholder="Ask any finance question..." onkeydown="if(event.key==='Enter')sendQ()">
+          <button class="bsm bsm-s" onclick="sendQ()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="div-line"><div class="div-dot" style="background:var(--cyan);box-shadow:0 0 10px var(--cyan);"></div></div>
+
+<!-- ════════════════ PORTFOLIO ════════════════ -->
+<section id="portfolio">
+  <div class="nb" style="width:650px;height:550px;background:radial-gradient(ellipse,rgba(0,255,136,.13) 0%,transparent 70%);top:-150px;right:-100px;animation-delay:-3s;"></div>
+  <!-- Green Earth Planet -->
+  <div class="planet-deco planet-earth" aria-hidden="true">
+    <div class="planet-atmosphere"></div>
+    <div class="planet-body">
+      <div class="planet-surface"></div>
+      <div class="planet-cloud cloud-a"></div>
+      <div class="planet-cloud cloud-b"></div>
+      <div class="planet-highlight"></div>
+    </div>
+    <div class="planet-orbit"><div class="planet-moon"></div></div>
+  </div>
+
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(0,255,136,.35);background:rgba(0,255,136,.08);color:var(--green);">Portfolio Intelligence</div>
+    <h2 class="rv d1"><span class="gg">Portfolio</span> Galaxy</h2>
+    <p class="lead rv d2">Track holdings, flag conflicts, calculate real fee drag, benchmark against passive alternatives.</p>
+    <div class="g4 rv d3" style="margin-bottom:1.5rem;">
+      <div class="stat sg"><div class="sl2">Total Value</div><div class="sv green" style="font-size:1.4rem;">¥4,820,000</div></div>
+      <div class="stat sr"><div class="sl2">Annual Fees</div><div class="sv red" style="font-size:1.4rem;">¥89,540</div></div>
+      <div class="stat sgd"><div class="sl2">Net Real Return</div><div class="sv gold" style="font-size:1.4rem;">2.6%</div></div>
+      <div class="stat"><div class="sl2">Avg TER</div><div class="sv purple" style="font-size:1.4rem;">1.86%</div></div>
+    </div>
+    <div class="card card-corner cg rv d4" style="padding:0;overflow:hidden;">
+      <div class="card-shine"></div>
+      <div style="padding:.875rem 1.1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:rgba(0,255,136,.04);">
+        <div style="font-family:var(--fm);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green);display:flex;align-items:center;gap:.45rem;"><div class="ping" style="background:var(--green);"></div>Holdings</div>
+        <div style="display:flex;gap:.875rem;">
+          <button onclick="document.getElementById('addHR').style.display=document.getElementById('addHR').style.display==='flex'?'none':'flex'" style="background:none;border:none;font-family:var(--fm);font-size:.62rem;letter-spacing:.1em;color:var(--muted);cursor:pointer;text-transform:uppercase;">+ Add</button>
+          <button onclick="askPortfolio()" style="background:none;border:none;font-family:var(--fm);font-size:.62rem;letter-spacing:.1em;color:var(--green);cursor:pointer;text-transform:uppercase;">Ask Darso →</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="pt">
+          <thead><tr><th>Fund / Asset</th><th>Value</th><th>TER</th><th>1Y Return</th><th>Conflict</th><th>Action</th></tr></thead>
+          <tbody id="holdBody">
+            <tr><td>Nomura Global Equity</td><td class="td-gd">¥1,200,000</td><td class="td-r">1.85%</td><td class="td-g">+9.2%</td><td><span class="flag fhi">HIGH</span></td><td><button onclick="sendQ('Analyze Nomura Global Equity fees and conflicts');document.getElementById('voice').scrollIntoView({behavior:'smooth'})" style="background:none;border:none;font-family:var(--fm);font-size:.7rem;color:var(--purple);cursor:pointer;">Analyze →</button></td></tr>
+            <tr><td>eMAXIS Slim All Country</td><td class="td-gd">¥2,000,000</td><td class="td-g">0.06%</td><td class="td-g">+14.1%</td><td><span class="flag flo">NONE</span></td><td><button onclick="sendQ('Is eMAXIS Slim All Country still the best low cost fund?');document.getElementById('voice').scrollIntoView({behavior:'smooth'})" style="background:none;border:none;font-family:var(--fm);font-size:.7rem;color:var(--purple);cursor:pointer;">Review →</button></td></tr>
+            <tr><td>SoftBank Vision Fund 2</td><td class="td-r">¥500,000</td><td class="td-r">2.10%</td><td class="td-r">-18.4%</td><td><span class="flag fhi">HIGH</span></td><td><button onclick="sendQ('Should I exit SoftBank Vision Fund 2?');document.getElementById('voice').scrollIntoView({behavior:'smooth'})" style="background:none;border:none;font-family:var(--fm);font-size:.7rem;color:var(--purple);cursor:pointer;">Analyze →</button></td></tr>
+            <tr><td>iShares TOPIX ETF</td><td class="td-gd">¥800,000</td><td class="td-gd">0.50%</td><td class="td-g">+8.8%</td><td><span class="flag flo">LOW</span></td><td><button onclick="sendQ('Compare iShares TOPIX versus eMAXIS Slim TOPIX');document.getElementById('voice').scrollIntoView({behavior:'smooth'})" style="background:none;border:none;font-family:var(--fm);font-size:.7rem;color:var(--purple);cursor:pointer;">Compare →</button></td></tr>
+            <tr><td>Cash / MMF</td><td class="td-gd">¥320,000</td><td class="td-g">0.05%</td><td class="td-gd">+0.8%</td><td><span class="flag flo">NONE</span></td><td class="td-m">—</td></tr>
+          </tbody>
+        </table>
+        <div id="addHR" style="display:none;gap:.6rem;padding:.75rem 1.1rem;border-top:1px solid var(--border);background:rgba(0,0,0,.2);align-items:center;flex-wrap:wrap;">
+          <input id="hN" placeholder="Fund name" class="si" style="margin:0;flex:1;min-width:140px;">
+          <input id="hV" type="number" placeholder="¥M" class="si" style="margin:0;width:75px;">
+          <input id="hT" type="number" placeholder="TER%" step=".01" class="si" style="margin:0;width:68px;">
+          <button onclick="addHolding()" class="bsm bsm-s">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="div-line"><div class="div-dot" style="background:var(--green);box-shadow:0 0 10px var(--green);"></div></div>
+
+<!-- ════════════════ FEE X-RAY ════════════════ -->
+<section id="fees">
+  <div class="nb" style="width:600px;height:500px;background:radial-gradient(ellipse,rgba(245,158,11,.13) 0%,transparent 70%);top:-100px;left:-120px;animation-delay:-6s;"></div>
+  <!-- Saturn-Like Gold Planet -->
+  <div class="planet-deco planet-saturn" aria-hidden="true">
+    <div class="planet-atmosphere"></div>
+    <div class="planet-body">
+      <div class="planet-surface"></div>
+      <div class="planet-bands"></div>
+      <div class="planet-spot"></div>
+      <div class="planet-highlight"></div>
+    </div>
+    <div class="planet-ring ring-main"></div>
+    <div class="planet-ring ring-inner"></div>
+  </div>
+
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:var(--gold);">Fee Analysis Engine</div>
+    <h2 class="rv d1"><span class="ggd">Fee X-Ray</span> Analyzer</h2>
+    <p class="lead rv d2">Drag the sliders — see exactly how much hidden fees cost you over 20 years in real money. The results are usually shocking.</p>
+    <div class="g2 rv d3" style="gap:1.5rem;">
+      <div class="card card-corner cgd">
+        <div class="card-shine"></div>
+        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:1.1rem;">Drag to Analyze</div>
+        <div class="fsl"><label>OCF / TER</label><input type="range" id="f1" min="0" max="3" step=".05" value="1.5" oninput="uFee()"><span class="fv" id="fv1">1.50%</span></div>
+        <div class="fsl"><label>Platform fee</label><input type="range" id="f2" min="0" max="1.5" step=".05" value=".3" oninput="uFee()"><span class="fv" id="fv2">0.30%</span></div>
+        <div class="fsl"><label>Transaction</label><input type="range" id="f3" min="0" max="1" step=".05" value=".15" oninput="uFee()"><span class="fv" id="fv3">0.15%</span></div>
+        <div class="fsl"><label>Entry load</label><input type="range" id="f4" min="0" max="5" step=".25" value="0" oninput="uFee()"><span class="fv" id="fv4">0.00%</span></div>
+        <div class="fsl"><label>Principal ¥M</label><input type="range" id="f5" min=".1" max="50" step=".1" value="1" oninput="uFee()"><span class="fv" id="fv5">¥1.0M</span></div>
+        <div class="fsl"><label>Years</label><input type="range" id="f6" min="1" max="40" step="1" value="20" oninput="uFee()"><span class="fv" id="fv6">20</span></div>
+        <div style="display:flex;gap:.6rem;margin-top:.875rem;">
+          <button onclick="document.getElementById('f1').value=0.06;document.getElementById('f2').value=0.10;document.getElementById('f3').value=0.02;document.getElementById('f4').value=0;uFee()" class="bsm bsm-p" style="flex:1;border-radius:.5rem;padding:.5rem;">Index Fund Benchmark</button>
+          <button onclick="sendQ('Explain the fee drag on '+document.getElementById('fv5').textContent+' at '+document.getElementById('fv1').textContent+' TER over '+document.getElementById('fv6').textContent+' years');document.getElementById('voice').scrollIntoView({behavior:'smooth'})" class="bsm bsm-s" style="flex:1;border-radius:.5rem;padding:.5rem;">Ask Darso →</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.875rem;">
+        <div class="g2" style="gap:.75rem;">
+          <div class="stat sr"><div class="sl2">Fee / year</div><div class="sv red" id="fo1" style="font-size:1.5rem;">1.95%</div></div>
+          <div class="stat sc"><div class="sl2">Net real return</div><div class="sv cyan" id="fo2" style="font-size:1.5rem;">2.55%</div></div>
+          <div class="stat sg"><div class="sl2">Final value</div><div class="sv green" id="fo3" style="font-size:1.5rem;">—</div></div>
+          <div class="stat sr"><div class="sl2">Lost to fees</div><div class="sv red" id="fo4" style="font-size:1.5rem;">—</div></div>
+        </div>
+        <div style="text-align:center;">
+          <svg width="190" height="115" viewBox="0 0 190 115">
+            <path d="M18 108 A77 77 0 0 1 172 108" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="11" stroke-linecap="round"/>
+            <path id="feeArc" d="M18 108 A77 77 0 0 1 172 108" fill="none" stroke="var(--red)" stroke-width="11" stroke-linecap="round" stroke-dasharray="242" stroke-dashoffset="85"/>
+            <text x="95" y="92" text-anchor="middle" font-family="Space Grotesk" font-size="22" font-weight="700" fill="#ef4444" id="fArcTxt">35%</text>
+            <text x="95" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="rgba(200,185,255,.4)" letter-spacing="1.5">WEALTH LOST TO FEES</text>
+          </svg>
+        </div>
+        <div class="vstrip" id="feeVerdict" style="min-height:60px;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="div-line"><div class="div-dot" style="background:var(--gold);box-shadow:0 0 10px var(--gold);"></div></div>
+
+<!-- ════════════════ SPIN FILTER ════════════════ -->
+<section id="spin">
+  <div class="nb" style="width:600px;height:500px;background:radial-gradient(ellipse,rgba(236,72,153,.15) 0%,transparent 70%);top:-100px;right:-120px;animation-delay:-4s;"></div>
+  <!-- Mars-Like Red Planet -->
+  <div class="planet-deco planet-mars" aria-hidden="true">
+    <div class="planet-atmosphere"></div>
+    <div class="planet-body">
+      <div class="planet-surface"></div>
+      <div class="planet-crater crater-a"></div>
+      <div class="planet-crater crater-b"></div>
+      <div class="planet-cap"></div>
+      <div class="planet-highlight"></div>
+    </div>
+  </div>
+
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(236,72,153,.35);background:rgba(236,72,153,.08);color:var(--pink);">Marketing Spin Detector</div>
+    <h2 class="rv d1"><span class="gr">Spin Filter</span></h2>
+    <p class="lead rv d2">Paste any fund pitch, advisor email, or brochure. Darso highlights every manipulation tactic.</p>
+    <div class="card card-corner cr rv d3" style="margin-bottom:1.25rem;">
+      <div class="card-shine"></div>
+      <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);margin-bottom:.875rem;">Paste Marketing Text</div>
+      <textarea id="spinIn" rows="5" style="width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(236,72,153,.2);border-radius:.75rem;padding:.875rem;font-family:var(--fb);font-size:.875rem;color:var(--white);resize:vertical;outline:none;line-height:1.65;" placeholder="Paste fund brochure, advisor email, or any financial marketing text...">Our flagship Global Growth Fund has delivered outstanding returns of 18.3% over the past 12 months, significantly outperforming the benchmark. With our world-class team of experienced portfolio managers and proven track record, this is a limited opportunity for sophisticated investors. Our dynamic high-conviction strategy captures alpha in volatile markets.</textarea>
+      <div style="display:flex;gap:.75rem;margin-top:.875rem;flex-wrap:wrap;">
+        <button onclick="runSpin()" class="btn btn-p" style="padding:.6rem 1.4rem;font-size:.85rem;">Analyze Text</button>
+        <button onclick="document.getElementById('spinIn').value='';document.getElementById('spinOut').style.display='none'" class="btn btn-o" style="padding:.6rem 1.1rem;font-size:.85rem;">Clear</button>
+        <button onclick="sendQ('Analyze this for spin: '+document.getElementById('spinIn').value.substring(0,380));document.getElementById('voice').scrollIntoView({behavior:'smooth'})" class="btn btn-o" style="padding:.6rem 1.1rem;font-size:.85rem;">Ask Darso AI →</button>
+      </div>
+    </div>
+    <div id="spinOut" style="display:none;">
+      <div class="g2 rv" style="gap:1.25rem;">
+        <div class="card" style="padding:1.25rem;">
+          <div style="font-family:var(--fm);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">Annotated — hover for detail</div>
+          <div id="spinAnnotated" style="font-size:.875rem;line-height:1.85;color:#d4d0f0;"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <div class="card cr" style="padding:1.1rem;"><div id="spinFindings"></div></div>
+          <div class="g3" style="gap:.6rem;">
+            <div class="stat sr"><div class="sl2">Red Flags</div><div class="sv red" id="spR" style="font-size:1.6rem;">0</div></div>
+            <div class="stat sgd"><div class="sl2">Warnings</div><div class="sv gold" id="spA" style="font-size:1.6rem;">0</div></div>
+            <div class="stat"><div class="sl2">Spin Score</div><div class="sv" id="spS" style="font-size:1.6rem;">—</div></div>
+          </div>
+          <div class="vstrip red" id="spVerdict"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="div-line"><div class="div-dot" style="background:var(--pink);box-shadow:0 0 10px var(--pink);"></div></div>
+
+<!-- ════════════════ ADVISOR CHECK ════════════════ -->
+<section id="advisor">
+  <div class="nb" style="width:650px;height:550px;background:radial-gradient(ellipse,rgba(59,130,246,.15) 0%,transparent 70%);top:-150px;left:-150px;animation-delay:-8s;"></div>
+  <!-- Jupiter-Like Blue Planet -->
+  <div class="planet-deco planet-jupiter" aria-hidden="true">
+    <div class="planet-atmosphere"></div>
+    <div class="planet-body">
+      <div class="planet-surface"></div>
+      <div class="band-a"></div>
+      <div class="band-b"></div>
+      <div class="planet-spot"></div>
+      <div class="planet-highlight"></div>
+    </div>
+    <div class="planet-orbit"><div class="planet-moon"></div></div>
+  </div>
+
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(59,130,246,.35);background:rgba(59,130,246,.08);color:#60a5fa;">Conflict of Interest Detector</div>
+    <h2 class="rv d1"><span class="gb">Advisor Check</span></h2>
+    <p class="lead rv d2">Enter your advisor and product details. Darso scores ownership ties, commissions, sales pressure, and fee bias.</p>
+    <div class="g2" style="gap:1.5rem;">
+      <div class="card card-corner cbl">
+        <div class="card-shine"></div>
+        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#60a5fa;margin-bottom:1rem;">Situation Details</div>
+        <label style="font-family:var(--fm);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem;">Advisor / Firm Name</label>
+        <input id="advName" type="text" value="Nomura Securities" class="si">
+        <label style="font-family:var(--fm);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem;">Product Recommended</label>
+        <input id="advProd" type="text" value="Nomura Global Equity Fund" class="si">
+        <label style="font-family:var(--fm);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem;">Product Manufacturer</label>
+        <input id="advIss" type="text" value="Nomura Asset Management" class="si">
+        <label style="font-family:var(--fm);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem;">Commission Disclosed?</label>
+        <select id="advComm" class="si">
+          <option value="no">Not disclosed</option>
+          <option value="partial">Partially disclosed</option>
+          <option value="yes">Fully disclosed</option>
+        </select>
+        <label style="font-family:var(--fm);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem;">Additional Context</label>
+        <textarea id="advCtx" rows="3" class="si" style="resize:none;line-height:1.5;">Advisor said this is their top pick this quarter. Entry load is 3%. Mentioned limited time window.</textarea>
+        <button onclick="runAdvisor()" class="btn btn-p" style="width:100%;justify-content:center;margin-top:.25rem;">Scan for Conflicts →</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div class="card cbl card-corner" style="border-color:rgba(59,130,246,.2);display:flex;align-items:center;gap:1.5rem;padding:1.5rem;">
+          <div class="card-shine"></div>
+          <svg width="96" height="96" viewBox="0 0 96 96">
+            <circle cx="48" cy="48" r="40" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="9"/>
+            <circle id="advRing" cx="48" cy="48" r="40" fill="none" stroke="var(--red)" stroke-width="9"
+              stroke-dasharray="251" stroke-dashoffset="63" stroke-linecap="round"
+              transform="rotate(-90 48 48)" style="transition:stroke-dashoffset .8s,stroke .4s;"/>
+          </svg>
+          <div>
+            <div style="font-family:var(--fh);font-size:2.1rem;font-weight:700;" id="advSL">HIGH</div>
+            <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.1em;color:var(--muted);">Conflict Risk</div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(59,130,246,.2);padding:1.1rem;">
+          <div class="card-shine"></div>
+          <div style="font-family:var(--fm);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:#60a5fa;margin-bottom:.875rem;">Risk Factors</div>
+          <div class="cbar"><span class="cbl">Ownership tie</span><div class="cbt"><div class="cbf" id="acg1" style="width:90%;background:var(--red);"></div></div><span class="cbv" id="acv1" style="color:var(--red);">90%</span></div>
+          <div class="cbar"><span class="cbl">Commission</span><div class="cbt"><div class="cbf" id="acg2" style="width:88%;background:var(--red);"></div></div><span class="cbv" id="acv2" style="color:var(--red);">88%</span></div>
+          <div class="cbar"><span class="cbl">Sales pressure</span><div class="cbt"><div class="cbf" id="acg3" style="width:72%;background:var(--gold);"></div></div><span class="cbv" id="acv3" style="color:var(--gold);">72%</span></div>
+          <div class="cbar"><span class="cbl">Fee bias</span><div class="cbt"><div class="cbf" id="acg4" style="width:80%;background:var(--red);"></div></div><span class="cbv" id="acv4" style="color:var(--red);">80%</span></div>
+        </div>
+        <div id="advFlags" class="card" style="border-color:rgba(59,130,246,.2);padding:1rem;display:flex;flex-direction:column;gap:.5rem;">
+          <div class="card-shine"></div>
+        </div>
+        <button onclick="sendQ('My advisor '+document.getElementById('advName').value+' recommends '+document.getElementById('advProd').value+' by '+document.getElementById('advIss').value+' — full conflict and fee analysis please');document.getElementById('voice').scrollIntoView({behavior:'smooth'})" class="btn btn-o" style="justify-content:center;font-size:.85rem;">Full AI Analysis →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="div-line"><div class="div-dot" style="background:#60a5fa;box-shadow:0 0 10px #60a5fa;"></div></div>
+
+<!-- ════════════════ BUDGET PLANNER ════════════════ -->
+<section id="budget">
+  <div class="nb" style="width:650px;height:550px;background:radial-gradient(ellipse,rgba(0,255,136,.13) 0%,transparent 70%);top:-150px;right:-150px;animation-delay:-2s;"></div>
+  <!-- Star/Sun Planet -->
+  <div class="planet-deco planet-sun" aria-hidden="true">
+    <div class="planet-atmosphere"></div>
+    <div class="planet-body">
+      <div class="planet-surface"></div>
+      <div class="planet-spot"></div>
+      <div class="planet-highlight"></div>
+    </div>
+    <div class="planet-ring ring-main"></div>
+    <div class="planet-orbit"><div class="planet-moon"></div></div>
+  </div>
+
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(0,255,136,.35);background:rgba(0,255,136,.08);color:var(--green);">Budget & Savings Intelligence</div>
+    <h2 class="rv d1"><span class="gg">Budget</span> Planner</h2>
+    <p class="lead rv d2">Enter your income and expenses. Darso projects your 10-year wealth under different fee scenarios — the difference is usually shocking.</p>
+    <div class="g2 rv d3" style="gap:1.5rem;">
+      <div class="card card-corner cg">
+        <div class="card-shine"></div>
+        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:.875rem;">Monthly Cash Flow</div>
+        <div style="font-family:var(--fm);font-size:.62rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem;padding-bottom:.35rem;border-bottom:1px solid var(--border);">Income</div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem;">
+          <label style="font-size:.75rem;color:var(--muted);width:120px;flex-shrink:0;">Salary / wages</label>
+          <input type="number" id="bI1" value="450000" oninput="uBudget()" style="flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:.5rem;padding:.4rem .7rem;font-family:var(--fm);font-size:.8rem;color:var(--white);outline:none;text-align:right;">
+          <span style="font-family:var(--fm);font-size:.7rem;color:var(--green);width:22px;">IN</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.875rem;">
+          <label style="font-size:.75rem;color:var(--muted);width:120px;flex-shrink:0;">Side income</label>
+          <input type="number" id="bI2" value="0" oninput="uBudget()" style="flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:.5rem;padding:.4rem .7rem;font-family:var(--fm);font-size:.8rem;color:var(--white);outline:none;text-align:right;">
+          <span style="font-family:var(--fm);font-size:.7rem;color:var(--green);width:22px;">IN</span>
+        </div>
+        <div style="font-family:var(--fm);font-size:.62rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem;padding-bottom:.35rem;border-bottom:1px solid var(--border);">Expenses</div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem;"><label style="font-size:.75rem;color:var(--muted);width:120px;flex-shrink:0;">Rent / mortgage</label><input type="number" id="bE1" value="150000" oninput="uBudget()" style="flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:.5rem;padding:.4rem .7rem;font-family:var(--fm);font-size:.8rem;color:var(--white);outline:none;text-align:right;"><span style="font-family:var(--fm);font-size:.7rem;color:var(--red);width:22px;">OUT</span></div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem;"><label style="font-size:.75rem;color:var(--muted);width:120px;flex-shrink:0;">Food & living</label><input type="number" id="bE2" value="80000" oninput="uBudget()" style="flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:.5rem;padding:.4rem .7rem;font-family:var(--fm);font-size:.8rem;color:var(--white);outline:none;text-align:right;"><span style="font-family:var(--fm);font-size:.7rem;color:var(--red);width:22px;">OUT</span></div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem;"><label style="font-size:.75rem;color:var(--muted);width:120px;flex-shrink:0;">Transport</label><input type="number" id="bE3" value="30000" oninput="uBudget()" style="flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:.5rem;padding:.4rem .7rem;font-family:var(--fm);font-size:.8rem;color:var(--white);outline:none;text-align:right;"><span style="font-family:var(--fm);font-size:.7rem;color:var(--red);width:22px;">OUT</span></div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem;"><label style="font-size:.75rem;color:var(--muted);width:120px;flex-shrink:0;">Subscriptions</label><input type="number" id="bE4" value="20000" oninput="uBudget()" style="flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:.5rem;padding:.4rem .7rem;font-family:var(--fm);font-size:.8rem;color:var(--white);outline:none;text-align:right;"><span style="font-family:var(--fm);font-size:.7rem;color:var(--red);width:22px;">OUT</span></div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;"><label style="font-size:.75rem;color:var(--muted);width:120px;flex-shrink:0;">Other</label><input type="number" id="bE5" value="30000" oninput="uBudget()" style="flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:.5rem;padding:.4rem .7rem;font-family:var(--fm);font-size:.8rem;color:var(--white);outline:none;text-align:right;"><span style="font-family:var(--fm);font-size:.7rem;color:var(--red);width:22px;">OUT</span></div>
+        <div style="padding-top:.875rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
+          <span style="font-family:var(--fm);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Investable / month</span>
+          <span style="font-family:var(--fh);font-size:1.5rem;font-weight:700;color:var(--green);" id="bSave">¥140,000</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <span style="font-family:var(--fm);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Savings rate</span>
+          <span style="font-family:var(--fh);font-size:1.2rem;font-weight:700;" id="bRate">31.1%</span>
+        </div>
+        <button onclick="uBudget();sendQ('I earn yen '+document.getElementById('bI1').value+' per month and can invest around '+document.getElementById('bSave').textContent+' monthly. What is the best low-cost investment strategy for me?');document.getElementById('voice').scrollIntoView({behavior:'smooth'})" class="btn btn-p" style="width:100%;justify-content:center;font-size:.875rem;">Ask Darso for Strategy →</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div class="g2" style="gap:.75rem;">
+          <div class="stat"><div class="sl2">Monthly Income</div><div class="sv" id="bInOut" style="font-size:1.3rem;">¥450,000</div></div>
+          <div class="stat sr"><div class="sl2">Monthly Expenses</div><div class="sv red" id="bExOut" style="font-size:1.3rem;">¥310,000</div></div>
+        </div>
+        <div class="card cg card-corner" style="padding:1.25rem;">
+          <div class="card-shine"></div>
+          <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:1rem;">10-Year Projection (monthly contributions)</div>
+          <div style="margin-bottom:.875rem;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:.3rem;"><span style="font-size:.8rem;color:var(--green);">Low-fee index (0.06% TER)</span><span style="font-family:var(--fm);font-size:.82rem;color:var(--green);font-weight:600;" id="bLow">—</span></div>
+            <div class="prog"><div class="progf" id="bLowB" style="background:var(--green);width:80%;"></div></div>
+          </div>
+          <div style="margin-bottom:.875rem;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:.3rem;"><span style="font-size:.8rem;color:var(--gold);">Mid-fee fund (1.0% TER)</span><span style="font-family:var(--fm);font-size:.82rem;color:var(--gold);font-weight:600;" id="bMid">—</span></div>
+            <div class="prog"><div class="progf" id="bMidB" style="background:var(--gold);width:65%;"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:.3rem;"><span style="font-size:.8rem;color:var(--red);">High-fee fund (2.0% TER)</span><span style="font-family:var(--fm);font-size:.82rem;color:var(--red);font-weight:600;" id="bHigh">—</span></div>
+            <div class="prog"><div class="progf" id="bHighB" style="background:var(--red);width:50%;"></div></div>
+          </div>
+        </div>
+        <div class="vstrip green" id="bVerdict"></div>
+        <div class="card" style="padding:1rem;">
+          <div class="card-shine"></div>
+          <div style="font-family:var(--fm);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">Savings Rate Guide</div>
+          <div style="display:flex;flex-direction:column;gap:.3rem;font-size:.8rem;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Under 10%</span><span style="color:var(--red);">Financial fragility</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">10 – 20%</span><span style="color:var(--gold);">Baseline stability</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">20 – 35%</span><span style="color:var(--cyan);">Good — on track</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">35 – 50%</span><span style="color:var(--green);">Excellent — FIRE path</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Over 50%</span><span style="color:var(--purple);">Outstanding</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="position:relative;z-index:2;padding:5rem 0 3rem;border-top:1px solid var(--border);text-align:center;background:radial-gradient(ellipse at 50% 100%,rgba(0,255,136,.06),transparent 60%);">
+  <div style="font-family:var(--fh);font-size:2.8rem;font-weight:800;margin-bottom:.875rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">DARSO</div>
+  <div style="color:var(--muted);font-size:.95rem;margin-bottom:.4rem;">Your Personal Financial Intelligence System</div>
+  <div style="color:rgba(200,185,255,.35);font-size:.8rem;">Powered by Groq AI · ElevenLabs Voice · Built for the truth</div>
+  <div style="height:1px;max-width:360px;margin:2rem auto;background:linear-gradient(90deg,transparent,rgba(168,85,247,.4),transparent);"></div>
+  <div style="color:rgba(200,185,255,.22);font-family:var(--fm);font-size:.72rem;letter-spacing:.1em;">2026 DARSO · Not regulated financial advice</div>
+</footer>
+
+<script id="threeLib" src="https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.min.js" defer></script>
+<script>
+// ================================================================
+//  DARSO v6 — CLEAN BUILD · ALL FEATURES WORKING
+// ================================================================
+var AK  = '';
+var EK  = '';
+var AI_PROVIDER = 'openrouter';
+var AI_MODEL = 'openai/gpt-4.1-mini';
+var LAST_AI_ERROR = '';
+var VID = '21m00Tcm4TlvDq8ikWAM';
+var LISTENING = false;
+var HISTORY   = [];
+var CUR_AUDIO = null;
+var REC       = null;
+
+// Pre-fill provider settings saved on this browser.
+(function loadSavedAISettings() {
+  AI_PROVIDER = localStorage.getItem('darso_provider') || AI_PROVIDER;
+  AI_MODEL = localStorage.getItem('darso_model') || AI_MODEL;
+  AK = localStorage.getItem('darso_ai_key') || '';
+  EK = localStorage.getItem('darso_eleven_key') || '';
+  var ps = document.getElementById('providerSel');
+  var mi = document.getElementById('modelIn');
+  var ak = document.getElementById('akIn');
+  var ek = document.getElementById('ekIn');
+  if (ps) ps.value = AI_PROVIDER;
+  if (mi) mi.value = AI_MODEL;
+  if (ak && AK) ak.value = AK;
+  if (ek && EK) ek.value = EK;
+})();
+
+// ── STARFIELD ─────────────────────────────────────────────────────
+(function() {
+  var c = document.getElementById('sc');
+  var x = c.getContext('2d');
+  var stars = [];
+  function resize() { c.width = window.innerWidth; c.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  var cols = ['#ffffff','#c4b5fd','#67e8f9','#6ee7b7','#f9a8d4'];
+  for (var i = 0; i < 260; i++) {
+    stars.push({ x: Math.random(), y: Math.random(), r: Math.random()*1.7+.3,
+      o: Math.random()*.7+.15, s: Math.random()*2+1,
+      ph: Math.random()*Math.PI*2, col: cols[Math.floor(Math.random()*cols.length)] });
+  }
+  var t = 0;
+  function draw() {
+    x.clearRect(0,0,c.width,c.height); t += .007;
+    stars.forEach(function(s) {
+      var op = s.o*(.55+.45*Math.sin(t*s.s+s.ph));
+      x.globalAlpha = op; x.fillStyle = s.col;
+      x.shadowBlur = s.r > 1.2 ? 5 : 0; x.shadowColor = s.col;
+      x.beginPath(); x.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2); x.fill();
+    });
+    x.globalAlpha = 1; x.shadowBlur = 0;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── STOCKTOWER 3D CITY ───────────────────────────────────────────
+(function() {
+  var hero = document.getElementById('stocktower');
+  var sceneEl = document.getElementById('stocktowerScene');
+  if (!hero || !sceneEl) return;
+
+  var scrollMix = 0, pointerX = 0, pointerY = 0;
+  function moveStockTower() {
+    var rect = hero.getBoundingClientRect();
+    scrollMix = Math.max(-1, Math.min(1, rect.top / window.innerHeight));
+    sceneEl.style.setProperty('--st-parallax', (scrollMix * -34) + 'px');
+  }
+  moveStockTower();
+  window.addEventListener('scroll', moveStockTower, { passive:true });
+  window.addEventListener('resize', moveStockTower);
+  hero.addEventListener('pointermove', function(e) {
+    var r = hero.getBoundingClientRect();
+    pointerX = ((e.clientX - r.left) / r.width - .5) * 2;
+    pointerY = ((e.clientY - r.top) / r.height - .5) * 2;
+  });
+  hero.addEventListener('pointerleave', function() { pointerX = 0; pointerY = 0; });
+
+  function bootThreeStockTower() {
+  if (!window.THREE || sceneEl.dataset.threeReady === '1') return;
+  sceneEl.dataset.threeReady = '1';
+
+  var frame = hero.querySelector('.stocktower-frame');
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(48, 1, .1, 1000);
+  camera.position.set(0, 24, 62);
+
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
+  } catch(e) { return; }
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
+  sceneEl.appendChild(renderer.domElement);
+  frame.classList.add('three-ready');
+
+  scene.add(new THREE.AmbientLight(0x9ffff0, .55));
+  var keyLight = new THREE.DirectionalLight(0xffffff, 1.25);
+  keyLight.position.set(-12, 28, 24);
+  scene.add(keyLight);
+  var greenLight = new THREE.PointLight(0x00ff88, 5, 82);
+  greenLight.position.set(-18, 14, 22);
+  scene.add(greenLight);
+  var redLight = new THREE.PointLight(0xef4444, 3.8, 72);
+  redLight.position.set(22, 10, 16);
+  scene.add(redLight);
+
+  var city = new THREE.Group();
+  city.position.y = -6;
+  scene.add(city);
+
+  function makeWindowTexture(hex) {
+    var c = document.createElement('canvas');
+    c.width = 96; c.height = 192;
+    var g = c.getContext('2d');
+    g.fillStyle = '#050a12'; g.fillRect(0, 0, c.width, c.height);
+    g.fillStyle = hex;
+    for (var y = 12; y < 182; y += 18) {
+      for (var x = 12; x < 86; x += 18) {
+        if (Math.random() > .23) g.fillRect(x, y, 7, 3);
+      }
+    }
+    var tex = new THREE.CanvasTexture(c);
+    tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(1.5, 2.8);
+    return tex;
+  }
+
+  var greenTex = makeWindowTexture('#00ff88');
+  var redTex = makeWindowTexture('#ef4444');
+  var baseGeo = new THREE.BoxGeometry(1, 1, 1);
+  var edgeGeo = new THREE.EdgesGeometry(baseGeo);
+  var buildings = [];
+  var data = [
+    [-22,-16,3.8,18,4,0x00ff88],[-16,-10,4.4,25,4.8,0xef4444],[-10,-18,5,30,5.2,0x00ff88],
+    [-5,-7,5.8,38,5.8,0x00ff88],[2,-12,7,50,6.4,0x00ff88],[9,-7,5.2,32,5,0xef4444],
+    [16,-14,4.2,24,4.5,0x00ff88],[23,-10,3.7,17,4,0x00ff88],[-20,5,4.8,24,5.2,0xef4444],
+    [-13,8,5.4,35,5.5,0x00ff88],[-5,7,6.4,46,6.2,0x00ff88],[4,8,8.4,62,7.2,0x00ff88],
+    [14,7,5.6,34,5.6,0xef4444],[22,5,4.4,26,4.8,0x00ff88],[-25,18,3.8,15,4],
+    [-16,19,4.6,22,4.5],[-6,20,5.4,28,5.2],[7,20,5.8,31,5.6],[18,18,4.2,20,4.4]
+  ];
+  data.forEach(function(d, i) {
+    var color = d[5] || 0x22d3ee;
+    var mat = new THREE.MeshStandardMaterial({
+      color:0x07101a, metalness:.42, roughness:.32, map:color === 0xef4444 ? redTex : greenTex,
+      emissive:new THREE.Color(color), emissiveIntensity:.2
+    });
+    var mesh = new THREE.Mesh(baseGeo, mat);
+    mesh.scale.set(d[2], d[3], d[4]);
+    mesh.position.set(d[0], d[3] / 2, d[1]);
+    var edge = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({
+      color:color, transparent:true, opacity:.55, blending:THREE.AdditiveBlending
+    }));
+    mesh.add(edge);
+    city.add(mesh);
+    buildings.push({ mesh:mesh, base:d[3], phase:i * .71, color:color });
+  });
+
+  var grid = new THREE.GridHelper(72, 36, 0x00ff88, 0x12352a);
+  grid.material.transparent = true; grid.material.opacity = .28;
+  city.add(grid);
+  var floor = new THREE.Mesh(new THREE.PlaneGeometry(82, 58), new THREE.MeshBasicMaterial({
+    color:0x00170e, transparent:true, opacity:.28, side:THREE.DoubleSide
+  }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = -.04;
+  city.add(floor);
+
+  function addVine(cx, cz, radius, height, color, phase) {
+    var pts = [];
+    for (var i = 0; i < 92; i++) {
+      var y = i / 91 * height;
+      var a = y * .33 + phase;
+      pts.push(new THREE.Vector3(cx + Math.cos(a) * radius, y, cz + Math.sin(a) * radius));
+    }
+    var geo = new THREE.BufferGeometry().setFromPoints(pts);
+    var mat = new THREE.LineBasicMaterial({ color:color, transparent:true, opacity:.82, blending:THREE.AdditiveBlending });
+    var line = new THREE.Line(geo, mat);
+    city.add(line);
+    return line;
+  }
+  var vines = [
+    addVine(4, 8, 6.2, 68, 0x00ff88, 0),
+    addVine(4, 8, 8.1, 62, 0x22d3ee, 2.1),
+    addVine(9, -7, 5.2, 42, 0xef4444, 1.4),
+    addVine(-5, 7, 5.4, 52, 0x00ff88, 3.2)
+  ];
+
+  var particleCount = 900;
+  var positions = new Float32Array(particleCount * 3);
+  var colors = new Float32Array(particleCount * 3);
+  var speeds = new Float32Array(particleCount);
+  var dirs = new Float32Array(particleCount);
+  for (var p = 0; p < particleCount; p++) {
+    var up = Math.random() > .24;
+    positions[p*3] = (Math.random() - .5) * 58;
+    positions[p*3+1] = Math.random() * 54;
+    positions[p*3+2] = (Math.random() - .5) * 42;
+    speeds[p] = .035 + Math.random() * .115;
+    dirs[p] = up ? 1 : -1;
+    colors[p*3] = up ? 0 : 1; colors[p*3+1] = up ? 1 : .18; colors[p*3+2] = up ? .53 : .18;
+  }
+  var particleGeo = new THREE.BufferGeometry();
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  var particleMat = new THREE.PointsMaterial({
+    size:.24, vertexColors:true, transparent:true, opacity:.9, depthWrite:false,
+    blending:THREE.AdditiveBlending, sizeAttenuation:true
+  });
+  var particles = new THREE.Points(particleGeo, particleMat);
+  city.add(particles);
+
+  function resizeStockTower() {
+    var r = sceneEl.getBoundingClientRect();
+    var w = Math.max(1, r.width), h = Math.max(1, r.height);
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resizeStockTower();
+  window.addEventListener('resize', resizeStockTower);
+
+  var clock = new THREE.Clock();
+  function animateStockTower() {
+    requestAnimationFrame(animateStockTower);
+    var t = clock.getElapsedTime();
+    city.rotation.y = Math.sin(t * .18) * .12 + pointerX * .12;
+    city.rotation.x = -0.04 + pointerY * .035;
+    greenLight.intensity = 4.4 + Math.sin(t * 1.7) * .9;
+    redLight.intensity = 3.2 + Math.cos(t * 1.25) * .6;
+    buildings.forEach(function(b) {
+      var h = b.base * (1 + Math.sin(t * 1.18 + b.phase) * .045);
+      b.mesh.scale.y = h;
+      b.mesh.position.y = h / 2;
+      b.mesh.material.emissiveIntensity = .16 + Math.max(0, Math.sin(t * 1.6 + b.phase)) * .16;
+    });
+    vines.forEach(function(v, i) { v.rotation.y = t * (.18 + i * .035); });
+    var pos = particleGeo.attributes.position.array;
+    for (var i = 0; i < particleCount; i++) {
+      var j = i * 3;
+      pos[j+1] += speeds[i] * dirs[i];
+      pos[j] += Math.sin(t * 1.8 + i) * .006;
+      if (dirs[i] > 0 && pos[j+1] > 68) pos[j+1] = 0;
+      if (dirs[i] < 0 && pos[j+1] < 0) pos[j+1] = 68;
+    }
+    particleGeo.attributes.position.needsUpdate = true;
+    camera.position.x = pointerX * 5;
+    camera.position.y = 24 + scrollMix * 3 + pointerY * 1.4;
+    camera.position.z = 62 + scrollMix * 5;
+    camera.lookAt(0, 18, 0);
+    renderer.render(scene, camera);
+  }
+  animateStockTower();
+  }
+
+  var threeLib = document.getElementById('threeLib');
+  if (window.THREE) bootThreeStockTower();
+  else if (threeLib) threeLib.addEventListener('load', bootThreeStockTower, { once:true });
+})();
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────────
+var obs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.rv').forEach(function(el) { obs.observe(el); });
+
+// ── TICKER ────────────────────────────────────────────────────────
+var STOCK_SYMBOLS = ['N225','^GSPC','BTC-USD','ETH-USD','GC=F','SOL-USD','INR=X'];
+var TICKER_IDS = { 'N225':'tNK', '^GSPC':'tSP', 'BTC-USD':'tBT', 'ETH-USD':'tET', 'GC=F':'tGL', 'SOL-USD':'tSL', 'INR=X':'tIN' };
+var TICKER_CHANGE_IDS = { 'N225':'tcNK', '^GSPC':'tcSP', 'BTC-USD':'tcBT', 'ETH-USD':'tcET', 'GC=F':'tcGL', 'SOL-USD':'tcSL', 'INR=X':'tcIN' };
+var TICKER_DECIMALS = { 'N225':0, '^GSPC':0, 'BTC-USD':0, 'ETH-USD':0, 'GC=F':0, 'SOL-USD':2, 'INR=X':2 };
+var LAST_QUOTES = {};
+
+function formatPrice(sym, value) {
+  var decimals = TICKER_DECIMALS[sym] || 2;
+  return Number(value).toFixed(decimals);
+}
+
+function renderQuoteResult(quotes, query) {
+  var el = document.getElementById('stockSearchResult');
+  if (!el) return;
+  if (!quotes || !quotes.length) {
+    el.textContent = 'No quote found for ' + query + '. Try another symbol.';
+    return;
+  }
+  var q = quotes[0];
+  el.innerHTML = '<div style="width:100%;">'
+    + '<strong style="font-size:1rem;color:#ffffff;">' + q.name + ' (' + q.symbol + ')</strong>'
+    + '<div style="margin-top:.45rem;display:flex;gap:1rem;flex-wrap:wrap;">'
+    + '<span>Price: ' + (q.price !== null ? q.price : 'n/a') + ' ' + (q.currency || '') + '</span>'
+    + '<span>Change: ' + (q.change !== null ? (q.change >= 0 ? '+' : '') + q.change.toFixed(2) : 'n/a') + '</span>'
+    + '<span>Change %: ' + (q.changePercent !== null ? (q.changePercent >= 0 ? '+' : '') + q.changePercent.toFixed(2) + '%' : 'n/a') + '</span>'
+    + '<span>Market: ' + (q.marketState || 'N/A') + '</span>'
+    + '</div></div>';
+}
+
+function applyTickerQuotes(quotes) {
+  quotes.forEach(function(q) {
+    if (!q || !q.symbol) return;
+    var id = TICKER_IDS[q.symbol];
+    var changeId = TICKER_CHANGE_IDS[q.symbol];
+    if (!id || !changeId) return;
+    LAST_QUOTES[q.symbol] = q;
+    var price = q.price == null ? '--' : formatPrice(q.symbol, q.price);
+    var change = q.change == null ? '--' : (q.change >= 0 ? '+' : '') + q.change.toFixed(2);
+    var pct = q.changePercent == null ? '--' : (q.changePercent >= 0 ? '+' : '') + q.changePercent.toFixed(2) + '%';
+    var priceEl = document.getElementById(id);
+    var changeEl = document.getElementById(changeId);
+    if (priceEl) priceEl.textContent = price;
+    if (changeEl) {
+      changeEl.textContent = pct;
+      changeEl.className = q.change >= 0 ? 'tu' : 'td';
+    }
+  });
+}
+
+function refreshMarketTicker() {
+  return fetch('/api/stock?symbols=' + encodeURIComponent(STOCK_SYMBOLS.join(',')))
+    .then(function(res) {
+      if (!res.ok) throw new Error('Stock API error ' + res.status);
+      return res.json();
+    })
+    .then(function(data) {
+      if (!data.quotes) throw new Error('Invalid stock response');
+      applyTickerQuotes(data.quotes);
+    })
+    .catch(function(err) {
+      console.warn('Ticker refresh failed:', err.message);
+    });
+}
+
+function searchStock() {
+  var queryEl = document.getElementById('stockQuery');
+  var resultEl = document.getElementById('stockSearchResult');
+  if (!queryEl || !resultEl) return;
+  var query = queryEl.value.trim();
+  if (!query) {
+    resultEl.textContent = 'Enter a stock symbol like AAPL, TSLA, or N225.';
+    return;
+  }
+  resultEl.textContent = 'Searching for ' + query.toUpperCase() + '...';
+  fetch('/api/stock?symbols=' + encodeURIComponent(query.toUpperCase()))
+    .then(function(res) {
+      if (!res.ok) return res.json().then(function(d) { throw new Error(d.error || 'Stock quote failed'); });
+      return res.json();
+    })
+    .then(function(data) {
+      renderQuoteResult(data.quotes || [], query.toUpperCase());
+    })
+    .catch(function(err) {
+      resultEl.textContent = err.message || 'Could not load quote.';
+    });
+}
+
+refreshMarketTicker();
+setInterval(refreshMarketTicker, 60000);
+
+// ── API KEYS ──────────────────────────────────────────────────────
+var MODEL_DEFAULTS = {
+  openrouter:'openai/gpt-4.1-mini',
+  openai:'gpt-4.1-mini',
+  gemini:'gemini-2.5-flash',
+  groq:'llama-3.3-70b-versatile'
+};
+function setProviderDefaults() {
+  var ps = document.getElementById('providerSel');
+  var mi = document.getElementById('modelIn');
+  if (!ps || !mi) return;
+  AI_PROVIDER = ps.value;
+  if (!mi.value || Object.keys(MODEL_DEFAULTS).some(function(k){ return mi.value === MODEL_DEFAULTS[k]; })) {
+    mi.value = MODEL_DEFAULTS[AI_PROVIDER];
+  }
+  var ak = document.getElementById('akIn');
+  if (ak) {
+    ak.placeholder = AI_PROVIDER === 'openrouter' ? 'OpenRouter sk-or-v1...' :
+      AI_PROVIDER === 'gemini' ? 'Gemini AIza...' :
+      AI_PROVIDER === 'groq' ? 'Groq gsk_...' : 'OpenAI sk-...';
+  }
+}
+function saveKeys() {
+  var ps = document.getElementById('providerSel');
+  var mi = document.getElementById('modelIn');
+  var ak = document.getElementById('akIn').value.trim();
+  var ek = document.getElementById('ekIn').value.trim();
+  AI_PROVIDER = ps ? ps.value : AI_PROVIDER;
+  AI_MODEL = mi && mi.value.trim() ? mi.value.trim() : MODEL_DEFAULTS[AI_PROVIDER];
+  if (ak.length > 10) { AK = ak; localStorage.setItem('darso_ai_key', AK); }
+  if (ek.length > 10) { EK = ek; localStorage.setItem('darso_eleven_key', EK); }
+  localStorage.setItem('darso_provider', AI_PROVIDER);
+  localStorage.setItem('darso_model', AI_MODEL);
+  document.getElementById('keyStatus').textContent = AI_PROVIDER + ' active · model ' + AI_MODEL;
+  toast('AI provider saved');
+}
+setProviderDefaults();
+if (AK && document.getElementById('keyStatus')) {
+  document.getElementById('keyStatus').textContent = AI_PROVIDER + ' active · model ' + AI_MODEL;
+}
+function checkBackendStatus() {
+  var ks = document.getElementById('keyStatus');
+  if (!ks) return;
+  fetch('/api/health').then(function(r) {
+    if (!r.ok) throw new Error('offline');
+    return r.json();
+  }).then(function(d) {
+    ks.style.color = d.chat ? 'var(--green)' : 'var(--gold)';
+    ks.textContent = d.chat ? 'Backend connected · finance AI ready' : 'Backend running · add OPENROUTER_API_KEY in .env';
+  }).catch(function() {
+    ks.style.color = 'var(--gold)';
+    ks.textContent = 'Backend offline · run npm start and open http://localhost:3000';
+  });
+}
+checkBackendStatus();
+
+// ── VOICE SELECT ──────────────────────────────────────────────────
+function setVoice(id, name, btn) {
+  VID = id;
+  document.querySelectorAll('#v0,#v1,#v2,#v3').forEach(function(b) {
+    b.className = 'bsm bsm-p';
+  });
+  btn.className = 'bsm bsm-c';
+  toast('Voice: ' + name);
+}
+
+// ── ORB STATES ────────────────────────────────────────────────────
+function setOrb(state) {
+  var orb  = document.getElementById('mainOrb');
+  var icon = document.getElementById('orbIcon');
+  var wave = document.getElementById('waveEl');
+  var lbl  = document.getElementById('orbLbl');
+  var mic  = document.getElementById('micBtn');
+
+  orb.className = 'orb';
+  wave.style.opacity = '0';
+
+  if (state === 'idle') {
+    icon.style.color = 'var(--purple)';
+    lbl.textContent  = 'Tap orb to speak';
+    if (mic) mic.textContent = 'Activate Voice';
+  } else if (state === 'listen') {
+    orb.classList.add('listening');
+    icon.style.color   = 'var(--green)';
+    wave.style.opacity = '1';
+    lbl.textContent    = 'Listening... speak now';
+    if (mic) mic.textContent = 'Stop Listening';
+  } else if (state === 'think') {
+    orb.classList.add('listening');
+    icon.style.color = 'var(--cyan)';
+    lbl.textContent  = 'Darso is thinking...';
+  } else if (state === 'speak') {
+    orb.classList.add('speaking');
+    icon.style.color   = 'var(--cyan)';
+    wave.style.opacity = '1';
+    lbl.textContent    = 'Darso is responding...';
+  }
+}
+
+// ── MIC ───────────────────────────────────────────────────────────
+function toggleListen() {
+  if (LISTENING) { stopListen(); } else { startListen(); }
+}
+function startListen() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Use Chrome for voice input — press F12 to check for errors'); return; }
+  REC = new SR();
+  REC.continuous = false; REC.interimResults = false; REC.lang = 'en-US';
+  REC.onresult = function(e) { var t = e.results[0][0].transcript; stopListen(); sendQ(t); };
+  REC.onerror  = function(e) { stopListen(); toast('Mic error: ' + e.error); };
+  REC.onend    = function()  { if (LISTENING) stopListen(); };
+  try { REC.start(); LISTENING = true; setOrb('listen'); }
+  catch(e) { toast('Mic could not start: ' + e.message); }
+}
+function stopListen() {
+  if (REC) { try { REC.stop(); } catch(e) {} }
+  LISTENING = false; setOrb('idle');
+}
+
+// ── ELEVENLABS TTS ────────────────────────────────────────────────
+function speakText(text) {
+  var plain = text.replace(/<[^>]+>/g,'').replace(/\[.*?\]/g,'')
+    .replace(/SIMPLE TRUTH:/g,'').replace(/WHY IT MATTERS:/g,'').replace(/DO THIS NOW:/g,'').trim();
+  var sents  = plain.match(/[^.!?]+[.!?]+/g) || [plain];
+  var chunks = []; var cur = '';
+  sents.forEach(function(s) {
+    s = s.trim(); if (!s) return;
+    if ((cur+' '+s).length < 150) { cur = cur ? cur+' '+s : s; }
+    else { if (cur) chunks.push(cur); cur = s; }
+  });
+  if (cur) chunks.push(cur);
+  if (!chunks.length) return;
+  if (CUR_AUDIO) { try { CUR_AUDIO.pause(); } catch(e) {} CUR_AUDIO = null; }
+  window.speechSynthesis.cancel();
+  setOrb('speak');
+  speakChunk(chunks, 0);
+}
+function speakChunk(chunks, idx) {
+  if (idx >= chunks.length) { setOrb('idle'); return; }
+  var ttsUrl = EK ? 'https://api.elevenlabs.io/v1/text-to-speech/'+VID : '/api/tts';
+  var headers = EK ? {'xi-api-key':EK,'Content-Type':'application/json'} : {'Content-Type':'application/json'};
+  fetch(ttsUrl, {
+    method:'POST',
+    headers:headers,
+    body:JSON.stringify({ text:chunks[idx], model_id:'eleven_turbo_v2_5',
+      voiceId:VID, voice_settings:{ stability:.35, similarity_boost:.85, style:.45, use_speaker_boost:true } })
+  }).then(function(r) {
+    if (!r.ok) throw new Error('EL '+r.status); return r.blob();
+  }).then(function(blob) {
+    var url = URL.createObjectURL(blob); var a = new Audio(url); CUR_AUDIO = a;
+    a.onended = function() { URL.revokeObjectURL(url); speakChunk(chunks, idx+1); };
+    a.onerror = function() { URL.revokeObjectURL(url); speakBrowser(chunks.slice(idx).join(' ')); };
+    a.play().catch(function() { speakBrowser(chunks.slice(idx).join(' ')); });
+  }).catch(function(e) { toast('Voice: '+e.message.substring(0,35)); speakBrowser(chunks.slice(idx).join(' ')); });
+}
+function speakBrowser(text) {
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text.substring(0,400));
+  u.rate = .88; u.pitch = .95;
+  var vs = window.speechSynthesis.getVoices();
+  var pick = vs.find(function(v) { return v.lang.indexOf('en')===0 && v.name.toLowerCase().indexOf('female')>-1; })
+    || vs.find(function(v) { return v.lang.indexOf('en')===0; });
+  if (pick) u.voice = pick;
+  u.onstart = function() { setOrb('speak'); };
+  u.onend   = function() { setOrb('idle'); };
+  u.onerror = function() { setOrb('idle'); };
+  window.speechSynthesis.speak(u);
+}
+
+// ── GROQ AI ───────────────────────────────────────────────────────
+var SYS = 'You are DARSO, a professional financial intelligence AI. Direct, honest, always on the user side.\n\nALWAYS use this exact structure:\n\n[VERDICT] — RED FLAG, CAUTION, CLEAR, or ANALYZING\n\nSIMPLE TRUTH: 1-2 sentences plain English, one real number or comparison.\n\nWHY IT MATTERS: One sentence on the money consequence.\n\nDO THIS NOW: One specific concrete action.\n\nRules: Under 130 words total. Answer the exact question asked. No jargon without explanation.';
+
+function callGroq(q, cb) {
+  if (HISTORY.length > 8) HISTORY = HISTORY.slice(-8);
+  HISTORY.push({ role:'user', content:q });
+  var models = ['llama-3.3-70b-versatile','llama-3.1-8b-instant','mixtral-8x7b-32768'];
+  tryModel(models, 0, cb);
+}
+function tryModel(models, idx, cb) {
+  if (idx >= models.length) { cb(null); return; }
+  var tid = setTimeout(function() { tryModel(models, idx+1, cb); }, 9000);
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method:'POST',
+    headers:{'Authorization':'Bearer '+AK,'Content-Type':'application/json'},
+    body:JSON.stringify({ model:models[idx], max_tokens:220, temperature:.55,
+      messages:[{role:'system',content:SYS}].concat(HISTORY) })
+  }).then(function(r) {
+    clearTimeout(tid);
+    if (!r.ok) { tryModel(models, idx+1, cb); return; }
+    return r.json();
+  }).then(function(d) {
+    if (!d) return;
+    if (!d.choices||!d.choices[0]) { tryModel(models, idx+1, cb); return; }
+    var rep = d.choices[0].message.content.trim();
+    HISTORY.push({ role:'assistant', content:rep }); cb(rep);
+  }).catch(function() { clearTimeout(tid); tryModel(models, idx+1, cb); });
+}
+
+// Broader finance brain. This overrides the old Groq-only prompt and lets
+// Darso answer general finance questions through OpenRouter/OpenAI/Gemini/Groq.
+SYS = 'You are DARSO, a professional financial intelligence AI. You answer finance questions broadly: investing, ETFs, mutual funds, stocks, bonds, crypto risk, retirement, emergency funds, budgeting, debt payoff, insurance, tax concepts, fees, advisor conflicts, scams, portfolio allocation, and financial planning tradeoffs. You are direct, numerate, and on the user side, but you do not pretend to be a licensed advisor, tax lawyer, or accountant. If the question needs location, income, age, goals, time horizon, risk tolerance, debts, tax status, or current prices and they are missing, state the missing assumption clearly and give a useful framework anyway. Do not invent live market prices or legal/tax rules; say when live verification is needed.\n\nALWAYS use this exact structure:\n\n[VERDICT] — RED FLAG, CAUTION, CLEAR, or ANALYZING\n\nSIMPLE TRUTH: 1-3 sentences plain English with at least one useful number, ratio, rule of thumb, or comparison when possible.\n\nWHY IT MATTERS: One sentence on the money consequence, risk, or decision impact.\n\nDO THIS NOW: One specific concrete action or question to ask next.\n\nRules: Under 170 words total. Answer the exact question asked. No jargon without explanation. Never guarantee returns.';
+
+function financeMessages() {
+  return [{ role:'system', content:SYS }].concat(HISTORY);
+}
+function withTimeout(promise, ms) {
+  return new Promise(function(resolve, reject) {
+    var done = false;
+    var tid = setTimeout(function(){ if (!done) { done = true; reject(new Error('timeout')); } }, ms);
+    promise.then(function(v){ if (!done) { done = true; clearTimeout(tid); resolve(v); } })
+      .catch(function(e){ if (!done) { done = true; clearTimeout(tid); reject(e); } });
+  });
+}
+function callAI(q, cb) {
+  if (HISTORY.length > 10) HISTORY = HISTORY.slice(-10);
+  HISTORY.push({ role:'user', content:q });
+  callProxyAI().then(function(rep) {
+    if (rep) HISTORY.push({ role:'assistant', content:rep });
+    cb(rep || null);
+  }).catch(function(e) {
+    LAST_AI_ERROR = e.message || 'backend unavailable';
+    if (!AK) { cb(null); return; }
+    AI_PROVIDER = (document.getElementById('providerSel') || {}).value || AI_PROVIDER;
+    AI_MODEL = ((document.getElementById('modelIn') || {}).value || AI_MODEL || MODEL_DEFAULTS[AI_PROVIDER]).trim();
+    var run = AI_PROVIDER === 'gemini' ? callGemini() :
+      AI_PROVIDER === 'openai' ? callOpenAI() :
+      AI_PROVIDER === 'groq' ? callOpenAICompatible('https://api.groq.com/openai/v1/chat/completions') :
+      callOpenAICompatible('https://openrouter.ai/api/v1/chat/completions', true);
+    withTimeout(run, 18000).then(function(rep) {
+      if (rep) HISTORY.push({ role:'assistant', content:rep });
+      cb(rep || null);
+    }).catch(function(err) {
+      LAST_AI_ERROR = err.message || 'request failed';
+      toast((AI_PROVIDER || 'AI') + ' error: ' + (err.message || 'request failed').substring(0, 42));
+      cb(null);
+    });
+  });
+}
+function callProxyAI() {
+  return withTimeout(fetch('/api/chat', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ messages:financeMessages(), model:AI_MODEL || MODEL_DEFAULTS.openrouter })
+  }).then(function(r) {
+    if (!r.ok) {
+      return r.json().catch(function(){ return {}; }).then(function(d) {
+        throw new Error(d.error || ('backend '+r.status));
+      });
+    }
+    return r.json();
+  }).then(function(d) {
+    return (d.reply || d.text || '').trim() || null;
+  }), 18000);
+}
+function callOpenAICompatible(url, isOpenRouter) {
+  var headers = {'Authorization':'Bearer '+AK,'Content-Type':'application/json'};
+  if (isOpenRouter) {
+    headers['HTTP-Referer'] = location.href;
+    headers['X-Title'] = 'DARSO Financial Intelligence';
+  }
+  return fetch(url, {
+    method:'POST',
+    headers:headers,
+    body:JSON.stringify({
+      model:AI_MODEL || MODEL_DEFAULTS[AI_PROVIDER],
+      max_tokens:360,
+      temperature:.42,
+      messages:financeMessages()
+    })
+  }).then(function(r) {
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(function(d) {
+    return d && d.choices && d.choices[0] && d.choices[0].message ?
+      d.choices[0].message.content.trim() : null;
+  });
+}
+function callOpenAI() {
+  var input = HISTORY.map(function(m) {
+    return { role:m.role === 'assistant' ? 'assistant' : 'user', content:m.content };
+  });
+  return fetch('https://api.openai.com/v1/responses', {
+    method:'POST',
+    headers:{'Authorization':'Bearer '+AK,'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:AI_MODEL || MODEL_DEFAULTS.openai,
+      instructions:SYS,
+      input:input,
+      max_output_tokens:380,
+      temperature:.42
+    })
+  }).then(function(r) {
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(function(d) {
+    if (d.output_text) return d.output_text.trim();
+    var out = [];
+    (d.output || []).forEach(function(item) {
+      (item.content || []).forEach(function(c) { if (c.text) out.push(c.text); });
+    });
+    return out.join('\n').trim() || null;
+  });
+}
+function callGemini() {
+  var contents = HISTORY.map(function(m) {
+    return { role:m.role === 'assistant' ? 'model' : 'user', parts:[{ text:m.content }] };
+  });
+  var model = (AI_MODEL || MODEL_DEFAULTS.gemini).replace(/^models\//,'');
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent?key='+encodeURIComponent(AK), {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      systemInstruction:{ parts:[{ text:SYS }] },
+      contents:contents,
+      generationConfig:{ temperature:.42, maxOutputTokens:380 }
+    })
+  }).then(function(r) {
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(function(d) {
+    var parts = d && d.candidates && d.candidates[0] && d.candidates[0].content ?
+      d.candidates[0].content.parts || [] : [];
+    return parts.map(function(p){ return p.text || ''; }).join('').trim() || null;
+  });
+}
+function parseResp(text) {
+  var verdict = 'ANALYZING';
+  var vm = text.match(/^\[(.*?)\]/);
+  if (vm) { verdict = vm[1]; text = text.replace(/^\[.*?\]\s*/,''); }
+  var truth='', matters='', action='';
+  var tm = text.match(/SIMPLE TRUTH:\s*([\s\S]*?)(?=WHY IT MATTERS:|DO THIS NOW:|$)/i);
+  var mm = text.match(/WHY IT MATTERS:\s*([\s\S]*?)(?=DO THIS NOW:|$)/i);
+  var am = text.match(/DO THIS NOW:\s*([\s\S]*?)$/i);
+  if (tm) truth   = tm[1].trim();
+  if (mm) matters = mm[1].trim();
+  if (am) action  = am[1].trim();
+  if (!truth) {
+    var sents = text.split(/\.\s+/).filter(function(s){return s.trim();});
+    truth   = sents[0] ? sents[0]+'.' : text;
+    matters = sents[1] ? sents[1]+'.' : '';
+    action  = sents.slice(2).join('. ');
+  }
+  return { verdict:verdict, truth:truth, matters:matters, action:action };
+}
+function fallback(q) {
+  var l = q.toLowerCase();
+  if (l.indexOf('nippon')>-1||l.indexOf('active value')>-1)
+    return '[CAUTION]\nSIMPLE TRUTH: Nippon Active Value Fund charges 1.8% per year. On 1 million yen over 20 years, that costs approximately 1.8 million yen in wealth you never see.\nWHY IT MATTERS: eMAXIS Slim All Country charges 0.06%, thirty times cheaper, for nearly identical returns.\nDO THIS NOW: Open Fee X-Ray below, set TER to 1.8%, and see the exact money lost versus a 0.06% fund.';
+  if (l.indexOf('nomura')>-1||l.indexOf('conflict')>-1)
+    return '[RED FLAG]\nSIMPLE TRUTH: Nomura recommending a Nomura fund is like a car salesman recommending their own car. They earn trail commissions every year you stay invested.\nWHY IT MATTERS: Their financial incentive is keeping you in the fund, not growing your wealth. The TER is 1.85%, thirty times more than a passive equivalent.\nDO THIS NOW: Ask in writing how much commission they earn from this recommendation.';
+  if (l.indexOf('2%')>-1||l.indexOf('2 percent')>-1||l.indexOf('management fee')>-1)
+    return '[RED FLAG]\nSIMPLE TRUTH: A 2% fee is extremely high. The cheapest Japan equity fund costs 0.15%. On 1 million yen over 20 years, that difference costs approximately 2.1 million yen.\nWHY IT MATTERS: The fund must beat the market by 2% every year just to match a cheap index. Almost no fund does this consistently.\nDO THIS NOW: Ask for the 10-year returns versus TOPIX after all fees. If they cannot show you, walk away.';
+  if (l.indexOf('emaxis')>-1||l.indexOf('ishares')>-1)
+    return '[CLEAR]\nSIMPLE TRUTH: eMAXIS Slim charges 0.058% per year. iShares MSCI Japan charges 0.50%. They track nearly identical markets. The only real difference is cost.\nWHY IT MATTERS: Over 20 years on 1 million yen, that gap saves approximately 420,000 yen in fees that stay invested and keep compounding.\nDO THIS NOW: If you hold iShares for Japan exposure, switch to eMAXIS Slim. Same market, nine times cheaper.';
+  if (l.indexOf('softbank')>-1||l.indexOf('vision fund')>-1)
+    return '[RED FLAG]\nSIMPLE TRUTH: SoftBank Vision Fund 2 is a VC fund, not retail investing. It is illiquid, down heavily from peak, charges 2.1% annually, and SoftBank is both manager and biggest investor.\nWHY IT MATTERS: Retail investors take full risk without the insider control that institutions have.\nDO THIS NOW: Exit at the earliest opportunity and move to a diversified low-cost index fund.';
+  if (l.indexOf('hello')>-1||l.indexOf('hi')>-1||l.indexOf('what can')>-1||l.indexOf('who are')>-1)
+    return '[ANALYZING]\nSIMPLE TRUTH: I am Darso, your financial truth detector. I cut through marketing spin, expose hidden fees, detect advisor conflicts, and give you the unfiltered facts on any investment product.\nWHY IT MATTERS: Most people lose tens of thousands to hidden fees and advisor conflicts they never knew existed.\nDO THIS NOW: Ask me about any fund you are considering, any advisor recommendation, or any product you are unsure about.';
+  return '[CAUTION]\nSIMPLE TRUTH: Darso is not connected to the backend AI proxy right now. The page must be opened from http://localhost:3000 after running npm start, and the server needs OPENROUTER_API_KEY in the .env file.\nWHY IT MATTERS: Opening index.html directly cannot call /api/chat, so broad finance answers will not work.\nDO THIS NOW: Create .env from .env.example, add your rotated OpenRouter key, run npm start, then open http://localhost:3000. Last error: '+(LAST_AI_ERROR || 'backend unavailable')+'.';
+}
+
+// ── SEND QUERY ────────────────────────────────────────────────────
+function sendQ(q) {
+  var qi = document.getElementById('qi');
+  var query = q || qi.value.trim(); if (!query) return; qi.value = '';
+  var msgs = document.getElementById('chatMsgs');
+  var um = document.createElement('div'); um.className='mu'; um.textContent = query;
+  msgs.appendChild(um);
+  var ty = document.createElement('div'); ty.className='tyind';
+  ty.innerHTML = '<div class="tdots"><div class="td2"></div><div class="td2"></div><div class="td2"></div></div>Darso is analyzing...';
+  msgs.appendChild(ty); msgs.scrollTop = msgs.scrollHeight; setOrb('think');
+
+  callAI(query, function(reply) {
+    ty.remove(); setOrb('idle');
+    var raw = reply || fallback(query);
+    var p   = parseResp(raw);
+    var pc  = 'purple';
+    if (/RED FLAG|AVOID/i.test(p.verdict))   pc = 'red';
+    else if (/CAUTION|WARNING/i.test(p.verdict)) pc = 'gold';
+    else if (/CLEAR|SAFE/i.test(p.verdict))   pc = 'green';
+
+    var am = document.createElement('div'); am.className = 'ma '+pc;
+    var vc = pc==='red'?'vtr':pc==='gold'?'vtgd':pc==='green'?'vtg':'vtp';
+    var html = '<span class="vtag '+vc+'">'+esc(p.verdict)+'</span>';
+    if (p.truth)   html += '<div class="mpart"><div class="mpl" style="color:var(--cyan);">Simple Truth</div>'+esc(p.truth)+'</div>';
+    if (p.matters) html += '<div class="mpart"><div class="mpl" style="color:var(--gold);">Why It Matters</div>'+esc(p.matters)+'</div>';
+    if (p.action)  html += '<div class="mpart"><div class="mpl" style="color:var(--green);">Do This Now</div>'+esc(p.action)+'</div>';
+    am.innerHTML = html;
+    msgs.appendChild(am); msgs.scrollTop = msgs.scrollHeight;
+    speakText((p.truth||'') + '. ' + (p.matters||'') + '. ' + (p.action||''));
+    uFee();
+  });
+}
+function clearChat() { document.getElementById('chatMsgs').innerHTML=''; HISTORY=[]; toast('Chat cleared'); }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── PORTFOLIO ─────────────────────────────────────────────────────
+function askPortfolio() {
+  var rows=[]; document.querySelectorAll('#holdBody tr').forEach(function(r){var c=r.querySelectorAll('td');if(c.length)rows.push(c[0].textContent+' TER '+c[2].textContent);});
+  sendQ('Analyze my portfolio: '+rows.join(', ')+'. Give fee drag and conflict summary.');
+  document.getElementById('voice').scrollIntoView({behavior:'smooth'});
+}
+function addHolding() {
+  var n=document.getElementById('hN').value.trim(); var v=parseFloat(document.getElementById('hV').value); var t=parseFloat(document.getElementById('hT').value);
+  if(!n||!v){toast('Enter fund name and value');return;}
+  var tc=t>1?'td-r':t>0.3?'td-gd':'td-g'; var tb=document.getElementById('holdBody');
+  var tr=document.createElement('tr');
+  tr.innerHTML='<td>'+esc(n)+'</td><td class="td-gd">¥'+(v*1e6).toLocaleString()+'</td><td class="'+tc+'">'+(t||0).toFixed(2)+'%</td><td class="td-m">—</td><td><span class="flag flo">—</span></td><td><button onclick="sendQ(\'Analyze '+esc(n)+' fees and conflicts\');document.getElementById(\'voice\').scrollIntoView({behavior:\'smooth\'})" style="background:none;border:none;font-family:var(--fm);font-size:.7rem;color:var(--purple);cursor:pointer;">Analyze →</button></td>';
+  tb.appendChild(tr); document.getElementById('hN').value=''; document.getElementById('hV').value=''; document.getElementById('hT').value=''; document.getElementById('addHR').style.display='none'; toast('Holding added: '+n);
+}
+
+// ── FEE X-RAY ─────────────────────────────────────────────────────
+function fmtM(n){if(n>=1e6)return 'Y'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return 'Y'+Math.round(n/1000)+'k';return 'Y'+Math.round(n);}
+function uFee() {
+  var o=parseFloat(document.getElementById('f1').value),pl=parseFloat(document.getElementById('f2').value),
+      tr=parseFloat(document.getElementById('f3').value),en=parseFloat(document.getElementById('f4').value),
+      P=parseFloat(document.getElementById('f5').value)*1e6,Y=parseFloat(document.getElementById('f6').value);
+  document.getElementById('fv1').textContent=o.toFixed(2)+'%'; document.getElementById('fv2').textContent=pl.toFixed(2)+'%';
+  document.getElementById('fv3').textContent=tr.toFixed(2)+'%'; document.getElementById('fv4').textContent=en.toFixed(2)+'%';
+  document.getElementById('fv5').textContent='Y'+(P/1e6).toFixed(1)+'M'; document.getElementById('fv6').textContent=Y;
+  var tf=(o+pl+tr)/100,nr=.07-tf-.025,sp=P*(1-en/100);
+  var fW=Math.max(0,sp*Math.pow(1+nr,Y)),fN=P*Math.pow(1+.045,Y),drag=Math.max(0,fN-fW);
+  var pct=Math.max(0,Math.min(99,Math.round(drag/fN*100)));
+  document.getElementById('fo1').textContent=(tf*100).toFixed(2)+'%'; document.getElementById('fo2').textContent=(nr*100).toFixed(2)+'%';
+  document.getElementById('fo3').textContent=fmtM(fW); document.getElementById('fo4').textContent=fmtM(drag);
+  var arc=document.getElementById('feeArc'),apt=document.getElementById('fArcTxt');
+  if(arc){arc.style.strokeDashoffset=242*(1-pct/100);arc.style.stroke=pct>=40?'var(--red)':pct>=20?'var(--gold)':'var(--green)';}
+  if(apt){apt.textContent=pct+'%';apt.setAttribute('fill',pct>=40?'#ef4444':pct>=20?'#f59e0b':'#00ff88');}
+  var fv=document.getElementById('feeVerdict');
+  if(fv){if(tf<0.004){fv.className='vstrip green';fv.textContent='Excellent — very low cost. You keep '+(100-pct)+'% of your potential real-term wealth gain.';}
+  else if(tf<0.012){fv.className='vstrip gold';fv.textContent='Acceptable but worth optimising. Fees consume ~'+pct+'% of potential wealth gain over '+Y+' years — '+fmtM(drag)+' lost.';}
+  else{fv.className='vstrip red';fv.textContent='High fee drag. At '+(tf*100).toFixed(2)+'%/yr, fees consume '+pct+'% of real wealth gain — '+fmtM(drag)+' in foregone wealth over '+Y+' years.';}}
+}
+
+// ── SPIN DETECTOR ─────────────────────────────────────────────────
+var SR = [
+  {re:/\boutstanding\b|\bexceptional\b|\bworld.class\b|\bproven\b/gi,type:'r',lbl:'Vague superlative',msg:'Unverifiable. Ask for a specific audited figure with benchmark comparison.'},
+  {re:/\bpast performance\b/gi,type:'r',lbl:'Performance disclaimer',msg:'Claims returns while legally disclaiming future responsibility.'},
+  {re:/\blimited (time|opportunity)\b|\bexclusive\b/gi,type:'r',lbl:'FOMO / urgency',msg:'Manufactured urgency to prevent rational comparison.'},
+  {re:/\b(\d+\.?\d*)%\s*(over|in)\s+the\s+past\s+\d+\s*(month|year)/gi,type:'r',lbl:'Cherry-picked window',msg:'Short-term return with no long-term benchmark comparison.'},
+  {re:/\bsignificantly?\b|\bsubstantially?\b/gi,type:'a',lbl:'Unmeasured claim',msg:'Without a number, "significantly" means nothing. Compared to what?'},
+  {re:/\bhigh.conviction\b|\bdynamic\b|\bcapture.?alpha\b/gi,type:'a',lbl:'Jargon veil',msg:'Strategy language without explaining actual risk.'},
+  {re:/\bsophisticated investor/gi,type:'a',lbl:'Flattery tactic',msg:'Flattering you to reduce critical thinking.'},
+  {re:/\bvolatile markets?\b|\buncertain(ty)?\b/gi,type:'a',lbl:'Fear trigger',msg:'Invoking fear to position the product as a safe haven.'}
+];
+function runSpin() {
+  var text=document.getElementById('spinIn').value; if(!text.trim())return;
+  var html=esc(text),findings=[],red=0,amber=0;
+  SR.forEach(function(rule){
+    var m=text.match(rule.re); if(!m)return;
+    if(rule.type==='r')red+=m.length; else amber+=m.length;
+    findings.push({lbl:rule.lbl,msg:rule.msg,type:rule.type,count:m.length});
+    html=html.replace(rule.re,function(x){return '<mark class="'+(rule.type==='r'?'mr':'ma2')+'" title="'+rule.lbl+': '+rule.msg+'">'+x+'</mark>';});
+  });
+  document.getElementById('spinAnnotated').innerHTML=html;
+  var fh=''; findings.forEach(function(f){var c=f.type==='r'?'var(--red)':'var(--gold)';var bg=f.type==='r'?'rgba(239,68,68,.08)':'rgba(245,158,11,.08)';fh+='<div style="display:flex;gap:.5rem;padding:.55rem .75rem;background:'+bg+';border-radius:.5rem;margin-bottom:.4rem;font-size:.8rem;color:#e0e0f0;line-height:1.5;"><span style="font-family:var(--fm);font-size:.6rem;padding:.15rem .5rem;border-radius:.22rem;border:1px solid '+c+';color:'+c+';flex-shrink:0;align-self:flex-start;">'+f.lbl+'</span>'+f.msg+' <span style="color:var(--muted);font-size:.72rem;">(x'+f.count+')</span></div>';});
+  if(!fh)fh='<div style="font-size:.85rem;color:var(--green);padding:.5rem;">No major spin detected.</div>';
+  document.getElementById('spinFindings').innerHTML=fh;
+  var score=Math.min(100,red*20+amber*10);
+  document.getElementById('spR').textContent=red; document.getElementById('spA').textContent=amber;
+  document.getElementById('spS').textContent=score+'/100'; document.getElementById('spS').style.color=score>=60?'var(--red)':score>=30?'var(--gold)':'var(--green)';
+  var sv=document.getElementById('spVerdict');
+  if(score>=60){sv.className='vstrip red';sv.textContent='High spin ('+score+'/100). '+red+' red-flag phrases and '+amber+' warnings. Demand audited 10-year benchmark-adjusted returns before acting.';}
+  else if(score>=30){sv.className='vstrip gold';sv.textContent='Moderate spin ('+score+'/100). Cross-reference all performance figures against full benchmark history before deciding.';}
+  else{sv.className='vstrip green';sv.textContent='Low spin ('+score+'/100). Text is relatively factual. Still verify all specific numbers independently.';}
+  document.getElementById('spinOut').style.display='block';
+}
+
+// ── ADVISOR CHECK ─────────────────────────────────────────────────
+function runAdvisor() {
+  var adv=document.getElementById('advName').value,iss=document.getElementById('advIss').value;
+  var comm=document.getElementById('advComm').value,ctx=document.getElementById('advCtx').value.toLowerCase();
+  var aw=adv.toLowerCase().split(' '),iw=iss.toLowerCase().split(' '),shared=0;
+  aw.forEach(function(w){if(w.length>3)iw.forEach(function(x){if(x.indexOf(w)>-1||w.indexOf(x)>-1)shared++;});});
+  var r1=shared>0?92:30,r2=comm==='no'?88:comm==='partial'?52:14;
+  var pw=['limited','urgent','exclusive','top pick','quarter','opportunity','window'];
+  var r3=18; pw.forEach(function(w){if(ctx.indexOf(w)>-1)r3+=18;}); r3=Math.min(90,r3);
+  var r4=(ctx.indexOf('3%')>-1||ctx.indexOf('entry')>-1)?82:35;
+  var avg=Math.round((r1+r2+r3+r4)/4);
+  var ring=document.getElementById('advRing'),sl=document.getElementById('advSL');
+  ring.style.strokeDashoffset=251*(1-avg/100);
+  var rc=avg>=70?'var(--red)':avg>=45?'var(--gold)':'var(--green)'; ring.style.stroke=rc;
+  sl.textContent=avg>=70?'HIGH':avg>=45?'MED':'LOW'; sl.style.color=rc;
+  function setBar(id,vid,v){var c=v>=70?'var(--red)':v>=45?'var(--gold)':'var(--green)';document.getElementById(id).style.cssText='width:'+v+'%;background:'+c+';';document.getElementById(vid).textContent=v+'%';document.getElementById(vid).style.color=c;}
+  setBar('acg1','acv1',r1);setBar('acg2','acv2',r2);setBar('acg3','acv3',r3);setBar('acg4','acv4',r4);
+  var flags=[];
+  if(r1>=70)flags.push({c:'var(--red)',t:'Ownership conflict: '+adv+' and '+iss+' share branding. The firm benefits financially from selling in-house products regardless of suitability.'});
+  if(r2>=70)flags.push({c:'var(--red)',t:'Undisclosed commissions: Trail fees are not disclosed. You have the right to demand full written disclosure.'});
+  else if(r2>=45)flags.push({c:'var(--gold)',t:'Partial disclosure: Request total cost of ownership including all advisor remuneration.'});
+  if(r3>=45)flags.push({c:'var(--gold)',t:'Sales pressure signals: Urgency cues suggest quota-driven selling, not advice in your interest.'});
+  if(r4>=70)flags.push({c:'var(--red)',t:'High entry load: A 3%+ entry fee generates immediate revenue regardless of future performance.'});
+  if(!flags.length)flags.push({c:'var(--green)',t:'No major conflicts detected. Continue to request written fee disclosure.'});
+  var el=document.getElementById('advFlags');
+  var fh='<div style="font-family:var(--fm);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:#60a5fa;margin-bottom:.6rem;">Flags Detected</div>';
+  flags.forEach(function(f){fh+='<div style="display:flex;gap:.45rem;margin-bottom:.4rem;font-size:.8rem;line-height:1.5;color:#e0e0f0;padding:.45rem .65rem;background:rgba(0,0,0,.2);border-radius:.4rem;"><span style="width:7px;height:7px;border-radius:50%;background:'+f.c+';flex-shrink:0;margin-top:4px;"></span>'+f.t+'</div>';});
+  el.innerHTML=fh; toast('Advisor scan: '+(avg>=70?'HIGH RISK':avg>=45?'MEDIUM RISK':'LOW RISK'));
+}
+
+// ── BUDGET PLANNER ────────────────────────────────────────────────
+function uBudget() {
+  var totalIn=(parseFloat(document.getElementById('bI1').value)||0)+(parseFloat(document.getElementById('bI2').value)||0);
+  var totalOut=(parseFloat(document.getElementById('bE1').value)||0)+(parseFloat(document.getElementById('bE2').value)||0)+(parseFloat(document.getElementById('bE3').value)||0)+(parseFloat(document.getElementById('bE4').value)||0)+(parseFloat(document.getElementById('bE5').value)||0);
+  var save=Math.max(0,totalIn-totalOut),rate=totalIn>0?(save/totalIn*100).toFixed(1):0;
+  document.getElementById('bInOut').textContent='Y'+Math.round(totalIn).toLocaleString();
+  document.getElementById('bExOut').textContent='Y'+Math.round(totalOut).toLocaleString();
+  document.getElementById('bSave').textContent='Y'+Math.round(save).toLocaleString();
+  var re=document.getElementById('bRate'); re.textContent=rate+'%'; re.style.color=parseFloat(rate)>=35?'var(--green)':parseFloat(rate)>=20?'var(--cyan)':parseFloat(rate)>=10?'var(--gold)':'var(--red)';
+  var months=120,rs=[(0.07-0.0006)/12,(0.07-0.01)/12,(0.07-0.02)/12];
+  var vals=rs.map(function(r){return r>0?save*(Math.pow(1+r,months)-1)/r:save*months;});
+  var maxV=Math.max.apply(null,vals);
+  var lbs=['bLow','bMid','bHigh'],bars=['bLowB','bMidB','bHighB'];
+  vals.forEach(function(v,i){document.getElementById(lbs[i]).textContent=fmtM(v);document.getElementById(bars[i]).style.width=Math.round(v/maxV*100)+'%';});
+  var diff=vals[0]-vals[2],bv=document.getElementById('bVerdict'); if(!bv)return;
+  if(save<=0){bv.className='vstrip red';bv.textContent='Spending more than you earn. Reduce expenses before investing. Even 10,000 yen per month compounds significantly over time.';}
+  else if(parseFloat(rate)<10){bv.className='vstrip gold';bv.textContent='Savings rate of '+rate+'% is low. Aim for 15-20%. The gap between 0.06% and 2% fee funds over 10 years on your savings is '+fmtM(diff)+'.';}
+  else{bv.className='vstrip green';bv.textContent='Savings rate of '+rate+'% is solid. Investing '+fmtM(save)+' per month in a 0.06% TER fund grows to approximately '+fmtM(vals[0])+' over 10 years. A 2% fee fund gives only '+fmtM(vals[2])+' — you lose '+fmtM(diff)+' to fees alone.';}
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function toast(m) {
+  var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2700);
+}
+
+// ── STOCK MANAGEMENT ────────────────────────────────────────────────
+async function searchStock() {
+  var query = document.getElementById('stockQuery').value.trim().toUpperCase();
+  if (!query) { toast('Enter a stock symbol'); return; }
+  
+  try {
+    var res = await fetch('/api/stock?symbols=' + encodeURIComponent(query));
+    var data = await res.json();
+    if (data.quotes && data.quotes.length > 0) {
+      var q = data.quotes[0];
+      var trend = q.changePercent >= 0 ? '▲' : '▼';
+      var color = q.changePercent >= 0 ? 'var(--green)' : 'var(--red)';
+      var html = '<div style="display:flex;flex-direction:column;gap:.5rem;color:#d4d0f0;">' +
+        '<div style="font-weight:600;font-size:1.1rem;">' + q.name + ' (' + q.symbol + ')</div>' +
+        '<div style="display:flex;gap:1.5rem;align-items:center;">' +
+          '<div style="font-family:var(--fm);">$' + q.price.toFixed(2) + '</div>' +
+          '<div style="color:' + color + ';font-weight:600;">' + trend + ' ' + q.changePercent.toFixed(2) + '%</div>' +
+        '</div>' +
+        '<div style="font-size:.85rem;color:var(--muted);">52w High: $' + (q.fiftyTwoWeekHigh || 'N/A') + ' | 52w Low: $' + (q.fiftyTwoWeekLow || 'N/A') + '</div>' +
+        '</div>';
+      document.getElementById('stockSearchResult').innerHTML = html;
+      toast('Quote loaded: ' + q.symbol);
+    } else {
+      document.getElementById('stockSearchResult').innerHTML = '<div style="color:var(--red);">No data found for ' + query + '</div>';
+    }
+  } catch (e) {
+    document.getElementById('stockSearchResult').innerHTML = '<div style="color:var(--red);">Error: ' + e.message + '</div>';
+  }
+}
+
+async function updateDashboard() {
+  try {
+    var res = await fetch('/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD');
+    var data = await res.json();
+    
+    if (data.quotes) {
+      var indices = data.quotes.filter(q => ['N225', '^GSPC', 'GC=F'].includes(q.symbol));
+      var crypto = data.quotes.filter(q => ['BTC-USD', 'ETH-USD', 'SOL-USD'].includes(q.symbol));
+      
+      var indicesHtml = '';
+      indices.forEach(q => {
+        var color = q.changePercent >= 0 ? 'var(--green)' : 'var(--red)';
+        indicesHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem .8rem;background:rgba(255,255,255,.03);border-radius:.6rem;">' +
+          '<div><div style="font-weight:600;">' + q.symbol + '</div><div style="font-size:.75rem;color:var(--muted);">' + q.name + '</div></div>' +
+          '<div style="text-align:right;"><div style="font-weight:600;">$' + q.price.toFixed(2) + '</div><div style="color:' + color + ';font-size:.8rem;">' + (q.changePercent >= 0 ? '+' : '') + q.changePercent.toFixed(2) + '%</div></div>' +
+          '</div>';
+      });
+      document.getElementById('dashboardIndices').innerHTML = indicesHtml;
+      
+      var cryptoHtml = '';
+      crypto.forEach(q => {
+        var color = q.changePercent >= 0 ? 'var(--green)' : 'var(--red)';
+        cryptoHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem .8rem;background:rgba(255,255,255,.03);border-radius:.6rem;">' +
+          '<div><div style="font-weight:600;">' + q.symbol + '</div><div style="font-size:.75rem;color:var(--muted);">' + q.name + '</div></div>' +
+          '<div style="text-align:right;"><div style="font-weight:600;">$' + q.price.toFixed(2) + '</div><div style="color:' + color + ';font-size:.8rem;">' + (q.changePercent >= 0 ? '+' : '') + q.changePercent.toFixed(2) + '%</div></div>' +
+          '</div>';
+      });
+      document.getElementById('dashboardCrypto').innerHTML = cryptoHtml;
+    }
+  } catch (e) {
+    console.log('Dashboard update error:', e);
+  }
+}
+
+async function analyzeStock() {
+  var symbol = document.getElementById('analyzeSymbol').value.trim().toUpperCase();
+  if (!symbol) { toast('Enter a stock symbol'); return; }
+  
+  try {
+    var res = await fetch('/api/stock?symbols=' + encodeURIComponent(symbol));
+    var data = await res.json();
+    if (!data.quotes || !data.quotes[0]) { toast('Stock not found'); return; }
+    
+    var quote = data.quotes[0];
+    var analysisRes = await fetch('/api/stock/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol, quote })
+    });
+    
+    var analysisData = await analysisRes.json();
+    var html = '<div style="color:#d4d0f0;line-height:1.7;"><div style="font-weight:600;color:var(--cyan);margin-bottom:.5rem;">📊 ' + symbol + ' Analysis</div>' +
+      '<div style="margin-bottom:.8rem;">' + (analysisData.analysis || 'Analysis pending...') + '</div>' +
+      '<div style="padding:.6rem;background:rgba(168,85,247,.08);border-radius:.5rem;font-size:.85rem;color:var(--purple);">Recommendation: ' + (analysisData.recommendation || 'Hold') + '</div></div>';
+    document.getElementById('analysisResult').innerHTML = html;
+    toast('Analysis complete: ' + symbol);
+  } catch (e) {
+    document.getElementById('analysisResult').innerHTML = '<div style="color:var(--red);">Error: ' + e.message + '</div>';
+  }
+}
+
+async function loadPortfolio() {
+  try {
+    var res = await fetch('/api/portfolio');
+    var portfolio = await res.json();
+    
+    document.getElementById('availableCash').textContent = '$' + portfolio.cash.toFixed(2);
+    document.getElementById('holdingsCount').textContent = portfolio.holdings.length;
+    
+    var totalValue = portfolio.cash;
+    var tbody = '';
+    
+    if (portfolio.holdings.length === 0) {
+      tbody = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem;">No holdings yet. Start trading!</td></tr>';
+    } else {
+      for (var h of portfolio.holdings) {
+        var res2 = await fetch('/api/stock?symbols=' + encodeURIComponent(h.symbol));
+        var data2 = await res2.json();
+        var currentPrice = data2.quotes && data2.quotes[0] ? data2.quotes[0].price : h.avgCost;
+        var currentValue = h.quantity * currentPrice;
+        var costBasis = h.quantity * h.avgCost;
+        var gain = currentValue - costBasis;
+        var gainPercent = costBasis > 0 ? (gain / costBasis * 100).toFixed(2) : 0;
+        var gainColor = gain >= 0 ? 'var(--green)' : 'var(--red)';
+        
+        tbody += '<tr>' +
+          '<td style="font-weight:600;">' + h.symbol + '</td>' +
+          '<td>' + h.quantity + '</td>' +
+          '<td>$' + h.avgCost.toFixed(2) + '</td>' +
+          '<td>$' + currentPrice.toFixed(2) + '</td>' +
+          '<td>$' + currentValue.toFixed(2) + '</td>' +
+          '<td style="color:' + gainColor + ';font-weight:600;">$' + gain.toFixed(2) + ' (' + (gain >= 0 ? '+' : '') + gainPercent + '%)</td>' +
+          '</tr>';
+        totalValue += currentValue;
+      }
+    }
+    
+    document.getElementById('totalValue').textContent = '$' + totalValue.toFixed(2);
+    document.getElementById('totalReturn').textContent = '+' + ((totalValue - 100000) / 100000 * 100).toFixed(1) + '%';
+    document.getElementById('holdingsBody').innerHTML = tbody;
+  } catch (e) {
+    console.log('Portfolio load error:', e);
+  }
+}
+
+async function executeTrade() {
+  var symbol = document.getElementById('tradeSymbol').value.trim().toUpperCase();
+  var quantity = parseInt(document.getElementById('tradeQuantity').value) || 0;
+  var type = document.getElementById('tradeType').value;
+  
+  if (!symbol || quantity <= 0) { toast('Invalid trade parameters'); return; }
+  
+  try {
+    var res = await fetch('/api/stock?symbols=' + encodeURIComponent(symbol));
+    var data = await res.json();
+    if (!data.quotes || !data.quotes[0]) { toast('Stock not found'); return; }
+    
+    var quote = data.quotes[0];
+    var tradeRes = await fetch('/api/portfolio/trade', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol, quantity: quantity, price: quote.price, type: type })
+    });
+    
+    var tradeData = await tradeRes.json();
+    if (tradeData.success) {
+      toast('Trade executed: ' + type.toUpperCase() + ' ' + quantity + ' ' + symbol);
+      document.getElementById('tradeSymbol').value = '';
+      document.getElementById('tradeQuantity').value = '';
+      loadPortfolio();
+    } else {
+      toast('Trade failed: ' + (tradeData.error || 'Unknown error'));
+    }
+  } catch (e) {
+    toast('Error: ' + e.message);
+  }
+}
+
+async function analyzePortfolio() {
+  try {
+    var res = await fetch('/api/portfolio');
+    var portfolio = await res.json();
+    
+    var res2 = await fetch('/api/stock?symbols=AAPL,TSLA,BTC-USD');
+    var quotes = (await res2.json()).quotes || [];
+    
+    var analysisRes = await fetch('/api/portfolio/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quotes })
+    });
+    
+    var analysisData = await analysisRes.json();
+    var html = '<div style="font-size:.85rem;line-height:1.8;color:#e0d8ff;">' +
+      (analysisData.analysis || 'Analysis pending...') +
+      '</div>';
+    document.getElementById('portfolioAnalysis').innerHTML = html;
+    toast('Portfolio analysis complete');
+  } catch (e) {
+    document.getElementById('portfolioAnalysis').innerHTML = '<div style="color:var(--red);">Error: ' + e.message + '</div>';
+  }
+}
+
+// ── AI AUTO-INVEST ────────────────────────────────────────────────
+var AI_RISK = 'moderate';
+var AI_NUM = 4;
+
+function setAIRisk(val, btn) {
+  AI_RISK = val;
+  document.querySelectorAll('[id^=aiRisk]').forEach(function(b) { b.className = 'bsm bsm-p'; });
+  btn.className = 'bsm bsm-c';
+}
+
+function setAINumStocks(val, btn) {
+  AI_NUM = val;
+  document.querySelectorAll('[id^=aiN]').forEach(function(b) { b.className = 'bsm bsm-p'; });
+  btn.className = 'bsm bsm-c';
+}
+
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function fmtDollar(n) { return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+
+function sigColor(t) {
+  if (t === 'bull') return 'var(--green)';
+  if (t === 'bear') return 'var(--red)';
+  return 'var(--gold)';
+}
+
+function sigBg(t) {
+  if (t === 'bull') return 'rgba(0,255,136,.12)';
+  if (t === 'bear') return 'rgba(239,68,68,.12)';
+  return 'rgba(245,158,11,.12)';
+}
+
+async function runAIAutoInvest() {
+  var amount = parseInt(document.getElementById('aiInvestAmount').value);
+  if (!amount || amount < 100) { toast('Enter at least $100'); return; }
+
+  document.getElementById('aiInvestResult').style.display = 'none';
+  var loadEl = document.getElementById('aiInvestLoading');
+  loadEl.style.display = 'block';
+  document.getElementById('aiInvestBtn').disabled = true;
+
+  var statusMsgs = [
+    'AI is analyzing the market...',
+    'Scanning fundamentals & valuation...',
+    'Evaluating momentum & sector rotation...',
+    'Weighing risk-adjusted returns...',
+    'Finalizing your portfolio...'
+  ];
+  var si = 0;
+  var statusTimer = setInterval(function() {
+    si = (si + 1) % statusMsgs.length;
+    document.getElementById('aiInvestStatus').textContent = statusMsgs[si];
+  }, 2500);
+
+  try {
+    var res = await fetch('/api/portfolio/ai-invest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amount, riskTolerance: AI_RISK, numStocks: AI_NUM })
+    });
+    var data = await res.json();
+
+    clearInterval(statusTimer);
+    loadEl.style.display = 'none';
+    document.getElementById('aiInvestBtn').disabled = false;
+
+    if (!data.success) {
+      toast('Auto-invest failed: ' + (data.error || 'unknown error'));
+      return;
+    }
+
+    // Strategy summary bar
+    var summaryEl = document.getElementById('aiStrategySummary');
+    summaryEl.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;">' +
+      '<div><span style="font-family:var(--fh);font-size:1.1rem;color:#60a5fa;font-weight:700;">' + escHtml(data.strategyName || 'AI Portfolio') + '</span>' +
+      '<div style="font-size:.82rem;color:var(--muted);margin-top:.25rem;">' + escHtml(data.expectedAnnualReturn || '') + ' · ' + escHtml(data.estimatedRiskLevel || '') + ' risk</div></div>' +
+      '<div style="text-align:right;"><div style="font-family:var(--fm);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Trades Executed</div>' +
+      '<div style="color:var(--green);font-weight:700;font-size:1.2rem;">' + data.trades.filter(function(t){return t.status==='executed';}).length + '/' + data.stocks.length + '</div></div>' +
+      '</div>' +
+      '<div style="margin-top:.75rem;font-size:.85rem;color:#d4d0f0;line-height:1.65;">' + escHtml(data.overallRationale || '') + '</div>';
+
+    // Stock cards
+    var stocksEl = document.getElementById('aiInvestStocks');
+    stocksEl.innerHTML = '';
+    data.stocks.forEach(function(s, i) {
+      var colors = ['#60a5fa','#a855f7','#22d3ee','#00ff88','#f59e0b'];
+      var color = colors[i % colors.length];
+      var sigHtml = (s.signals || []).map(function(sig, j) {
+        var t = (s.signalTypes || [])[j] || 'neutral';
+        return '<span style="display:inline-block;font-size:.68rem;padding:.22rem .6rem;border-radius:.3rem;background:' + sigBg(t) + ';color:' + sigColor(t) + ';border:1px solid ' + sigColor(t) + ';">' + escHtml(sig) + '</span>';
+      }).join('');
+
+      var statusBadge = s.status === 'executed'
+        ? '<span style="font-family:var(--fm);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--green);">✓ Executed</span>'
+        : '<span style="font-family:var(--fm);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);">⏳ ' + escHtml(s.status) + '</span>';
+
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.style.cssText = 'border-color:rgba(139,92,246,.15);padding:1rem 1.25rem;';
+      card.innerHTML = '<div class="card-shine"></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:.6rem;">' +
+          '<div style="display:flex;align-items:center;gap:.75rem;">' +
+            '<div style="width:40px;height:40px;border-radius:10px;background:' + color + '22;border:1.5px solid ' + color + ';display:grid;place-items:center;font-family:var(--fm);font-weight:700;font-size:.82rem;color:' + color + ';">' + s.ticker.substring(0,3) + '</div>' +
+            '<div><div style="font-weight:600;font-size:.92rem;color:var(--white);">' + escHtml(s.name) + ' <span style="font-family:var(--fm);font-size:.75rem;color:var(--muted);">' + escHtml(s.ticker) + '</span></div>' +
+            '<div style="font-size:.72rem;color:var(--muted);">' + escHtml(s.sector) + ' · ' + (s.estimatedReturn || '') + ' · ' + (s.confidence || '') + ' confidence</div></div>' +
+          '</div>' +
+          '<div style="text-align:right;flex-shrink:0;">' +
+            '<div style="font-family:var(--fh);font-size:1.25rem;font-weight:700;color:var(--white);">' + (s.invested ? fmtDollar(s.invested) : '') + '</div>' +
+            '<div style="font-family:var(--fm);font-size:.72rem;color:' + color + ';">' + (s.allocationPct || 0).toFixed(1) + '% allocation</div>' +
+            (s.quantity ? '<div style="font-size:.7rem;color:var(--muted);margin-top:.15rem;">' + s.quantity + ' @ $' + (s.price || 0).toFixed(2) + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:.82rem;color:#d4d0f0;line-height:1.6;margin-bottom:.6rem;">' + escHtml(s.rationale) + '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;">' + sigHtml + '</div>' +
+        '<div style="margin-top:.5rem;text-align:right;">' + statusBadge + '</div>';
+      stocksEl.appendChild(card);
+    });
+
+    // Summary stats
+    document.getElementById('aiTotalInvested').textContent = fmtDollar(data.totalInvested);
+    document.getElementById('aiCashRemaining').textContent = fmtDollar(data.remainingCash);
+
+    // Verdict
+    var v = document.getElementById('aiVerdict');
+    var totalReturn = data.expectedAnnualReturn || '';
+    v.className = 'vstrip purple';
+    v.textContent = 'Portfolio "' + (data.strategyName || 'AI Portfolio') + '" deployed. ' + (data.trades.filter(function(t){return t.status==='executed';}).length) + ' of ' + data.stocks.length + ' positions filled at $' + data.totalInvested.toFixed(2) + '. Expected annual return: ' + totalReturn + '. ' + (data.marketOutlook || '');
+
+    document.getElementById('aiInvestResult').style.display = 'block';
+    toast('Portfolio deployed! ' + data.trades.filter(function(t){return t.status==='executed';}).length + ' trades executed.');
+
+    // Refresh portfolio
+    loadPortfolio();
+    updateDashboard();
+
+  } catch (e) {
+    clearInterval(statusTimer);
+    loadEl.style.display = 'none';
+    document.getElementById('aiInvestBtn').disabled = false;
+    toast('Error: ' + e.message);
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+uFee(); uBudget(); runAdvisor(); updateDashboard(); loadPortfolio();
+
+// Refresh stock data every 60 seconds
+setInterval(updateDashboard, 60000);
+setInterval(loadPortfolio, 60000);
+
+// Welcome message
+setTimeout(function() {
+  var msgs = document.getElementById('chatMsgs');
+  var p = { verdict:'DARSO ONLINE', truth:'I am your financial intelligence system. I cut through marketing spin, expose hidden fees, detect advisor conflicts, and speak the truth back to you.', matters:'Most people lose tens of thousands to hidden fees and advisor conflicts they never knew existed.', action:'Tap the orb above to speak, or type any financial question below.' };
+  var am = document.createElement('div'); am.className='ma purple';
+  am.innerHTML='<span class="vtag vtp">DARSO ONLINE</span><div class="mpart"><div class="mpl" style="color:var(--cyan);">Simple Truth</div>'+esc(p.truth)+'</div><div class="mpart"><div class="mpl" style="color:var(--gold);">Why It Matters</div>'+esc(p.matters)+'</div><div class="mpart"><div class="mpl" style="color:var(--green);">Do This Now</div>'+esc(p.action)+'</div>';
+  msgs.appendChild(am);
+  setTimeout(function(){ speakText('Darso online. Your financial intelligence system is ready. Ask me about any fund, advisor, or investment product and I will give you the unvarnished truth.'); }, 800);
+}, 600);
+</script>
+</body>
+</html>
