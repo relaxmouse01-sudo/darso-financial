@@ -1,3 +1,4 @@
 node_modules/
 .env
 portfolio.json
+*.txt

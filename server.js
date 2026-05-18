@@ -194,32 +194,50 @@ async function handleStock(req, res) {
   }
 
   const query = encodeURIComponent(symbols.join(','));
-  try {
-    const upstream = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${query}`, {
-      headers: { 'User-Agent': 'DARSO/1.0' }
-    });
-    if (upstream.ok) {
-      const data = await upstream.json().catch(() => ({}));
-      const results = (data.quoteResponse && Array.isArray(data.quoteResponse.result) ? data.quoteResponse.result : []).map(q => ({
-        symbol: q.symbol,
-        name: q.shortName || q.longName || q.symbol,
-        price: q.regularMarketPrice,
-        change: q.regularMarketChange,
-        changePercent: q.regularMarketChangePercent,
-        currency: q.currency,
-        marketState: q.marketState,
-        fiftyTwoWeekHigh: q.fiftyTwoWeekHigh,
-        fiftyTwoWeekLow: q.fiftyTwoWeekLow,
-        avgVolume: q.averageVolume,
-        source: 'yahoo'
-      }));
-      if (results.length) {
-        sendJson(res, 200, { quotes: results });
-        return;
+  const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+  const yahooOpts = { headers: { 'User-Agent': ua, 'Accept': 'application/json', 'Referer': 'https://finance.yahoo.com/' } };
+  const yahooHosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
+
+  for (const host of yahooHosts) {
+    try {
+      const upstream = await fetch(`https://${host}/v8/finance/chart/${query}?interval=1d`, yahooOpts);
+      if (upstream.ok) {
+        const data = await upstream.json().catch(() => ({}));
+        const result = data.chart && data.chart.result && data.chart.result[0];
+        const meta = result && result.meta;
+        if (meta && meta.regularMarketPrice != null) {
+          const quotes = symbols.map(sym => {
+            const m = data.chart.result.find(r => r.meta && r.meta.symbol === sym);
+            if (!m || !m.meta) return null;
+            const mk = m.meta;
+            return {
+              symbol: sym,
+              name: mk.shortName || mk.symbol,
+              price: mk.regularMarketPrice,
+              change: mk.previousClose ? mk.regularMarketPrice - mk.previousClose : 0,
+              changePercent: mk.previousClose ? ((mk.regularMarketPrice - mk.previousClose) / mk.previousClose * 100) : 0,
+              currency: mk.currency || 'USD',
+              marketState: mk.currentTradingPeriod ? (mk.currentTradingPeriod.regular ? 'REGULAR' : 'CLOSED') : 'CLOSED',
+              source: 'yahoo'
+            };
+          }).filter(Boolean);
+          if (quotes.length) { sendJson(res, 200, { quotes }); return; }
+        }
       }
-    }
-  } catch (err) {
-    // ignore and fallback
+    } catch (_) {}
+    try {
+      const upstream = await fetch(`https://${host}/v7/finance/quote?symbols=${query}`, yahooOpts);
+      if (upstream.ok) {
+        const data = await upstream.json().catch(() => ({}));
+        const results = (data.quoteResponse && Array.isArray(data.quoteResponse.result) ? data.quoteResponse.result : []).map(q => ({
+          symbol: q.symbol, name: q.shortName || q.longName || q.symbol,
+          price: q.regularMarketPrice, change: q.regularMarketChange,
+          changePercent: q.regularMarketChangePercent, currency: q.currency,
+          marketState: q.marketState, source: 'yahoo'
+        }));
+        if (results.length) { sendJson(res, 200, { quotes: results }); return; }
+      }
+    } catch (_) {}
   }
 
   const fallback = symbols.map(getStockFallback);
@@ -342,20 +360,24 @@ async function handleAIAutoInvest(req, res) {
   // 1. Fetch some real market quotes for context
   const topSymbols = 'AAPL,MSFT,GOOGL,AMZN,NVDA,TSLA,META,BRK.B,JPM,V,PG,JNJ,XOM,UNH,HD,COST,DIS,MA,NFLX,ADBE,CRM,INTC,AMD,PYPL,SNAP,UBER,ABNB,PLTR,SOFI,HOOD';
   let marketContext = '';
-  try {
-    const upstream = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(topSymbols)}`, {
-      headers: { 'User-Agent': 'DARSO/1.0' }
-    });
-    if (upstream.ok) {
-      const data = await upstream.json();
-      const results = (data.quoteResponse && Array.isArray(data.quoteResponse.result) ? data.quoteResponse.result : []).filter(q => q.regularMarketPrice);
-      if (results.length) {
-        marketContext = 'Current market context (real quotes):\n' + results.slice(0, 30).map(q =>
-          `- ${q.symbol} (${q.shortName || q.longName || q.symbol}): $${q.regularMarketPrice}, ${q.regularMarketChangePercent > 0 ? '+' : ''}${(q.regularMarketChangePercent || 0).toFixed(2)}% today, mkt cap $${((q.marketCap || 0) / 1e12).toFixed(2)}T`
-        ).join('\n');
+  const uaAI = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+  const yho = { headers: { 'User-Agent': uaAI, 'Accept': 'application/json', 'Referer': 'https://finance.yahoo.com/' } };
+  const yh = ['query1.finance.yahoo.com','query2.finance.yahoo.com'];
+  for (const h of yh) {
+    try {
+      const up = await fetch(`https://${h}/v7/finance/quote?symbols=${encodeURIComponent(topSymbols)}`, yho);
+      if (up.ok) {
+        const d = await up.json();
+        const results = ((d.quoteResponse && d.quoteResponse.result) || []).filter(q => q.regularMarketPrice);
+        if (results.length) {
+          marketContext = 'Current market context (real quotes):\n' + results.slice(0, 30).map(q =>
+            `- ${q.symbol} (${q.shortName || q.longName || q.symbol}): $${q.regularMarketPrice}, ${q.regularMarketChangePercent > 0 ? '+' : ''}${(q.regularMarketChangePercent || 0).toFixed(2)}% today`
+          ).join('\n');
+          break;
+        }
       }
-    }
-  } catch (e) { /* proceed without live context */ }
+    } catch (_) {}
+  }
 
   const prompt = `You are an expert portfolio manager. A user wants to invest $${amount} in the stock market.
 
@@ -440,19 +462,20 @@ Rules:
   // 2. Fetch real prices for selected tickers and execute trades
   const tickers = recommendation.stocks.map(s => s.ticker).join(',');
   let priceMap = {};
-  try {
-    const priceRes = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(tickers)}`, {
-      headers: { 'User-Agent': 'DARSO/1.0' }
-    });
-    if (priceRes.ok) {
-      const priceData = await priceRes.json();
-      (priceData.quoteResponse?.result || []).forEach(q => {
-        if (q.regularMarketPrice) {
-          priceMap[q.symbol] = q.regularMarketPrice;
-        }
-      });
-    }
-  } catch (e) { /* fallback to estimated prices */ }
+  const yhpOpts = { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Accept': 'application/json', 'Referer': 'https://finance.yahoo.com/' } };
+  const yhHosts = ['query1.finance.yahoo.com','query2.finance.yahoo.com'];
+  for (const h of yhHosts) {
+    try {
+      const priceRes = await fetch(`https://${h}/v7/finance/quote?symbols=${encodeURIComponent(tickers)}`, yhpOpts);
+      if (priceRes.ok) {
+        const priceData = await priceRes.json();
+        (priceData.quoteResponse?.result || []).forEach(q => {
+          if (q.regularMarketPrice) priceMap[q.symbol] = q.regularMarketPrice;
+        });
+        if (Object.keys(priceMap).length) break;
+      }
+    } catch (_) {}
+  }
 
   const portfolio = loadPortfolio();
   const trades = [];
