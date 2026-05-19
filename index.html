@@ -15,7 +15,8 @@
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{background:#fff;color:#000;font-family:var(--fb);overflow-x:hidden;}
+body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:var(--white);font-family:var(--fb);overflow-x:hidden;animation:bgShift 16s ease infinite;background-size:400% 400%;}
+@keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:rgba(168,85,247,.4);border-radius:2px;}
