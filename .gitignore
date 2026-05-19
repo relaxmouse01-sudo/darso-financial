@@ -2,3 +2,4 @@ node_modules/
 .env
 portfolio.json
 *.txt
+*.mp4

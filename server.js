@@ -184,6 +184,37 @@ function getStockFallback(symbol) {
   };
 }
 
+async function handleStockChart(req, res) {
+  const url = new URL(req.url, 'http://localhost');
+  const symbol = (url.searchParams.get('symbol') || '').trim().toUpperCase();
+  const range = url.searchParams.get('range') || '3mo';
+  if (!symbol) { sendJson(res, 400, { error: 'symbol parameter required' }); return; }
+  const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+  const yahooOpts = { headers: { 'User-Agent': ua, 'Accept': 'application/json', 'Referer': 'https://finance.yahoo.com/' } };
+  const hosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
+  for (const host of hosts) {
+    try {
+      const upstream = await fetch(`https://${host}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`, yahooOpts);
+      if (upstream.ok) {
+        const data = await upstream.json().catch(() => ({}));
+        const result = data.chart && data.chart.result && data.chart.result[0];
+        if (result && result.timestamp && result.indicators && result.indicators.quote) {
+          const timestamps = result.timestamp;
+          const quotes = result.indicators.quote[0];
+          const chartData = [];
+          for (let i = 0; i < timestamps.length; i++) {
+            if (quotes.close && quotes.close[i] != null) {
+              chartData.push({ t: timestamps[i] * 1000, o: quotes.open[i], h: quotes.high[i], l: quotes.low[i], c: quotes.close[i], v: quotes.volume[i] });
+            }
+          }
+          if (chartData.length) { sendJson(res, 200, { symbol, chartData }); return; }
+        }
+      }
+    } catch (_) {}
+  }
+  sendJson(res, 200, { symbol, chartData: [] });
+}
+
 async function handleStock(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const symbolsParam = (url.searchParams.get('symbols') || '').trim();
@@ -199,6 +230,30 @@ async function handleStock(req, res) {
   const yahooHosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
 
   for (const host of yahooHosts) {
+    // v7/quote first — has full fundamental data
+    try {
+      const upstream = await fetch(`https://${host}/v7/finance/quote?symbols=${query}`, yahooOpts);
+      if (upstream.ok) {
+        const data = await upstream.json().catch(() => ({}));
+        const results = (data.quoteResponse && Array.isArray(data.quoteResponse.result) ? data.quoteResponse.result : []).map(q => ({
+          symbol: q.symbol, name: q.shortName || q.longName || q.symbol,
+          price: q.regularMarketPrice, change: q.regularMarketChange,
+          changePercent: q.regularMarketChangePercent, currency: q.currency,
+          marketState: q.marketState,
+          marketCap: q.marketCap, volume: q.regularMarketVolume,
+          avgVolume: q.averageVolume, peRatio: q.trailingPE,
+          forwardPE: q.forwardPE, eps: q.earningsPerShare,
+          dividendYield: q.dividendYield, dividendRate: q.dividendRate,
+          exDividendDate: q.exDividendDate,
+          fiftyTwoWeekHigh: q.fiftyTwoWeekHigh, fiftyTwoWeekLow: q.fiftyTwoWeekLow,
+          fiftyDayAvg: q.fiftyDayAverage, twoHundredDayAvg: q.twoHundredDayAverage,
+          beta: q.beta, priceToBook: q.priceToBook,
+          shortRatio: q.shortRatio, source: 'yahoo'
+        }));
+        if (results.length) { sendJson(res, 200, { quotes: results }); return; }
+      }
+    } catch (_) {}
+    // v8/chart fallback — basic price data only
     try {
       const upstream = await fetch(`https://${host}/v8/finance/chart/${query}?interval=1d`, yahooOpts);
       if (upstream.ok) {
@@ -223,19 +278,6 @@ async function handleStock(req, res) {
           }).filter(Boolean);
           if (quotes.length) { sendJson(res, 200, { quotes }); return; }
         }
-      }
-    } catch (_) {}
-    try {
-      const upstream = await fetch(`https://${host}/v7/finance/quote?symbols=${query}`, yahooOpts);
-      if (upstream.ok) {
-        const data = await upstream.json().catch(() => ({}));
-        const results = (data.quoteResponse && Array.isArray(data.quoteResponse.result) ? data.quoteResponse.result : []).map(q => ({
-          symbol: q.symbol, name: q.shortName || q.longName || q.symbol,
-          price: q.regularMarketPrice, change: q.regularMarketChange,
-          changePercent: q.regularMarketChangePercent, currency: q.currency,
-          marketState: q.marketState, source: 'yahoo'
-        }));
-        if (results.length) { sendJson(res, 200, { quotes: results }); return; }
       }
     } catch (_) {}
   }
@@ -616,7 +658,8 @@ function serveStatic(req, res) {
       '.png': 'image/png',
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
-      '.svg': 'image/svg+xml'
+      '.svg': 'image/svg+xml',
+      '.mp4': 'video/mp4'
     };
     send(res, 200, data, { 'Content-Type': types[ext] || 'application/octet-stream' });
   });
@@ -638,6 +681,10 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'POST' && req.url === '/api/tts') {
     handleTts(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'GET' && req.url.startsWith('/api/stock/chart')) {
+    handleStockChart(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && req.url.startsWith('/api/stock')) {
