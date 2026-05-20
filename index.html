@@ -566,12 +566,10 @@ select.si option{background:#0a0518;}
         <div class="card-shine"></div>
         <div id="stockSearchResult" style="color:#000;font-size:.95rem;min-height:72px;display:flex;align-items:center;">Live stock quotes refresh automatically every minute.</div>
       </div>
-      <div id="deepDivePanel" style="display:none;max-width:660px;text-align:left;"></div>
+      <div id="deepDivePanel" style="display:none;max-width:900px;margin-top:1rem;text-align:left;"></div>
       <a class="stocktower-btn" href="#stock-ticker">Live Demo</a>
     </div>
   </div>
-  <div id="ddOverlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);" onclick="closeDeepDive()"></div>
-  <div id="ddSidebar" style="display:none;position:fixed;top:0;left:0;bottom:0;width:min(520px,90vw);z-index:201;background:#0b0719;border-right:1px solid var(--border);overflow-y:auto;padding:1.5rem;transform:translateX(-100%);transition:transform .3s ease;box-shadow:4px 0 40px rgba(0,0,0,.5);"></div>
 </section>
 
 <!-- ════════════════ STOCK DASHBOARD ════════════════ -->
@@ -2187,12 +2185,12 @@ async function searchStock() {
 
 // ── COMPANY DEEP DIVE ─────────────────────────────────────────
 function companyDeepDive(symbol) {
-  var sidebar = document.getElementById('ddSidebar');
-  var overlay = document.getElementById('ddOverlay');
-  sidebar.innerHTML = '<div style="color:#fff;">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">' +
-      '<div style="font-size:1.1rem;font-weight:600;color:var(--purple);">\u25B6 ' + symbol + '</div>' +
-      '<button onclick="closeDeepDive()" style="background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;padding:.2rem;">\u2716</button>' +
+  var panel = document.getElementById('deepDivePanel');
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="padding:1.25rem;background:rgba(0,0,0,.45);border-radius:.75rem;backdrop-filter:blur(12px);border:1px solid var(--border);color:#fff;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">' +
+      '<div style="font-size:1.1rem;font-weight:600;color:var(--purple);">\u25B6 Deep Dive: ' + symbol + '</div>' +
+      '<button onclick="document.getElementById(\'deepDivePanel\').style.display=\'none\'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:.2rem;">\u2716</button>' +
     '</div>' +
     '<div id="ddStatus" style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;">Fetching company profile...</div>' +
     '<div id="ddContent"></div>' +
@@ -2200,17 +2198,13 @@ function companyDeepDive(symbol) {
       '<div style="border-top:1px solid var(--border);padding-top:1rem;">' +
         '<div style="font-size:.82rem;font-weight:600;margin-bottom:.5rem;color:var(--cyan);">Ask about ' + symbol + '</div>' +
         '<div style="display:flex;gap:.5rem;">' +
-          '<input id="ddQ" type="text" placeholder="Ask anything..." style="flex:1;padding:.5rem .75rem;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:.4rem;color:#fff;font-family:var(--fb);font-size:.85rem;outline:none;" onkeydown="if(event.key==\'Enter\')askDeepDive()">' +
+          '<input id="ddQ" type="text" placeholder="Ask anything about this company..." style="flex:1;padding:.5rem .75rem;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:.4rem;color:#fff;font-family:var(--fb);font-size:.85rem;outline:none;" onkeydown="if(event.key==\'Enter\')askDeepDive()">' +
           '<button onclick="askDeepDive()" style="padding:.5rem 1rem;background:var(--cyan);color:#000;border:none;border-radius:.4rem;cursor:pointer;font-family:var(--fb);font-size:.82rem;">Ask</button>' +
         '</div>' +
         '<div id="ddChatMsgs" style="margin-top:.6rem;font-size:.85rem;line-height:1.6;color:#d0d0e0;max-height:200px;overflow-y:auto;"></div>' +
       '</div>' +
     '</div>' +
     '</div>';
-
-  overlay.style.display = 'block';
-  sidebar.style.display = 'block';
-  setTimeout(function(){ sidebar.style.transform = 'translateX(0)'; }, 20);
 
   fetch('/api/company/profile', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:symbol}) })
     .then(function(r){return r.json()})
@@ -2233,13 +2227,6 @@ function companyDeepDive(symbol) {
     .catch(function(err){
       document.getElementById('ddStatus').textContent = 'Error: ' + err.message;
     });
-}
-
-function closeDeepDive() {
-  var sidebar = document.getElementById('ddSidebar');
-  var overlay = document.getElementById('ddOverlay');
-  sidebar.style.transform = 'translateX(-100%)';
-  setTimeout(function(){ sidebar.style.display = 'none'; overlay.style.display = 'none'; }, 300);
 }
 
 function renderDDProfile(p) {
@@ -2309,7 +2296,7 @@ function askDeepDive() {
   msgs.innerHTML += '<div style="padding:.35rem 0;color:var(--muted);">Darso is thinking...</div>';
   msgs.scrollTop = msgs.scrollHeight;
 
-  var ddTitleEl = document.querySelector('#ddSidebar [style*="color: var(--purple)"]');
+  var ddTitleEl = document.querySelector('#deepDivePanel [style*="color: var(--purple)"]');
   var companyName = ddTitleEl ? ddTitleEl.textContent.replace(/[▶\s]/g,'').trim() : 'the queried company';
 
   fetch('/api/company/ask', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({company: companyName, question:q}) })
