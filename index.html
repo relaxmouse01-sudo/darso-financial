@@ -15,9 +15,7 @@
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{background:linear-gradient(135deg,#0b0719,#1a1040,#0d1b2a);color:var(--white);font-family:var(--fb);overflow-x:hidden;background-size:400% 400%;animation:gradientShift 20s ease infinite;position:relative;}
-body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 0);background-size:28px 28px;pointer-events:none;z-index:0;}
-@keyframes gradientShift{0%{background-position:0% 50%}25%{background-position:100% 0%}50%{background-position:100% 100%}75%{background-position:0% 100%}100%{background-position:0% 50%}}
+body{background:#0b0719;color:var(--white);font-family:var(--fb);overflow-x:hidden;}
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:rgba(168,85,247,.4);border-radius:2px;}
