@@ -2186,14 +2186,11 @@ async function searchStock() {
 // ── COMPANY DEEP DIVE ─────────────────────────────────────────
 function companyDeepDive(symbol) {
   var panel = document.getElementById('deepDivePanel');
-  var hero = document.querySelector('.stocktower-hero');
   panel.style.display = 'block';
-  hero.style.minHeight = 'auto';
-  hero.style.paddingBottom = '3rem';
-  panel.innerHTML = '<div style="padding:1.25rem;background:rgba(0,0,0,.45);border-radius:.75rem;backdrop-filter:blur(12px);border:1px solid var(--border);color:#fff;">' +
+  panel.innerHTML = '<div style="padding:1.25rem;background:#0b0719;border-radius:.75rem;border:1px solid var(--border);color:#fff;box-shadow:0 4px 30px rgba(0,0,0,.5);">' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">' +
       '<div style="font-size:1.1rem;font-weight:600;color:var(--purple);">\u25B6 Deep Dive: ' + symbol + '</div>' +
-      '<button onclick="document.getElementById(\'deepDivePanel\').style.display=\'none\';document.querySelector(\'.stocktower-hero\').style.minHeight=\'100vh\';document.querySelector(\'.stocktower-hero\').style.paddingBottom=\'0\'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:.2rem;">\u2716</button>' +
+      '<button onclick="document.getElementById(\'deepDivePanel\').style.display=\'none\'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:.2rem;">\u2716</button>' +
     '</div>' +
     '<div id="ddStatus" style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;">Fetching company profile...</div>' +
     '<div id="ddContent"></div>' +
