@@ -562,7 +562,7 @@ select.si option{background:#0a0518;}
         <input id="ddSymbol" class="si" placeholder="Company name or symbol e.g. AAPL, Adani, Tesla" style="flex:1;min-width:200px;pointer-events:auto;">
         <button type="button" class="btn btn-g" onclick="var s=document.getElementById('ddSymbol').value.trim();if(s){companyDeepDive(s.toUpperCase())}else{toast('Enter a company name')}" style="white-space:nowrap;pointer-events:auto;">Deep Dive</button>
       </div>
-      <div id="deepDivePanel" style="display:none;max-width:800px;margin-top:1rem;text-align:left;max-height:65vh;overflow-y:auto;"></div>
+      <div id="deepDivePanel" style="display:none;max-width:800px;margin-top:1rem;text-align:left;max-height:65vh;overflow-y:auto;pointer-events:auto;"></div>
       <a class="stocktower-btn" href="#stock-ticker" style="margin-top:.5rem;">Live Demo</a>
     </div>
   </div>
