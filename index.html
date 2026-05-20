@@ -415,7 +415,7 @@ select.si option{background:#0a0518;}
 .screener-value{font-family:'Figtree',sans-serif;font-size:.82rem;font-weight:600;color:#000;}
 
 /* STOCKTOWER HERO */
-.stocktower-hero{min-height:100vh;padding:0;display:flex;flex-direction:column;background:transparent;isolation:isolate;}
+.stocktower-hero{min-height:100vh;padding:0;display:grid;place-items:center;background:transparent;isolation:isolate;}
 .stocktower-frame{position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:0;overflow:hidden;box-shadow:none;}
 .stocktower-scene{position:absolute;inset:-4% 0 0;z-index:0;overflow:hidden;transform:translateY(var(--st-parallax,0px));will-change:transform;}
 .st-floating{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:.18em;font-family:var(--fh);font-size:clamp(3rem,12vw,9rem);font-weight:800;color:var(--white);text-shadow:0 0 30px rgba(0,255,136,.5),0 0 60px rgba(0,255,136,.3),0 0 100px rgba(168,85,247,.25);z-index:1;}
@@ -435,9 +435,7 @@ select.si option{background:#0a0518;}
 .st-floating span:nth-child(12){animation-delay:1.65s;color:#a855f7;}
 @keyframes stfloat{0%,100%{transform:translateY(0) scale(1);}25%{transform:translateY(-18px) scale(1.06);}50%{transform:translateY(0) scale(1);}75%{transform:translateY(12px) scale(.96);}}
 .stocktower-overlay{position:absolute;inset:0;z-index:2;background:rgba(255,255,255,.08);backdrop-filter:blur(4px);pointer-events:none;transition:opacity .15s ease-out;}
-.stocktower-content{position:relative;z-index:3;display:flex;gap:3rem;width:100%;max-width:1180px;margin:0 auto;padding:clamp(3rem,7vh,5.5rem) 2.5rem 3rem;align-items:flex-start;pointer-events:none;}
-.st-left{flex:0 0 auto;text-align:left;max-width:400px;}
-.st-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:1rem;}
+.stocktower-content{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:inherit;padding:clamp(3rem,7vh,5.5rem) 1rem 3rem;text-align:center;pointer-events:none;}
 .stocktower-kicker{margin-bottom:.9rem;font-family:'Abril Fatface',serif;font-size:.85rem;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:#000;opacity:0;animation:stFlyInTop .6s ease .2s forwards;}
 .stocktower-content h1{max-width:980px;margin:0 auto 1.8rem;font-size:clamp(2.8rem,9vw,6.5rem);line-height:1;letter-spacing:-.02em;color:#000;font-family:'Abril Fatface',serif;font-weight:400;opacity:0;animation:stFlyInLeft .7s ease .5s forwards;}
 .stocktower-content .g2{opacity:0;animation:stFlyInRight .7s ease .9s forwards;}
@@ -483,8 +481,6 @@ select.si option{background:#0a0518;}
   .planet-deco{display:none;}
   .stocktower-hero{min-height:100vh;padding:0;}
   .stocktower-frame{inset:0;border-radius:0;}
-  .stocktower-content{flex-direction:column;gap:1.5rem;padding:2rem 1.25rem;}
-  .st-left{max-width:100%;text-align:center;}
   .stocktower-content h1{max-width:22rem;}
 }
 </style>
@@ -560,22 +556,14 @@ select.si option{background:#0a0518;}
     <div class="stocktower-scene" id="stocktowerScene" aria-hidden="true"></div>
     <div class="stocktower-overlay"></div>
     <div class="stocktower-content">
-      <div class="st-left">
-        <p class="stocktower-kicker">Live Market Skyline</p>
-        <h1 id="stocktower-title">DARSO AGENCY</h1>
+      <p class="stocktower-kicker">Live Market Skyline</p>
+      <h1 id="stocktower-title">DARSO AGENCY</h1>
+      <div class="g2" style="max-width:600px;margin-top:1.25rem;gap:.75rem;align-items:center;">
+        <input id="ddSymbol" class="si" placeholder="Company name or symbol e.g. AAPL, Adani, Tesla" style="flex:1;min-width:200px;pointer-events:auto;">
+        <button type="button" class="btn btn-g" onclick="var s=document.getElementById('ddSymbol').value.trim();if(s){companyDeepDive(s.toUpperCase())}else{toast('Enter a company name')}" style="white-space:nowrap;pointer-events:auto;">Deep Dive</button>
       </div>
-      <div class="st-right">
-        <div class="g2" style="gap:.85rem;align-items:center;">
-          <input id="stockQuery" class="si" placeholder="Enter symbol e.g. AAPL, TSLA, N225" style="flex:1;min-width:180px;">
-          <button type="button" class="btn btn-g" onclick="searchStock()" style="white-space:nowrap;">Get Quote</button>
-        </div>
-        <div class="card card-corner cg" style="min-height:72px;">
-          <div class="card-shine"></div>
-          <div id="stockSearchResult" style="color:#000;font-size:.95rem;min-height:64px;display:flex;align-items:center;">Search a stock to see its quote here.</div>
-        </div>
-        <div id="deepDivePanel" style="display:none;"></div>
-        <a class="stocktower-btn" href="#stock-ticker" style="align-self:flex-start;">Live Demo</a>
-      </div>
+      <div id="deepDivePanel" style="display:none;max-width:800px;margin-top:1rem;text-align:left;"></div>
+      <a class="stocktower-btn" href="#stock-ticker" style="margin-top:.5rem;">Live Demo</a>
     </div>
   </div>
 </section>
@@ -1555,28 +1543,6 @@ function refreshMarketTicker() {
     });
 }
 
-function searchStock() {
-  var queryEl = document.getElementById('stockQuery');
-  var resultEl = document.getElementById('stockSearchResult');
-  if (!queryEl || !resultEl) return;
-  var query = queryEl.value.trim();
-  if (!query) {
-    resultEl.textContent = 'Enter a stock symbol like AAPL, TSLA, or N225.';
-    return;
-  }
-  resultEl.textContent = 'Searching for ' + query.toUpperCase() + '...';
-  fetch('/api/stock?symbols=' + encodeURIComponent(query.toUpperCase()))
-    .then(function(res) {
-      if (!res.ok) return res.json().then(function(d) { throw new Error(d.error || 'Stock quote failed'); });
-      return res.json();
-    })
-    .then(function(data) {
-      renderQuoteResult(data.quotes || [], query.toUpperCase());
-    })
-    .catch(function(err) {
-      resultEl.textContent = err.message || 'Could not load quote.';
-    });
-}
 
 refreshMarketTicker();
 setInterval(refreshMarketTicker, 60000);
@@ -2161,35 +2127,6 @@ function toast(m) {
 }
 
 // ── STOCK MANAGEMENT ────────────────────────────────────────────────
-async function searchStock() {
-  var query = document.getElementById('stockQuery').value.trim().toUpperCase();
-  if (!query) { toast('Enter a stock symbol'); return; }
-  
-  try {
-    var res = await fetch('/api/stock?symbols=' + encodeURIComponent(query));
-    var data = await res.json();
-    if (data.quotes && data.quotes.length > 0) {
-      var q = data.quotes[0];
-      var trend = q.changePercent >= 0 ? '▲' : '▼';
-      var color = q.changePercent >= 0 ? 'var(--green)' : 'var(--red)';
-      var html = '<div style="display:flex;flex-direction:column;gap:.5rem;color:#d4d0f0;">' +
-        '<div style="font-weight:600;font-size:1.1rem;">' + q.name + ' (' + q.symbol + ')</div>' +
-        '<div style="display:flex;gap:1.5rem;align-items:center;">' +
-          '<div style="font-family:var(--fm);">$' + q.price.toFixed(2) + '</div>' +
-          '<div style="color:' + color + ';font-weight:600;">' + trend + ' ' + q.changePercent.toFixed(2) + '%</div>' +
-        '</div>' +
-        '<div style="font-size:.85rem;color:var(--muted);">52w High: $' + (q.fiftyTwoWeekHigh || 'N/A') + ' | 52w Low: $' + (q.fiftyTwoWeekLow || 'N/A') + '</div>' +
-        '<div style="margin-top:.3rem;"><button onclick="companyDeepDive(\'' + q.symbol + '\')" style="background:var(--purple);color:#fff;border:none;border-radius:.4rem;padding:.4rem .8rem;font-size:.78rem;cursor:pointer;pointer-events:auto;font-family:var(--fb);">\u25B6 Deep Dive</button></div>' +
-        '</div>';
-      document.getElementById('stockSearchResult').innerHTML = html;
-      toast('Quote loaded: ' + q.symbol);
-    } else {
-      document.getElementById('stockSearchResult').innerHTML = '<div style="color:var(--red);">No data found for ' + query + '</div>';
-    }
-  } catch (e) {
-    document.getElementById('stockSearchResult').innerHTML = '<div style="color:var(--red);">Error: ' + e.message + '</div>';
-  }
-}
 
 // ── COMPANY DEEP DIVE ─────────────────────────────────────────
 function companyDeepDive(symbol) {
