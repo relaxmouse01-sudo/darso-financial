@@ -2290,6 +2290,7 @@ function askDeepDive() {
       msgs.innerHTML += '<div style="color:var(--red);font-size:.85rem;">Error: ' + escHtml(e.message) + '</div>';
     });
 }
+async function updateDashboard() {
   try {
     var res = await fetch('/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD');
     var data = await res.json();
