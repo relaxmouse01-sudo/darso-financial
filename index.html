@@ -2185,12 +2185,111 @@ async function searchStock() {
 
 // ── COMPANY DEEP DIVE ─────────────────────────────────────────
 function companyDeepDive(symbol) {
-  window.open('/company.html?symbol=' + encodeURIComponent(symbol), '_blank');
+  var panel = document.getElementById('deepDivePanel');
+  var hero = document.querySelector('.stocktower-hero');
+  panel.style.display = 'block';
+  hero.style.minHeight = 'auto';
+  hero.style.paddingBottom = '3rem';
+  panel.innerHTML = '<div style="padding:1.25rem;background:rgba(0,0,0,.45);border-radius:.75rem;backdrop-filter:blur(12px);border:1px solid var(--border);color:#fff;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">' +
+      '<div style="font-size:1.1rem;font-weight:600;color:var(--purple);">\u25B6 Deep Dive: ' + symbol + '</div>' +
+      '<button onclick="document.getElementById(\'deepDivePanel\').style.display=\'none\';document.querySelector(\'.stocktower-hero\').style.minHeight=\'100vh\';document.querySelector(\'.stocktower-hero\').style.paddingBottom=\'0\'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:.2rem;">\u2716</button>' +
+    '</div>' +
+    '<div id="ddStatus" style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;">Fetching company profile...</div>' +
+    '<div id="ddContent"></div>' +
+    '<div id="ddChat" style="margin-top:1rem;display:none;">' +
+      '<div style="border-top:1px solid var(--border);padding-top:1rem;">' +
+        '<div style="font-size:.82rem;font-weight:600;margin-bottom:.5rem;color:var(--cyan);">Ask about ' + symbol + '</div>' +
+        '<div style="display:flex;gap:.5rem;">' +
+          '<input id="ddQ" type="text" placeholder="Ask anything..." style="flex:1;padding:.5rem .75rem;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:.4rem;color:#fff;font-family:var(--fb);font-size:.85rem;outline:none;" onkeydown="if(event.key==\'Enter\')askDeepDive()">' +
+          '<button onclick="askDeepDive()" style="padding:.5rem 1rem;background:var(--cyan);color:#000;border:none;border-radius:.4rem;cursor:pointer;font-family:var(--fb);font-size:.82rem;">Ask</button>' +
+        '</div>' +
+        '<div id="ddChatMsgs" style="margin-top:.6rem;font-size:.85rem;line-height:1.6;color:#d0d0e0;max-height:200px;overflow-y:auto;"></div>' +
+      '</div>' +
+    '</div>' +
+    '</div>';
+
+  fetch('/api/company/profile', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:symbol}) })
+    .then(function(r){return r.json()})
+    .then(function(profile){
+      if (profile.error) { document.getElementById('ddStatus').textContent = 'Error: ' + profile.error; return; }
+      document.getElementById('ddStatus').textContent = 'Profile loaded. Fetching 5-year financials...';
+      renderDDProfile(profile);
+      fetch('/api/company/financials', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:symbol}) })
+        .then(function(r){return r.json()})
+        .then(function(fin){
+          document.getElementById('ddStatus').textContent = 'Complete.';
+          renderDDFinancials(fin);
+          document.getElementById('ddChat').style.display = 'block';
+        })
+        .catch(function(){ document.getElementById('ddStatus').textContent = 'Financial data loaded.'; document.getElementById('ddChat').style.display = 'block'; });
+    })
+    .catch(function(err){ document.getElementById('ddStatus').textContent = 'Error: ' + err.message; });
 }
 
+function renderDDProfile(p) {
+  var d = p.profile || p;
+  var el = document.getElementById('ddContent');
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.4rem;margin-bottom:.5rem;">' +
+    (d.sector ? '<div style="padding:.25rem .5rem;background:rgba(255,255,255,.06);border-radius:.3rem;font-size:.78rem;"><span style="color:var(--muted);">Sector</span><br>' + escHtml(d.sector) + '</div>' : '') +
+    (d.industry ? '<div style="padding:.25rem .5rem;background:rgba(255,255,255,.06);border-radius:.3rem;font-size:.78rem;"><span style="color:var(--muted);">Industry</span><br>' + escHtml(d.industry) + '</div>' : '') +
+    (d.headquarters ? '<div style="padding:.25rem .5rem;background:rgba(255,255,255,.06);border-radius:.3rem;font-size:.78rem;"><span style="color:var(--muted);">HQ</span><br>' + escHtml(d.headquarters) + '</div>' : '') +
+    (d.founded ? '<div style="padding:.25rem .5rem;background:rgba(255,255,255,.06);border-radius:.3rem;font-size:.78rem;"><span style="color:var(--muted);">Founded</span><br>' + d.founded + '</div>' : '') +
+    (d.employees ? '<div style="padding:.25rem .5rem;background:rgba(255,255,255,.06);border-radius:.3rem;font-size:.78rem;"><span style="color:var(--muted);">Employees</span><br>' + d.employees.toLocaleString() + '</div>' : '') +
+    '</div>' +
+    (d.description ? '<div style="font-size:.85rem;line-height:1.6;color:#d0d0e0;margin-bottom:.5rem;">' + escHtml(d.description) + '</div>' : '') +
+    (d.segments && d.segments.length ? '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem;">Segments:</div><div style="display:flex;flex-wrap:wrap;gap:.3rem;">' + d.segments.map(function(s){return '<span style="background:rgba(168,85,247,.12);padding:.2rem .5rem;border-radius:.3rem;font-size:.75rem;">' + escHtml(s.name) + ' <span style="color:var(--cyan);">' + (s.revenuePct||0) + '%</span></span>';}).join('') + '</div>' : '');
 }
 
-async function updateDashboard() {
+function renderDDFinancials(data) {
+  var fin = data.financials || {};
+  var ratios = data.ratios || {};
+  var html = '<div style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.5rem;font-size:.78rem;">' +
+    '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">' +
+    '<tr style="border-bottom:1px solid var(--border);"><td style="padding:.25rem .4rem;font-weight:600;color:var(--muted);">Metric</td><td style="padding:.25rem .4rem;color:var(--muted);">2020</td><td style="padding:.25rem .4rem;color:var(--muted);">2021</td><td style="padding:.25rem .4rem;color:var(--muted);">2022</td><td style="padding:.25rem .4rem;color:var(--muted);">2023</td><td style="padding:.25rem .4rem;color:var(--muted);">2024</td><td style="padding:.25rem .4rem;color:var(--muted);">2025</td></tr>';
+  ['revenue','netIncome','totalAssets','totalDebt'].forEach(function(k){
+    var obj = fin[k];
+    if (!obj) return;
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,.04);"><td style="padding:.25rem .4rem;font-weight:500;">' + k.charAt(0).toUpperCase() + k.slice(1) + '</td>';
+    ['2020','2021','2022','2023','2024','2025'].forEach(function(y){
+      var v = obj[y]; if (v == null) { html += '<td style="padding:.25rem .4rem;color:var(--muted);">\u2014</td>'; return; }
+      html += '<td style="padding:.25rem .4rem;">' + (v >= 100 ? '$' + v.toFixed(1) + 'B' : '$' + (v*1000).toFixed(0) + 'M') + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</table></div>';
+  if (ratios.peRatio || ratios.pbRatio || ratios.roe || ratios.debtToEquity) {
+    html += '<div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.4rem;">';
+    if (ratios.peRatio) html += '<span style="background:rgba(255,255,255,.06);padding:.15rem .4rem;border-radius:.2rem;font-size:.72rem;">P/E ' + ratios.peRatio + '</span>';
+    if (ratios.pbRatio) html += '<span style="background:rgba(255,255,255,.06);padding:.15rem .4rem;border-radius:.2rem;font-size:.72rem;">P/B ' + ratios.pbRatio + '</span>';
+    if (ratios.roe) html += '<span style="background:rgba(255,255,255,.06);padding:.15rem .4rem;border-radius:.2rem;font-size:.72rem;">ROE ' + ratios.roe + '%</span>';
+    if (ratios.debtToEquity) html += '<span style="background:rgba(255,255,255,.06);padding:.15rem .4rem;border-radius:.2rem;font-size:.72rem;">D/E ' + ratios.debtToEquity + '</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('ddContent').innerHTML += html;
+}
+
+function askDeepDive() {
+  var q = document.getElementById('ddQ').value.trim();
+  if (!q) return;
+  document.getElementById('ddQ').value = '';
+  var msgs = document.getElementById('ddChatMsgs');
+  msgs.innerHTML += '<div style="color:#fff;font-size:.85rem;">You: ' + escHtml(q) + '</div>';
+  msgs.innerHTML += '<div style="color:var(--muted);font-size:.82rem;">Thinking...</div>';
+  msgs.scrollTop = msgs.scrollHeight;
+  var name = document.querySelector('#deepDivePanel [style*="color: var(--purple)"]');
+  var company = name ? name.textContent.replace(/[▶\s]/g,'').trim() : 'the company';
+  fetch('/api/company/ask', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({company:company, question:q}) })
+    .then(function(r){return r.json()}).then(function(d){
+      msgs.innerHTML = msgs.innerHTML.replace(/<div style="color:var\(--muted\);font-size:.82rem;">Thinking\.\.\.<\/div>$/, '');
+      msgs.innerHTML += '<div style="color:#d0d0e0;font-size:.85rem;">' + (d.reply || 'No response') + '</div>';
+      msgs.scrollTop = msgs.scrollHeight;
+    }).catch(function(e){
+      msgs.innerHTML = msgs.innerHTML.replace(/<div style="color:var\(--muted\);font-size:.82rem;">Thinking\.\.\.<\/div>$/, '');
+      msgs.innerHTML += '<div style="color:var(--red);font-size:.85rem;">Error: ' + escHtml(e.message) + '</div>';
+    });
+}
   try {
     var res = await fetch('/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD');
     var data = await res.json();
