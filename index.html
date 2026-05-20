@@ -503,6 +503,7 @@ select.si option{background:#0a0518;}
     <a href="#voice">Voice AI</a>
     <a href="#fees">Fee X-Ray</a>
     <a href="#spin">Spin Filter</a>
+    <a href="/admin" target="_blank" style="color:var(--purple) !important;">Admin</a>
   </div>
   <div style="display:flex;align-items:center;gap:.75rem;">
     <button class="nav-cta" onclick="document.getElementById('voice').scrollIntoView({behavior:'smooth'})">Try Free</button>
@@ -524,6 +525,7 @@ select.si option{background:#0a0518;}
   <a href="#voice" onclick="document.getElementById('mm').classList.remove('open')">Voice AI</a>
   <a href="#fees" onclick="document.getElementById('mm').classList.remove('open')">Fee X-Ray</a>
   <a href="#spin" onclick="document.getElementById('mm').classList.remove('open')">Spin Filter</a>
+  <a href="/admin" target="_blank" onclick="document.getElementById('mm').classList.remove('open')" style="color:var(--purple) !important;">Admin</a>
 </div>
 
 <!-- TICKER -->
@@ -564,6 +566,7 @@ select.si option{background:#0a0518;}
         <div class="card-shine"></div>
         <div id="stockSearchResult" style="color:#000;font-size:.95rem;min-height:72px;display:flex;align-items:center;">Live stock quotes refresh automatically every minute.</div>
       </div>
+      <div id="deepDivePanel" style="display:none;max-width:900px;margin-top:1rem;text-align:left;"></div>
       <a class="stocktower-btn" href="#stock-ticker">Live Demo</a>
     </div>
   </div>
@@ -2168,6 +2171,7 @@ async function searchStock() {
           '<div style="color:' + color + ';font-weight:600;">' + trend + ' ' + q.changePercent.toFixed(2) + '%</div>' +
         '</div>' +
         '<div style="font-size:.85rem;color:var(--muted);">52w High: $' + (q.fiftyTwoWeekHigh || 'N/A') + ' | 52w Low: $' + (q.fiftyTwoWeekLow || 'N/A') + '</div>' +
+        '<div style="margin-top:.3rem;"><button onclick="companyDeepDive(\'' + q.symbol + '\')" style="background:var(--purple);color:#fff;border:none;border-radius:.4rem;padding:.4rem .8rem;font-size:.78rem;cursor:pointer;pointer-events:auto;font-family:var(--fb);">\u25B6 Deep Dive</button></div>' +
         '</div>';
       document.getElementById('stockSearchResult').innerHTML = html;
       toast('Quote loaded: ' + q.symbol);
@@ -2177,6 +2181,135 @@ async function searchStock() {
   } catch (e) {
     document.getElementById('stockSearchResult').innerHTML = '<div style="color:var(--red);">Error: ' + e.message + '</div>';
   }
+}
+
+// ── COMPANY DEEP DIVE ─────────────────────────────────────────
+function companyDeepDive(symbol) {
+  var panel = document.getElementById('deepDivePanel');
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="padding:1.25rem;background:rgba(0,0,0,.45);border-radius:.75rem;backdrop-filter:blur(12px);border:1px solid var(--border);color:#fff;">' +
+    '<div style="font-size:1.1rem;font-weight:600;margin-bottom:.6rem;color:var(--purple);">\u25B6 Deep Dive: ' + symbol + '</div>' +
+    '<div id="ddStatus" style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;">Fetching company profile...</div>' +
+    '<div id="ddContent"></div>' +
+    '<div id="ddChat" style="margin-top:1rem;display:none;">' +
+      '<div style="border-top:1px solid var(--border);padding-top:1rem;">' +
+        '<div style="font-size:.82rem;font-weight:600;margin-bottom:.5rem;color:var(--cyan);">Ask about ' + symbol + '</div>' +
+        '<div style="display:flex;gap:.5rem;">' +
+          '<input id="ddQ" type="text" placeholder="Ask anything about this company..." style="flex:1;padding:.5rem .75rem;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:.4rem;color:#fff;font-family:var(--fb);font-size:.85rem;outline:none;" onkeydown="if(event.key==\'Enter\')askDeepDive()">' +
+          '<button onclick="askDeepDive()" style="padding:.5rem 1rem;background:var(--cyan);color:#000;border:none;border-radius:.4rem;cursor:pointer;font-family:var(--fb);font-size:.82rem;">Ask</button>' +
+        '</div>' +
+        '<div id="ddChatMsgs" style="margin-top:.6rem;font-size:.85rem;line-height:1.6;color:#d0d0e0;max-height:200px;overflow-y:auto;"></div>' +
+      '</div>' +
+    '</div>' +
+    '</div>';
+
+  var name = symbol;
+  // Step 1: Company profile
+  fetch('/api/company/profile', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:name}) })
+    .then(function(r){return r.json()})
+    .then(function(profile){
+      if (profile.error) {
+        document.getElementById('ddStatus').textContent = 'Could not find: ' + profile.error;
+        return;
+      }
+      document.getElementById('ddStatus').textContent = 'Profile loaded. Fetching 5-year financials...';
+      renderDDProfile(profile);
+      // Step 2: Financials
+      fetch('/api/company/financials', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:name}) })
+        .then(function(r){return r.json()})
+        .then(function(fin){
+          document.getElementById('ddStatus').textContent = 'Financial data loaded.';
+          renderDDFinancials(fin);
+          document.getElementById('ddChat').style.display = 'block';
+        })
+        .catch(function(){ document.getElementById('ddStatus').textContent = 'Financial data unavailable.'; });
+    })
+    .catch(function(err){
+      document.getElementById('ddStatus').textContent = 'Error: ' + err.message;
+    });
+}
+
+function renderDDProfile(p) {
+  var pData = p.profile || p;
+  var el = document.getElementById('ddContent');
+  var html = '<div style="margin-bottom:.75rem;"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.4rem;">' +
+    (pData.sector ? '<div style="padding:.3rem .5rem;background:rgba(255,255,255,.06);border-radius:.3rem;font-size:.78rem;"><span style="color:var(--muted);">Sector</span><br>' + escHtml(pData.sector) + '</div>' : '') +
+    (pData.industry ? '<div style="padding:.3rem .5rem;background:rgba(255,255,255,.06);border-radius:.3rem;font-size:.78rem;"><span style="color:var(--muted);">Industry</span><br>' + escHtml(pData.industry) + '</div>' : '') +
+    (pData.headquarters ? '<div style="padding:.3rem .5rem;background:rgba(255,255,255,.06);border-radius:.3rem;font-size:.78rem;"><span style="color:var(--muted);">HQ</span><br>' + escHtml(pData.headquarters) + '</div>' : '') +
+    (pData.founded ? '<div style="padding:.3rem .5rem;background:rgba(255,255,255,.06);border-radius:.3rem;font-size:.78rem;"><span style="color:var(--muted);">Founded</span><br>' + pData.founded + '</div>' : '') +
+    (pData.employees ? '<div style="padding:.3rem .5rem;background:rgba(255,255,255,.06);border-radius:.3rem;font-size:.78rem;"><span style="color:var(--muted);">Employees</span><br>' + pData.employees.toLocaleString() + '</div>' : '') +
+    '</div></div>' +
+    (pData.description ? '<div style="font-size:.85rem;line-height:1.7;color:#d0d0e0;margin-bottom:.75rem;">' + escHtml(pData.description) + '</div>' : '') +
+    (pData.segments && pData.segments.length ? '<div style="margin-bottom:.5rem;"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--fm);margin-bottom:.35rem;">Business Segments</div><div style="display:flex;flex-wrap:wrap;gap:.3rem;">' + pData.segments.map(function(s){return '<span style="background:rgba(168,85,247,.12);padding:.2rem .5rem;border-radius:.3rem;font-size:.75rem;">' + escHtml(s.name) + ' <span style="color:var(--cyan);">' + (s.revenuePct||0) + '%</span></span>';}).join('') + '</div></div>' : '');
+  el.innerHTML = html;
+}
+
+function renderDDFinancials(data) {
+  var fin = data.financials || {};
+  var ratios = data.ratios || {};
+  var html = '<div style="border-top:1px solid var(--border);padding-top:.75rem;margin-top:.75rem;">' +
+    '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--fm);margin-bottom:.5rem;">5-Year Financials</div>' +
+    '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.78rem;">';
+  var metrics = [
+    {l:'Revenue', k:'revenue'}, {l:'Net Income', k:'netIncome'}, {l:'Operating Income', k:'operatingIncome'},
+    {l:'Total Assets', k:'totalAssets'}, {l:'Total Debt', k:'totalDebt'}, {l:'Free Cash Flow', k:'freeCashFlow'}
+  ];
+  var years = ['2020','2021','2022','2023','2024','2025'];
+  html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:.3rem .5rem;font-weight:600;color:var(--muted);">Metric</td>';
+  years.forEach(function(y){html += '<td style="padding:.3rem .5rem;color:var(--muted);font-size:.7rem;">' + y + '</td>';});
+  html += '</tr>';
+  metrics.forEach(function(m){
+    var obj = fin[m.k];
+    if (!obj) return;
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,.04);"><td style="padding:.3rem .5rem;font-weight:500;">' + m.l + '</td>';
+    years.forEach(function(y){
+      var v = obj[y];
+      if (v == null) { html += '<td style="padding:.3rem .5rem;color:var(--muted);">—</td>'; return; }
+      html += '<td style="padding:.3rem .5rem;">' + (v >= 100 ? '$' + v.toFixed(1) + 'B' : '$' + (v*1000).toFixed(0) + 'M') + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</table></div>';
+
+  if (ratios.peRatio || ratios.pbRatio) {
+    html += '<div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;">';
+    if (ratios.peRatio) html += '<span style="background:rgba(255,255,255,.06);padding:.2rem .5rem;border-radius:.3rem;font-size:.72rem;">P/E: ' + ratios.peRatio + '</span>';
+    if (ratios.forwardPE) html += '<span style="background:rgba(255,255,255,.06);padding:.2rem .5rem;border-radius:.3rem;font-size:.72rem;">Fwd P/E: ' + ratios.forwardPE + '</span>';
+    if (ratios.pbRatio) html += '<span style="background:rgba(255,255,255,.06);padding:.2rem .5rem;border-radius:.3rem;font-size:.72rem;">P/B: ' + ratios.pbRatio + '</span>';
+    if (ratios.roe) html += '<span style="background:rgba(255,255,255,.06);padding:.2rem .5rem;border-radius:.3rem;font-size:.72rem;">ROE: ' + ratios.roe + '%</span>';
+    if (ratios.debtToEquity) html += '<span style="background:rgba(255,255,255,.06);padding:.2rem .5rem;border-radius:.3rem;font-size:.72rem;">D/E: ' + ratios.debtToEquity + '</span>';
+    if (ratios.dividendYield) html += '<span style="background:rgba(255,255,255,.06);padding:.2rem .5rem;border-radius:.3rem;font-size:.72rem;">Div: ' + ratios.dividendYield + '%</span>';
+    if (ratios.beta) html += '<span style="background:rgba(255,255,255,.06);padding:.2rem .5rem;border-radius:.3rem;font-size:.72rem;">Beta: ' + ratios.beta + '</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('ddContent').innerHTML += html;
+}
+
+function askDeepDive() {
+  var input = document.getElementById('ddQ');
+  var q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  var msgs = document.getElementById('ddChatMsgs');
+  msgs.innerHTML += '<div style="padding:.35rem 0;color:#fff;font-weight:500;">You: ' + escHtml(q) + '</div>';
+  msgs.innerHTML += '<div style="padding:.35rem 0;color:var(--muted);">Darso is thinking...</div>';
+  msgs.scrollTop = msgs.scrollHeight;
+
+  var symbol = document.querySelector('#ddStatus').textContent.includes('financial') ? 'this company' : '';
+  var companyName = document.querySelector('#deepDivePanel .dd-title') ? '' : symbol || 'this company';
+
+  fetch('/api/company/ask', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({company: companyName || 'the queried company', question:q}) })
+    .then(function(r){return r.json()})
+    .then(function(data){
+      msgs.innerHTML = msgs.innerHTML.replace(/<div style="padding:.35rem 0;color:var\(--muted\);">Darso is thinking\.\.\.<\/div>$/, '');
+      msgs.innerHTML += '<div style="padding:.35rem 0;color:#d0d0e0;font-size:.85rem;line-height:1.6;">' + (data.reply || 'No response') + '</div>';
+      msgs.scrollTop = msgs.scrollHeight;
+    })
+    .catch(function(err){
+      msgs.innerHTML = msgs.innerHTML.replace(/<div style="padding:.35rem 0;color:var\(--muted\);">Darso is thinking\.\.\.<\/div>$/, '');
+      msgs.innerHTML += '<div style="padding:.35rem 0;color:var(--red);">Error: ' + escHtml(err.message) + '</div>';
+    });
 }
 
 async function updateDashboard() {

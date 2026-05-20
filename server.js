@@ -637,6 +637,155 @@ async function handleStockAnalysis(req, res) {
   });
 }
 
+// ── TRACKING ──────────────────────────────────────────────────────
+var TRACKING_FILE = path.join(__dirname, 'tracking.json');
+function loadTracking() {
+  if (!fs.existsSync(TRACKING_FILE)) return { totalRequests: 0, uniqueIps: [], endpointCounts: {}, hourlyCounts: {}, pageViews: {}, requestLog: [] };
+  try { return JSON.parse(fs.readFileSync(TRACKING_FILE, 'utf8')); }
+  catch { return { totalRequests: 0, uniqueIps: [], endpointCounts: {}, hourlyCounts: {}, pageViews: {}, requestLog: [] }; }
+}
+function saveTracking(t) {
+  try { fs.writeFileSync(TRACKING_FILE, JSON.stringify(t, null, 2)); } catch(_) {}
+}
+function trackRequest(req) {
+  var t = loadTracking();
+  t.totalRequests++;
+  var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+  if (!t.uniqueIps.includes(ip)) t.uniqueIps.push(ip);
+  var ep = req.url.split('?')[0];
+  t.endpointCounts[ep] = (t.endpointCounts[ep] || 0) + 1;
+  var hour = new Date().toISOString().slice(0, 13);
+  t.hourlyCounts[hour] = (t.hourlyCounts[hour] || 0) + 1;
+  if (req.method === 'GET' && !req.url.startsWith('/api/') && req.url !== '/admin') {
+    t.pageViews[req.url] = (t.pageViews[req.url] || 0) + 1;
+  }
+  t.requestLog = (t.requestLog || []).slice(-99);
+  t.requestLog.push({ time: Date.now(), ip: ip, url: req.url, method: req.method });
+  saveTracking(t);
+}
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin';
+
+async function handleAdminStats(req, res, url) {
+  var token = url.searchParams.get('token') || '';
+  if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var t = loadTracking();
+  sendJson(res, 200, {
+    totalRequests: t.totalRequests,
+    uniqueVisitors: t.uniqueIps.length,
+    endpoints: t.endpointCounts,
+    hourly: t.hourlyCounts,
+    pageViews: t.pageViews,
+    recentRequests: (t.requestLog || []).slice(-50).reverse()
+  });
+}
+
+// ── COMPANY DEEP-DIVE ────────────────────────────────────────────
+var COMPANY_CACHE = {};
+function getCompanyKey(name) { return name.trim().toUpperCase(); }
+
+async function handleCompanyProfile(req, res) {
+  var payload = await readJson(req);
+  var companyName = (payload.name || payload.symbol || '').trim();
+  if (!companyName) { sendJson(res, 400, { error: 'Company name or symbol required' }); return; }
+
+  var key = getCompanyKey(companyName);
+  if (COMPANY_CACHE[key]) { sendJson(res, 200, COMPANY_CACHE[key]); return; }
+
+  if (!OPENROUTER_API_KEY) { sendJson(res, 500, { error: 'AI not configured' }); return; }
+
+  var prompt = 'You are a financial data API. Given the company "' + companyName + '", respond ONLY with a valid JSON object (no markdown, no extra text):\n\n{\n  "profile": {\n    "name": "Full company name",\n    "ticker": "stock symbol if known",\n    "sector": "sector",\n    "industry": "industry",\n    "description": "2-3 sentence overview",\n    "website": "website URL",\n    "headquarters": "city, country",\n    "founded": year,\n    "employees": number,\n    "keyPeople": [{"name":"CEO name","title":"CEO"}],\n    "exchanges": ["NSE","BSE"]\n  },\n  "segments": [\n    {"name":"segment name","revenuePct": 45, "description":"what this segment does"}\n  ],\n  "competitors": ["COMP1","COMP2","COMP3"],\n  "peers": ["PEER1","PEER2"]\n}\n\nBe accurate. If you don\'t know the exact ticker use "N/A". If the company doesn\'t exist, respond with {"error": "company not found"}.' + (companyName.toLowerCase().includes('adani') ? '\n\nFor Adani companies: Adani Enterprises (ticker: ADANIENT.NS), Adani Ports (ADANIPORTS.NS), Adani Green (ADANIGREEN.NS), Adani Power (ADANIPOWER.NS), Adani Wilmar (AWL.NS). The group is Indian conglomerate.' : '');
+
+  var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + OPENROUTER_API_KEY,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'http://localhost:3000',
+      'X-Title': 'DARSO Company Intelligence'
+    },
+    body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 2000, temperature: 0.3 })
+  });
+
+  var data = await upstream.json().catch(function() { return {}; });
+  if (!upstream.ok) { sendJson(res, 500, { error: (data.error && data.error.message) || 'AI request failed' }); return; }
+
+  var raw = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+  raw = raw.replace(/```json|```/g, '').trim();
+  var start = raw.indexOf('{'), end = raw.lastIndexOf('}');
+  if (start === -1 || end === -1) { sendJson(res, 500, { error: 'AI response was not valid JSON' }); return; }
+
+  var result;
+  try { result = JSON.parse(raw.slice(start, end + 1)); }
+  catch (e) { sendJson(res, 500, { error: 'Failed to parse company profile' }); return; }
+
+  if (result.error) { sendJson(res, 404, { error: result.error }); return; }
+
+  COMPANY_CACHE[key] = result;
+  // Also cache common alternatives
+  if (result.ticker && result.ticker !== 'N/A') COMPANY_CACHE[getCompanyKey(result.ticker)] = result;
+  sendJson(res, 200, result);
+}
+
+async function handleCompanyFinancials(req, res) {
+  var payload = await readJson(req);
+  var companyName = (payload.name || payload.symbol || '').trim();
+  if (!companyName) { sendJson(res, 400, { error: 'Company name or symbol required' }); return; }
+
+  if (!OPENROUTER_API_KEY) { sendJson(res, 500, { error: 'AI not configured' }); return; }
+
+  var prompt = 'You are a financial data API. Given the company "' + companyName + '", respond ONLY with a valid JSON object (no markdown, no extra text):\n\n{\n  "financials": {\n    "revenue": {"2020": number_billions, "2021": number_billions, "2022": number_billions, "2023": number_billions, "2024": number_billions, "2025": number_billions_or_null},\n    "netIncome": {"2020": number_billions, "2021": number_billions, "2022": number_billions, "2023": number_billions, "2024": number_billions, "2025": number_billions_or_null},\n    "operatingIncome": {"2020": number_billions, "2021": number_billions, "2022": number_billions, "2023": number_billions, "2024": number_billions, "2025": number_billions_or_null},\n    "totalAssets": {"2020": number_billions, "2021": number_billions, "2022": number_billions, "2023": number_billions, "2024": number_billions, "2025": number_billions_or_null},\n    "totalDebt": {"2020": number_billions, "2021": number_billions, "2022": number_billions, "2023": number_billions, "2024": number_billions, "2025": number_billions_or_null},\n    "freeCashFlow": {"2020": number_billions, "2021": number_billions, "2022": number_billions, "2023": number_billions, "2024": number_billions, "2025": number_billions_or_null},\n    "operatingMargin": {"2020": percent, "2021": percent, "2022": percent, "2023": percent, "2024": percent, "2025": percent_or_null},\n    "netMargin": {"2020": percent, "2021": percent, "2022": percent, "2023": percent, "2024": percent, "2025": percent_or_null},\n    "revenueGrowth": {"2021": percent, "2022": percent, "2023": percent, "2024": percent}\n  },\n  "ratios": {\n    "peRatio": number,\n    "forwardPE": number_or_null,\n    "pbRatio": number,\n    "roe": percent,\n    "roa": percent,\n    "debtToEquity": number,\n    "currentRatio": number,\n    "dividendYield": percent_or_null,\n    "beta": number_or_null\n  },\n  "keyMetrics": {\n    "marketCap": "string like $120B",\n    "avgVolume": number_or_null,\n    "shortPercent": number_or_null\n  },\n  "growth": {\n    "revenueCagr5y": percent,\n    "earningsCagr5y": percent,\n    "nextYearEstimate": percent_or_null\n  }\n}\n\nProvide the most accurate data you can. Use null for unknown values. All monetary values in billions of USD unless the company is primarily in India (use INR crores) and note the currency.';
+
+  var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + OPENROUTER_API_KEY,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'http://localhost:3000',
+      'X-Title': 'DARSO Company Intelligence'
+    },
+    body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 2500, temperature: 0.3 })
+  });
+
+  var data = await upstream.json().catch(function() { return {}; });
+  if (!upstream.ok) { sendJson(res, 500, { error: (data.error && data.error.message) || 'AI request failed' }); return; }
+
+  var raw = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+  raw = raw.replace(/```json|```/g, '').trim();
+  var start = raw.indexOf('{'), end = raw.lastIndexOf('}');
+  if (start === -1 || end === -1) { sendJson(res, 500, { error: 'AI response was not valid JSON' }); return; }
+
+  try { sendJson(res, 200, JSON.parse(raw.slice(start, end + 1))); }
+  catch (e) { sendJson(res, 500, { error: 'Failed to parse financial data' }); }
+}
+
+async function handleCompanyAsk(req, res) {
+  var payload = await readJson(req);
+  var companyName = (payload.company || '').trim();
+  var question = (payload.question || '').trim();
+  if (!companyName || !question) { sendJson(res, 400, { error: 'company and question are required' }); return; }
+
+  if (!OPENROUTER_API_KEY) { sendJson(res, 500, { error: 'AI not configured' }); return; }
+
+  var prompt = 'You are a specialist analyst focused exclusively on ' + companyName + '. You have deep knowledge of this company\'s business model, financials, management, competitive position, risks, and growth prospects. Answer the following question thoroughly and concisely:\n\nQuestion: ' + question + '\n\nProvide specific data points, dates, and facts where possible. If you don\'t know something, say so openly. Focus on what matters most for an investor.';
+
+  var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + OPENROUTER_API_KEY,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'http://localhost:3000',
+      'X-Title': 'DARSO ' + companyName + ' Analyst'
+    },
+    body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 800, temperature: 0.4 })
+  });
+
+  var data = await upstream.json().catch(function() { return {}; });
+  if (!upstream.ok) { sendJson(res, 500, { error: (data.error && data.error.message) || 'AI request failed' }); return; }
+
+  sendJson(res, 200, { reply: (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '' });
+}
+
 function serveStatic(req, res) {
   const rawPath = req.url === '/' ? '/index.html' : req.url.split('?')[0];
   const filePath = path.normalize(path.join(PUBLIC_DIR, rawPath));
@@ -666,6 +815,7 @@ function serveStatic(req, res) {
 }
 
 const server = http.createServer((req, res) => {
+  trackRequest(req);
   if (req.method === 'GET' && req.url === '/api/health') {
     sendJson(res, 200, {
       ok: true,
@@ -715,6 +865,31 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/api/portfolio/history') {
     const history = loadPortfolioHistory();
     sendJson(res, 200, { history });
+    return;
+  }
+  if (req.method === 'GET' && req.url.startsWith('/api/admin/stats')) {
+    const url = new URL(req.url, 'http://localhost');
+    handleAdminStats(req, res, url).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/company/profile') {
+    handleCompanyProfile(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/company/financials') {
+    handleCompanyFinancials(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/company/ask') {
+    handleCompanyAsk(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'GET' && (req.url === '/admin' || req.url === '/admin.html')) {
+    const adminPath = path.join(__dirname, 'admin.html');
+    fs.readFile(adminPath, (err, data) => {
+      if (err) { send(res, 404, 'Admin page not found'); return; }
+      send(res, 200, data, { 'Content-Type': 'text/html; charset=utf-8' });
+    });
     return;
   }
   if (req.method === 'GET') {

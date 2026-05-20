@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DARSO Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);--purple:#a855f7;--cyan:#22d3ee;--green:#00ff88;--gold:#f59e0b;--red:#ef4444;--white:#f0eeff;--muted:rgba(200,185,255,.4);--fh:'Space Grotesk',sans-serif;--fb:'Inter',sans-serif;--fm:'JetBrains Mono',monospace;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:100vh;}
+::selection{background:var(--purple);color:#fff;}
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:2.5rem;width:100%;max-width:380px;backdrop-filter:blur(12px);}
+.login-box h1{font-family:var(--fh);font-size:1.5rem;margin-bottom:.4rem;}
+.login-box p{color:var(--muted);font-size:.85rem;margin-bottom:1.5rem;}
+.login-box input{width:100%;padding:.75rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;transition:border .2s;margin-bottom:1rem;}
+.login-box input:focus{border-color:var(--purple);}
+.login-box button{width:100%;padding:.75rem;background:var(--purple);color:#fff;border:none;border-radius:.5rem;font-family:var(--fb);font-size:.9rem;cursor:pointer;transition:opacity .2s;}
+.login-box button:hover{opacity:.85;}
+.login-error{color:var(--red);font-size:.82rem;margin-top:.75rem;display:none;}
+.dashboard{display:none;padding:1.5rem 2rem;max-width:1400px;margin:0 auto;}
+.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
+.dash-header h1{font-family:var(--fh);font-size:1.6rem;}
+.dash-header span{color:var(--muted);font-size:.85rem;}
+.dash-header button{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--white);padding:.5rem 1rem;border-radius:.4rem;cursor:pointer;font-family:var(--fb);font-size:.8rem;transition:background .2s;}
+.dash-header button:hover{background:rgba(255,255,255,.12);}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.25rem;}
+.stat-card .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.35rem;}
+.stat-card .value{font-family:var(--fh);font-size:1.6rem;font-weight:600;}
+.stat-card .sub{font-size:.78rem;color:var(--muted);margin-top:.25rem;}
+.tab-bar{display:flex;gap:.25rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0;}
+.tab-btn{background:none;border:none;color:var(--muted);padding:.6rem 1.2rem;font-family:var(--fb);font-size:.85rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+.tab-btn:hover{color:var(--white);}
+.tab-btn.active{color:var(--purple);border-bottom-color:var(--purple);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.endpoint-table,.page-table{width:100%;border-collapse:collapse;font-size:.85rem;}
+.endpoint-table th,.page-table th{text-align:left;padding:.6rem .8rem;color:var(--muted);font-family:var(--fm);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--border);}
+.endpoint-table td,.page-table td{padding:.55rem .8rem;border-bottom:1px solid rgba(255,255,255,.04);color:#d0d0e0;}
+.endpoint-table tr:hover td,.page-table tr:hover td{background:rgba(255,255,255,.03);}
+.bar-cell{display:flex;align-items:center;gap:.6rem;}
+.bar{height:6px;border-radius:3px;background:var(--purple);min-width:2px;transition:width .3s;}
+.bar.green{background:var(--green);}
+.bar.gold{background:var(--gold);}
+.bar.cyan{background:var(--cyan);}
+.company-section{background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;}
+.company-section h3{font-family:var(--fh);font-size:1.1rem;margin-bottom:1rem;}
+.company-input-group{display:flex;gap:.5rem;margin-bottom:1rem;}
+.company-input-group input{flex:1;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;}
+.company-input-group input:focus{border-color:var(--purple);}
+.company-input-group button{padding:.65rem 1.25rem;background:var(--purple);color:#fff;border:none;border-radius:.5rem;cursor:pointer;font-family:var(--fb);font-size:.85rem;white-space:nowrap;}
+.company-input-group button:hover{opacity:.85;}
+.company-input-group button.cyan{background:var(--cyan);color:#000;}
+.company-result{display:none;margin-top:1rem;}
+.company-result .cr-section{margin-bottom:1.25rem;}
+.company-result .cr-section h4{font-family:var(--fm);font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.5rem;}
+.company-result .cr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.5rem;}
+.company-result .cr-field{padding:.5rem .7rem;background:rgba(255,255,255,.04);border-radius:.4rem;}
+.company-result .cr-field .cr-label{font-size:.68rem;color:var(--muted);font-family:var(--fm);}
+.company-result .cr-field .cr-val{font-size:.95rem;color:var(--white);margin-top:.15rem;}
+.chat-area{background:var(--card);border:1px solid var(--border);border-radius:.75rem;overflow:hidden;margin-top:1rem;}
+.chat-msgs{height:240px;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem;}
+.chat-msgs::-webkit-scrollbar{width:3px;}
+.chat-msgs::-webkit-scrollbar-thumb{background:rgba(168,85,247,.3);border-radius:2px;}
+.cm{background:rgba(255,255,255,.04);border-radius:.5rem;padding:.6rem .85rem;font-size:.85rem;line-height:1.5;color:#d0d0e0;max-width:85%;}
+.cm.user{background:rgba(168,85,247,.12);align-self:flex-end;color:var(--white);}
+.cm.ai{border-left:2px solid var(--purple);}
+.chat-input{display:flex;gap:.5rem;padding:.6rem .85rem;border-top:1px solid var(--border);}
+.chat-input input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.4rem;padding:.5rem .75rem;color:var(--white);font-family:var(--fb);font-size:.85rem;outline:none;}
+.chat-input input:focus{border-color:var(--purple);}
+.chat-input button{padding:.5rem 1rem;background:var(--purple);color:#fff;border:none;border-radius:.4rem;cursor:pointer;}
+.chat-input button:hover{opacity:.85;}
+.loading-dots::after{content:'';animation:dots 1.2s steps(4) infinite;}
+@keyframes dots{0%{content:'';}25%{content:'.';}50%{content:'..';}75%{content:'...';}}
+@media(max-width:600px){
+  .dashboard{padding:1rem;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .dash-header{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h1>DARSO Admin</h1>
+    <p>Enter the admin password to access the dashboard.</p>
+    <input type="password" id="adminPass" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
+    <button onclick="login()">Sign In</button>
+    <div class="login-error" id="loginError">Incorrect password</div>
+  </div>
+</div>
+
+<div class="dashboard" id="dashboard">
+  <div class="dash-header">
+    <div>
+      <h1>DARSO Admin Dashboard</h1>
+      <span id="lastUpdated">Loading...</span>
+    </div>
+    <div>
+      <button onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="label">Total Requests</div><div class="value" id="statTotal">-</div></div>
+    <div class="stat-card"><div class="label">Unique Visitors</div><div class="value" id="statVisitors">-</div></div>
+    <div class="stat-card"><div class="label">API Endpoints</div><div class="value" id="statEndpoints">-</div></div>
+    <div class="stat-card"><div class="label">Page Views</div><div class="value" id="statPages">-</div></div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="analytics" onclick="switchTab('analytics',this)">Analytics</button>
+    <button class="tab-btn" data-tab="endpoints" onclick="switchTab('endpoints',this)">Endpoints</button>
+    <button class="tab-btn" data-tab="company" onclick="switchTab('company',this)">Company AI</button>
+  </div>
+
+  <div class="tab-content active" id="tab-analytics">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
+      <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1rem;">Requests Over Time (hourly)</h3>
+      <div id="hourlyChart" style="display:flex;align-items:flex-end;gap:2px;min-height:120px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:.5rem;"></div>
+    </div>
+    <div style="margin-top:1rem;background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
+      <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1rem;">Page Views</h3>
+      <table class="page-table" id="pageTable"><thead><tr><th>Page</th><th>Views</th><th>%</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div style="margin-top:1rem;background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
+      <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1rem;">Recent Requests</h3>
+      <div id="recentRequests" style="font-size:.8rem;color:var(--muted);max-height:200px;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-endpoints">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
+      <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1rem;">API Endpoint Usage</h3>
+      <table class="endpoint-table" id="endpointTable"><thead><tr><th>Endpoint</th><th>Requests</th><th>% of Total</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-company">
+    <div class="company-section">
+      <h3>Company Intelligence</h3>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;">Enter a company name or ticker. Darso will generate a comprehensive profile, 5-year financials, and you can ask specific questions.</p>
+      <div class="company-input-group">
+        <input type="text" id="companyInput" placeholder="e.g. Adani, Reliance, Apple, TSLA" onkeydown="if(event.key==='Enter')runCompanyDeepDive()">
+        <button onclick="runCompanyDeepDive()">Deep Dive</button>
+        <button class="cyan" onclick="document.getElementById('chatCompanyName').textContent=document.getElementById('companyInput').value.trim();initCompanyChat()">Ask AI</button>
+      </div>
+      <div id="companyLoading" style="display:none;text-align:center;padding:2rem;color:var(--muted);font-size:.9rem;">
+        <span class="loading-dots"></span> Loading company data...
+      </div>
+      <div class="company-result" id="companyResult"></div>
+      <div id="companyFinancialsResult"></div>
+    </div>
+    <div class="company-section" id="companyChatSection" style="display:none;">
+      <h3>Personalised AI: <span id="chatCompanyName" style="color:var(--purple);"></span></h3>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;">Ask anything about this company. The AI acts as a specialist analyst focused exclusively on it.</p>
+      <div class="chat-area">
+        <div class="chat-msgs" id="companyChatMsgs"></div>
+        <div class="chat-input">
+          <input type="text" id="companyChatInput" placeholder="Ask about this company..." onkeydown="if(event.key==='Enter')askCompany()">
+          <button onclick="askCompany()">Ask</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var TOKEN = localStorage.getItem('darsoAdminToken') || '';
+var COMPANY = '';
+
+function login() {
+  var pass = document.getElementById('adminPass').value;
+  if (!pass) return;
+  TOKEN = pass;
+  // Verify by hitting stats endpoint
+  verifyToken();
+}
+
+function verifyToken() {
+  fetch('/api/admin/stats?token=' + encodeURIComponent(TOKEN))
+    .then(function(r) { if (r.ok) return r.json(); throw new Error('Unauthorized'); })
+    .then(function(data) {
+      localStorage.setItem('darsoAdminToken', TOKEN);
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      renderDashboard(data);
+    })
+    .catch(function() {
+      document.getElementById('loginError').style.display = 'block';
+      TOKEN = '';
+      localStorage.removeItem('darsoAdminToken');
+    });
+}
+
+function logout() {
+  TOKEN = '';
+  localStorage.removeItem('darsoAdminToken');
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminPass').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+function refresh() {
+  fetch('/api/admin/stats?token=' + encodeURIComponent(TOKEN))
+    .then(function(r) { if (r.ok) return r.json(); })
+    .then(function(data) { if (data) renderDashboard(data); })
+    .catch(function() {});
+}
+
+function renderDashboard(data) {
+  document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+  // Stat cards
+  animateNum('statTotal', data.totalRequests);
+  animateNum('statVisitors', data.uniqueVisitors);
+  var epCount = Object.keys(data.endpoints || {}).length;
+  document.getElementById('statEndpoints').textContent = epCount;
+  var pvCount = Object.keys(data.pageViews || {}).length;
+  document.getElementById('statPages').textContent = pvCount;
+
+  // Hourly chart
+  var hourly = data.hourly || {};
+  var hours = Object.keys(hourly).sort();
+  var maxH = 0;
+  hours.forEach(function(h) { if (hourly[h] > maxH) maxH = hourly[h]; });
+  var chartEl = document.getElementById('hourlyChart');
+  chartEl.innerHTML = '<div style="color:var(--muted);font-size:.78rem;width:100%;text-align:center;padding:1rem 0;">' + (hours.length ? '' : 'No data yet') + '</div>';
+  if (hours.length) {
+    chartEl.innerHTML = '';
+    hours.forEach(function(h) {
+      var val = hourly[h] || 0;
+      var pct = maxH > 0 ? (val / maxH * 100) : 0;
+      var label = h.slice(11, 16);
+      chartEl.innerHTML += '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:28px;">' +
+        '<div style="width:20px;height:' + Math.max(2, pct) + 'px;background:var(--purple);border-radius:2px 2px 0 0;transition:height .3s;"></div>' +
+        '<span style="font-size:.6rem;color:var(--muted);transform:rotate(-45deg);white-space:nowrap;">' + label + '</span></div>';
+    });
+  }
+
+  // Page views table
+  var pages = data.pageViews || {};
+  var pageEntries = Object.keys(pages).sort(function(a,b){return pages[b]-pages[a];});
+  var pageTbody = document.querySelector('#pageTable tbody');
+  pageTbody.innerHTML = '';
+  var totalViews = pageEntries.reduce(function(s,k){return s+pages[k];},0);
+  pageEntries.forEach(function(p) {
+    var pct = totalViews > 0 ? (pages[p] / totalViews * 100).toFixed(1) : 0;
+    var pageName = p === '/' || p === '' ? 'Home' : p;
+    var barW = Math.max(2, pct * 3);
+    pageTbody.innerHTML += '<tr><td>' + esc(pageName) + '</td><td>' + pages[p] + '</td><td><div class="bar-cell"><div class="bar green" style="width:' + barW + 'px;"></div>' + pct + '%</div></td></tr>';
+  });
+
+  // Endpoint table
+  var endpoints = data.endpoints || {};
+  var epEntries = Object.keys(endpoints).sort(function(a,b){return endpoints[b]-endpoints[a];});
+  var epTbody = document.querySelector('#endpointTable tbody');
+  epTbody.innerHTML = '';
+  var totalEP = epEntries.reduce(function(s,k){return s+endpoints[k];},0);
+  epEntries.forEach(function(ep) {
+    var pct = totalEP > 0 ? (endpoints[ep] / totalEP * 100).toFixed(1) : 0;
+    var barW = Math.max(2, pct * 2);
+    epTbody.innerHTML += '<tr><td style="font-family:var(--fm);font-size:.78rem;">' + esc(ep) + '</td><td>' + endpoints[ep] + '</td><td><div class="bar-cell"><div class="bar" style="width:' + barW + 'px;"></div>' + pct + '%</div></td></tr>';
+  });
+
+  // Recent requests
+  var recent = data.recentRequests || [];
+  var recentEl = document.getElementById('recentRequests');
+  recentEl.innerHTML = '';
+  if (!recent.length) {
+    recentEl.innerHTML = '<div style="padding:.5rem 0;color:var(--muted);">No recent requests.</div>';
+  } else {
+    recent.forEach(function(r) {
+      var t = new Date(r.time).toLocaleTimeString();
+      var m = r.method === 'GET' ? '<span style="color:var(--green);">GET</span>' : '<span style="color:var(--gold);">POST</span>';
+      recentEl.innerHTML += '<div style="display:flex;gap:.75rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--fm);font-size:.75rem;"><span style="color:var(--muted);min-width:60px;">' + t + '</span>' + m + ' <span style="color:#d0d0e0;">' + esc(r.url) + '</span></div>';
+    });
+  }
+}
+
+function animateNum(id, val) {
+  var el = document.getElementById(id);
+  var current = parseInt(el.textContent.replace(/,/g,'')) || 0;
+  if (current === val) { el.textContent = val.toLocaleString(); return; }
+  el.textContent = val.toLocaleString();
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── COMPANY DEEP-DIVE ────────────────────────────────────────────
+function runCompanyDeepDive() {
+  var name = document.getElementById('companyInput').value.trim();
+  if (!name) { return; }
+  COMPANY = name;
+  document.getElementById('companyLoading').style.display = 'block';
+  document.getElementById('companyResult').style.display = 'none';
+  document.getElementById('companyResult').innerHTML = '';
+
+  // Step 1: Get company profile
+  fetch('/api/company/profile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(profile) {
+    document.getElementById('companyLoading').style.display = 'none';
+    if (profile.error) {
+      document.getElementById('companyResult').innerHTML = '<div style="color:var(--red);padding:1rem;">' + esc(profile.error) + '</div>';
+      document.getElementById('companyResult').style.display = 'block';
+      return;
+    }
+    renderCompanyProfile(profile);
+    // Step 2: Get financials
+    loadCompanyFinancials(name);
+  })
+  .catch(function(err) {
+    document.getElementById('companyLoading').style.display = 'none';
+    document.getElementById('companyResult').innerHTML = '<div style="color:var(--red);">Error: ' + esc(err.message) + '</div>';
+    document.getElementById('companyResult').style.display = 'block';
+  });
+}
+
+function renderCompanyProfile(p) {
+  var pData = p.profile || p;
+  var html = '<div class="cr-section"><h4>Company Profile</h4><div class="cr-grid">' +
+    '<div class="cr-field"><div class="cr-label">Name</div><div class="cr-val">' + esc(pData.name || '') + '</div></div>';
+  if (pData.ticker) html += '<div class="cr-field"><div class="cr-label">Ticker</div><div class="cr-val" style="font-family:var(--fm);color:var(--cyan);">' + esc(pData.ticker) + '</div></div>';
+  if (pData.sector) html += '<div class="cr-field"><div class="cr-label">Sector</div><div class="cr-val">' + esc(pData.sector) + '</div></div>';
+  if (pData.industry) html += '<div class="cr-field"><div class="cr-label">Industry</div><div class="cr-val">' + esc(pData.industry) + '</div></div>';
+  if (pData.headquarters) html += '<div class="cr-field"><div class="cr-label">Headquarters</div><div class="cr-val">' + esc(pData.headquarters) + '</div></div>';
+  if (pData.founded) html += '<div class="cr-field"><div class="cr-label">Founded</div><div class="cr-val">' + pData.founded + '</div></div>';
+  if (pData.employees) html += '<div class="cr-field"><div class="cr-label">Employees</div><div class="cr-val">' + pData.employees.toLocaleString() + '</div></div>';
+  if (pData.website && pData.website !== 'N/A') html += '<div class="cr-field"><div class="cr-label">Website</div><div class="cr-val"><a href="' + esc(pData.website) + '" target="_blank" style="color:var(--cyan);">' + esc(pData.website) + '</a></div></div>';
+  html += '</div></div>';
+
+  if (pData.description) {
+    html += '<div class="cr-section"><h4>Overview</h4><p style="font-size:.9rem;line-height:1.7;color:#d0d0e0;">' + esc(pData.description) + '</p></div>';
+  }
+
+  if (pData.keyPeople && pData.keyPeople.length) {
+    html += '<div class="cr-section"><h4>Key People</h4><div class="cr-grid">';
+    pData.keyPeople.forEach(function(kp) {
+      html += '<div class="cr-field"><div class="cr-label">' + esc(kp.title || '') + '</div><div class="cr-val">' + esc(kp.name || '') + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  if (pData.segments && pData.segments.length) {
+    html += '<div class="cr-section"><h4>Business Segments</h4><div style="display:flex;flex-wrap:wrap;gap:.5rem;">';
+    pData.segments.forEach(function(s) {
+      html += '<div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:.5rem;padding:.5rem .8rem;flex:1;min-width:150px;"><div style="display:flex;justify-content:space-between;margin-bottom:.15rem;"><span style="font-weight:600;font-size:.85rem;">' + esc(s.name) + '</span><span style="color:var(--cyan);font-family:var(--fm);font-size:.8rem;">' + (s.revenuePct || 0) + '%</span></div><div style="font-size:.75rem;color:var(--muted);">' + esc(s.description || '') + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  if (pData.competitors && pData.competitors.length) {
+    html += '<div class="cr-section"><h4>Competitors</h4><div style="display:flex;flex-wrap:wrap;gap:.3rem;">';
+    pData.competitors.forEach(function(c) {
+      html += '<span style="background:rgba(255,255,255,.06);padding:.25rem .6rem;border-radius:.3rem;font-size:.8rem;color:#d0d0e0;">' + esc(c) + '</span>';
+    });
+    html += '</div></div>';
+  }
+
+  var el = document.getElementById('companyResult');
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
+function loadCompanyFinancials(name) {
+  var el = document.getElementById('companyFinancialsResult');
+  el.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);font-size:.85rem;">Loading 5-year financials...</div>';
+
+  fetch('/api/company/financials', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) {
+      el.innerHTML = '<div style="color:var(--red);padding:.5rem;">' + esc(data.error) + '</div>';
+      return;
+    }
+    renderFinancials(data);
+  })
+  .catch(function(err) {
+    el.innerHTML = '<div style="color:var(--red);">Error: ' + esc(err.message) + '</div>';
+  });
+}
+
+function renderFinancials(data) {
+  var fin = data.financials || {};
+  var ratios = data.ratios || {};
+  var metrics = data.keyMetrics || {};
+  var growth = data.growth || {};
+  var html = '<div class="cr-section"><h4>5-Year Financial Performance</h4>';
+
+  // Revenue table
+  html += '<div style="overflow-x:auto;margin-bottom:1rem;"><table class="endpoint-table" style="min-width:500px;"><thead><tr><th>Metric</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead><tbody>';
+  function addRow(label, obj, unit) {
+    if (!obj) return;
+    html += '<tr><td style="font-weight:500;">' + label + '</td>';
+    var years = ['2020','2021','2022','2023','2024','2025'];
+    years.forEach(function(y) {
+      var v = obj[y];
+      if (v == null) { html += '<td style="color:var(--muted);">—</td>'; return; }
+      var display = unit === 'pct' ? v.toFixed(1) + '%' : (v >= 100 ? '$' + v.toFixed(1) + 'B' : '$' + (v * 1000).toFixed(0) + 'M');
+      html += '<td>' + display + '</td>';
+    });
+    html += '</tr>';
+  }
+  addRow('Revenue', fin.revenue);
+  addRow('Net Income', fin.netIncome);
+  addRow('Operating Income', fin.operatingIncome);
+  addRow('Total Assets', fin.totalAssets);
+  addRow('Total Debt', fin.totalDebt);
+  addRow('Free Cash Flow', fin.freeCashFlow);
+  addRow('Operating Margin', fin.operatingMargin, 'pct');
+  addRow('Net Margin', fin.netMargin, 'pct');
+  html += '</tbody></table></div>';
+
+  // Revenue growth
+  if (fin.revenueGrowth) {
+    html += '<h4 style="font-family:var(--fm);font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.5rem;">Revenue Growth</h4><div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">';
+    Object.keys(fin.revenueGrowth).forEach(function(y) {
+      var v = fin.revenueGrowth[y];
+      if (v == null) return;
+      var c = v >= 0 ? 'var(--green)' : 'var(--red)';
+      html += '<span style="background:rgba(255,255,255,.04);padding:.3rem .6rem;border-radius:.3rem;font-size:.8rem;"><span style="color:var(--muted);">' + y + '</span> <span style="color:' + c + ';font-weight:600;">' + (v >= 0 ? '+' : '') + v.toFixed(1) + '%</span></span>';
+    });
+    html += '</div>';
+  }
+
+  // Key ratios
+  html += '<div class="cr-section"><h4>Key Ratios & Metrics</h4><div class="cr-grid">';
+  var ratioItems = [
+    {l:'P/E Ratio', v: ratios.peRatio},
+    {l:'Forward P/E', v: ratios.forwardPE},
+    {l:'P/B Ratio', v: ratios.pbRatio},
+    {l:'ROE', v: ratios.roe, u:'%'},
+    {l:'ROA', v: ratios.roa, u:'%'},
+    {l:'Debt/Equity', v: ratios.debtToEquity},
+    {l:'Current Ratio', v: ratios.currentRatio},
+    {l:'Div Yield', v: ratios.dividendYield, u:'%'},
+    {l:'Beta', v: ratios.beta},
+  ];
+  ratioItems.forEach(function(item) {
+    if (item.v == null) return;
+    var val = item.u ? item.v + item.u : item.v;
+    html += '<div class="cr-field"><div class="cr-label">' + item.l + '</div><div class="cr-val">' + val + '</div></div>';
+  });
+  if (metrics.marketCap) html += '<div class="cr-field"><div class="cr-label">Market Cap</div><div class="cr-val">' + esc(metrics.marketCap) + '</div></div>';
+  if (growth.revenueCagr5y != null) html += '<div class="cr-field"><div class="cr-label">Revenue CAGR (5Y)</div><div class="cr-val" style="color:var(--green);">' + growth.revenueCagr5y + '%</div></div>';
+  if (growth.earningsCagr5y != null) html += '<div class="cr-field"><div class="cr-label">Earnings CAGR (5Y)</div><div class="cr-val" style="color:var(--green);">' + growth.earningsCagr5y + '%</div></div>';
+  html += '</div></div>';
+
+  el = document.getElementById('companyFinancialsResult');
+  el.innerHTML = html;
+}
+
+// ── COMPANY CHAT ────────────────────────────────────────────────
+function initCompanyChat() {
+  var name = document.getElementById('chatCompanyName').textContent;
+  if (!name) return;
+  COMPANY = name;
+  document.getElementById('companyChatSection').style.display = 'block';
+  document.getElementById('companyChatMsgs').innerHTML = '';
+  addCompanyChatMsg('ai', 'I am a specialist analyst focused on <strong>' + esc(name) + '</strong>. Ask me anything about this company — its financials, management, competitive position, or growth prospects.');
+}
+
+function askCompany() {
+  var input = document.getElementById('companyChatInput');
+  var question = input.value.trim();
+  if (!question) return;
+  COMPANY = document.getElementById('chatCompanyName').textContent;
+  if (!COMPANY) { return; }
+  input.value = '';
+  addCompanyChatMsg('user', question);
+
+  fetch('/api/company/ask', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ company: COMPANY, question: question })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    addCompanyChatMsg('ai', data.reply || 'No response');
+  })
+  .catch(function(err) {
+    addCompanyChatMsg('ai', 'Error: ' + err.message);
+  });
+}
+
+function addCompanyChatMsg(role, text) {
+  var el = document.getElementById('companyChatMsgs');
+  var div = document.createElement('div');
+  div.className = 'cm ' + role;
+  div.innerHTML = text;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+if (TOKEN) { verifyToken(); }
+setInterval(refresh, 15000);
+</script>
+</body>
+</html>
