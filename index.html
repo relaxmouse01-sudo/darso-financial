@@ -1708,10 +1708,12 @@ function stopAudioVis() {
 }
 
 // ── MIC ───────────────────────────────────────────────────────────
+var LAST_TRANSCRIPT = '';
 function toggleListen() {
-  if (LISTENING) { stopListen(); } else { startListen(); }
+  if (LISTENING) { stopListen(true); } else { startListen(); }
 }
 function startListen() {
+  LAST_TRANSCRIPT = '';
   // mic bend + bounce
   var orb = document.getElementById('mainOrb');
   var wrap = document.getElementById('orbWrap');
@@ -1724,16 +1726,22 @@ function startListen() {
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { toast('Use Chrome for voice input — press F12 to check for errors'); return; }
   REC = new SR();
-  REC.continuous = false; REC.interimResults = false; REC.lang = 'en-US';
-  REC.onresult = function(e) { var t = e.results[0][0].transcript; stopListen(); sendQ(t); };
-  REC.onerror  = function(e) { stopListen(); toast('Mic error: ' + e.error); };
-  REC.onend    = function()  { if (LISTENING) stopListen(); };
+  REC.continuous = false; REC.interimResults = true; REC.lang = 'en-US';
+  REC.onresult = function(e) {
+    LAST_TRANSCRIPT = e.results[0][0].transcript;
+    // if speech ended naturally (final result), stop and answer
+    if (e.results[0].isFinal) { stopListen(false); sendQ(LAST_TRANSCRIPT); }
+  };
+  REC.onerror  = function(e) { stopListen(false); toast('Mic error: ' + e.error); };
+  REC.onend    = function()  { if (LISTENING) { LISTENING = false; stopListen(false); } };
   try { REC.start(); LISTENING = true; setOrb('listen'); startAudioVis(); }
   catch(e) { toast('Mic could not start: ' + e.message); }
 }
-function stopListen() {
+function stopListen(manual) {
   if (REC) { try { REC.stop(); } catch(e) {} }
   LISTENING = false; setOrb('idle'); stopAudioVis();
+  // if stopped manually and we have a transcript, send it
+  if (manual && LAST_TRANSCRIPT) sendQ(LAST_TRANSCRIPT);
 }
 
 // ── ELEVENLABS TTS ────────────────────────────────────────────────
