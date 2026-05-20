@@ -481,7 +481,9 @@ select.si option{background:#0a0518;}
   .planet-deco{display:none;}
   .stocktower-hero{min-height:100vh;padding:0;}
   .stocktower-frame{inset:0;border-radius:0;}
+  .stocktower-content{grid-template-columns:1fr!important;}
   .stocktower-content h1{max-width:22rem;}
+  .stocktower-content>div:last-child{text-align:left!important;}
 }
 </style>
 </head>
@@ -555,19 +557,23 @@ select.si option{background:#0a0518;}
     <div class="stocktower-frame">
     <div class="stocktower-scene" id="stocktowerScene" aria-hidden="true"></div>
     <div class="stocktower-overlay"></div>
-    <div class="stocktower-content">
-      <p class="stocktower-kicker">Live Market Skyline</p>
-      <h1 id="stocktower-title">DARSO AGENCY</h1>
-      <div class="g2" style="max-width:720px;margin-top:1.4rem;gap:.85rem;align-items:center;">
-        <input id="stockQuery" class="si" placeholder="Enter symbol e.g. AAPL, TSLA, N225" style="flex:1;min-width:220px;">
-        <button type="button" class="btn btn-g" onclick="searchStock()" style="white-space:nowrap;">Get Quote</button>
+    <div class="stocktower-content" style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;pointer-events:none;">
+      <div style="text-align:left;">
+        <div class="g2" style="max-width:100%;gap:.85rem;align-items:center;pointer-events:auto;">
+          <input id="stockQuery" class="si" placeholder="Enter symbol e.g. AAPL, TSLA, N225" style="flex:1;min-width:180px;">
+          <button type="button" class="btn btn-g" onclick="searchStock()" style="white-space:nowrap;">Get Quote</button>
+        </div>
+        <div class="card card-corner cg" style="margin-top:1.25rem;max-width:100%;min-height:96px;pointer-events:auto;">
+          <div class="card-shine"></div>
+          <div id="stockSearchResult" style="color:#000;font-size:.95rem;min-height:72px;display:flex;align-items:center;">Live stock quotes refresh automatically every minute.</div>
+        </div>
+        <div id="deepDivePanel" style="display:none;max-width:100%;margin-top:1rem;text-align:left;pointer-events:auto;"></div>
+        <a class="stocktower-btn" href="#stock-ticker" style="margin-top:1rem;">Live Demo</a>
       </div>
-      <div class="card card-corner cg" style="margin-top:1.25rem;max-width:900px;min-height:96px;">
-        <div class="card-shine"></div>
-        <div id="stockSearchResult" style="color:#000;font-size:.95rem;min-height:72px;display:flex;align-items:center;">Live stock quotes refresh automatically every minute.</div>
+      <div style="text-align:right;align-self:center;">
+        <p class="stocktower-kicker">Live Market Skyline</p>
+        <h1 id="stocktower-title">DARSO AGENCY</h1>
       </div>
-      <div id="deepDivePanel" style="display:none;max-width:900px;margin-top:1rem;text-align:left;"></div>
-      <a class="stocktower-btn" href="#stock-ticker">Live Demo</a>
     </div>
   </div>
 </section>
