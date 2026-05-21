@@ -31,9 +31,6 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
 .stat-card .value{font-family:var(--fh);font-size:1.6rem;font-weight:600;}
 .stat-card .sub{font-size:.78rem;color:var(--muted);margin-top:.25rem;}
 .tab-bar{display:flex;gap:.25rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0;}
-.adapt-float{position:fixed;bottom:2rem;right:2rem;z-index:999;background:var(--cyan);color:#000;border:none;border-radius:3rem;padding:.85rem 2rem;font-family:var(--fh);font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 0 30px rgba(34,211,238,.5);transition:all .3s;animation:pulseGlow 2s infinite;}
-.adapt-float:hover{transform:scale(1.08);box-shadow:0 0 50px rgba(34,211,238,.8);}
-@keyframes pulseGlow{0%,100%{box-shadow:0 0 20px rgba(34,211,238,.4)}50%{box-shadow:0 0 40px rgba(34,211,238,.8)}}
 .tab-btn{background:none;border:none;color:var(--muted);padding:.6rem 1.2rem;font-family:var(--fb);font-size:.85rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
 .tab-btn:hover{color:var(--white);}
 .tab-btn.active{color:var(--purple);border-bottom-color:var(--purple);}
@@ -93,9 +90,6 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
     <input type="password" id="adminPass" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
     <button onclick="login()">Sign In</button>
     <div class="login-error" id="loginError">Incorrect password</div>
-    <hr style="border-color:var(--border);margin:1.2rem 0;">
-    <button onclick="login();setTimeout(adaptNow,500)" style="background:var(--cyan);color:#000;font-weight:700;font-size:.95rem;">⚡ ADAPT — AI Suggestions</button>
-    <p style="color:var(--muted);font-size:.72rem;margin-top:.5rem;">Login first, then AI analyzes usage data for improvements</p>
   </div>
 </div>
 
@@ -178,8 +172,6 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
     </div>
   </div>
 </div>
-
-<button class="adapt-float" onclick="adaptNow()">✦ ADAPT</button>
 
 <!-- ADAPT MODAL -->
 <div id="adaptModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeAdaptModal()">
