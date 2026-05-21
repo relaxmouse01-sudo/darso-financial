@@ -1204,7 +1204,38 @@ async function handleCompanyAsk(req, res) {
 
   if (!OPENROUTER_API_KEY) { sendJson(res, 500, { error: 'AI not configured' }); return; }
 
-  var prompt = 'You are a specialist analyst focused exclusively on ' + companyName + '. You have deep knowledge of this company\'s business model, financials, management, competitive position, risks, and growth prospects. Answer the following question thoroughly and concisely:\n\nQuestion: ' + question + '\n\nProvide specific data points, dates, and facts where possible. If you don\'t know something, say so openly. Focus on what matters most for an investor.';
+  var prompt = 'You are a specialist analyst focused exclusively on ' + companyName + '. You have deep knowledge of this company\'s business model, financials, management, competitive position, risks, and growth prospects.';
+
+  // Include profile context
+  var key = getCompanyKey(companyName);
+  var cached = COMPANY_CACHE[key];
+  if (cached) {
+    var prof = cached.profile || cached;
+    prompt += '\n\nCompany Background:\n';
+    if (prof.name) prompt += 'Name: ' + prof.name + '\n';
+    if (prof.ticker && prof.ticker !== 'N/A') prompt += 'Ticker: ' + prof.ticker + '\n';
+    if (prof.sector) prompt += 'Sector: ' + prof.sector + '\n';
+    if (prof.industry) prompt += 'Industry: ' + prof.industry + '\n';
+    if (prof.description) prompt += 'Description: ' + prof.description + '\n';
+    if (prof.segments && prof.segments.length) {
+      prompt += 'Business Segments:\n';
+      prof.segments.forEach(function(s){ prompt += '  - ' + s.name + ' (' + (s.revenuePct||0) + '% of revenue): ' + (s.description||'') + '\n'; });
+    }
+    if (prof.competitors && prof.competitors.length) {
+      prompt += 'Competitors: ' + prof.competitors.join(', ') + '\n';
+    }
+  }
+
+  // Include user knowledge base
+  var knowledge = payload.knowledge;
+  if (knowledge && Array.isArray(knowledge) && knowledge.length > 0) {
+    prompt += '\nPrivate Company Knowledge (provided by the company itself):\n';
+    knowledge.forEach(function(k){
+      prompt += '  [' + (k.tag||'general') + '] ' + k.text + '\n';
+    });
+  }
+
+  prompt += '\nAnswer the following question thoroughly and concisely:\n\nQuestion: ' + question + '\n\nProvide specific data points, dates, and facts where possible. If you don\'t know something, say so openly. Focus on what matters most for an investor or business decision-maker.';
 
   var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -1215,6 +1246,56 @@ async function handleCompanyAsk(req, res) {
       'X-Title': 'DARSO ' + companyName + ' Analyst'
     },
     body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 800, temperature: 0.4 })
+  });
+
+  var data = await upstream.json().catch(function() { return {}; });
+  if (!upstream.ok) { sendJson(res, 500, { error: (data.error && data.error.message) || 'AI request failed' }); return; }
+
+  sendJson(res, 200, { reply: (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '' });
+}
+
+async function handleCompanyCustom(req, res) {
+  if (!OPENROUTER_API_KEY) { sendJson(res, 500, { error: 'AI not configured' }); return; }
+  var payload = await readJson(req);
+  var companyName = (payload.company || '').trim();
+  var type = (payload.type || '').trim();
+  if (!companyName || !type) { sendJson(res, 400, { error: 'company and type are required' }); return; }
+
+  var prompts = {
+    reputation: 'You are a market research analyst. Analyze the market reputation of ' + companyName + '. Cover:\n1. Brand perception in the market\n2. Customer sentiment (positive/negative/mixed)\n3. Media coverage and public relations\n4. Competitive positioning\n5. Any controversies or reputational risks\n6. Overall reputation score out of 10\n\nBe specific and provide reasoning.',
+    products: 'You are a product analyst specializing in ' + companyName + '. Analyze their products/services:\n1. List their main products/services and their market position\n2. Which products are growing vs declining\n3. New product launches or upcoming releases\n4. Product quality and innovation\n5. How products compare to competitors\n6. Recommendations for product strategy',
+    trends: 'You are a market trend analyst covering ' + companyName + '. Analyze the key market trends affecting this company:\n1. Industry trends (growth/decline areas)\n2. Technology changes impacting the business\n3. Regulatory changes on the horizon\n4. Consumer behavior shifts\n5. Competitive landscape changes\n6. Opportunities and threats\n7. 12-month outlook',
+    dropshipping: 'You are a dropshipping product research expert. For a company like ' + companyName + ', suggest:\n1. Top 5 products they should sell next (with reasons)\n2. Product categories with highest growth potential\n3. Target audience recommendations\n4. Pricing strategy suggestions\n5. Marketing angles for each product\n6. Seasonal trends to capitalize on\n\nFocus on practical, profitable, and trending products.'
+  };
+
+  var prompt = prompts[type] || 'Analyze ' + companyName + ' for insights about ' + type + '. Provide detailed analysis with specific recommendations.';
+
+  // Include profile context if cached
+  var key = getCompanyKey(companyName);
+  var cached = COMPANY_CACHE[key];
+  if (cached) {
+    var prof = cached.profile || cached;
+    prompt += '\n\nCompany Background:\n';
+    if (prof.name) prompt += 'Name: ' + prof.name + '\n';
+    if (prof.ticker && prof.ticker !== 'N/A') prompt += 'Ticker: ' + prof.ticker + '\n';
+    if (prof.sector) prompt += 'Sector: ' + prof.sector + '\n';
+    if (prof.industry) prompt += 'Industry: ' + prof.industry + '\n';
+    if (prof.description) prompt += 'Description: ' + prof.description + '\n';
+    if (prof.segments && prof.segments.length) {
+      prompt += 'Business Segments:\n';
+      prof.segments.forEach(function(s){ prompt += '  - ' + s.name + ' (' + (s.revenuePct||0) + '%)\n'; });
+    }
+  }
+
+  var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + OPENROUTER_API_KEY,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'http://localhost:3000',
+      'X-Title': 'DARSO ' + companyName + ' ' + type
+    },
+    body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 1200, temperature: 0.4 })
   });
 
   var data = await upstream.json().catch(function() { return {}; });
@@ -1335,6 +1416,10 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'POST' && req.url === '/api/company/ask') {
     handleCompanyAsk(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/company/custom') {
+    handleCompanyCustom(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'POST' && req.url === '/api/predict/chart') {
