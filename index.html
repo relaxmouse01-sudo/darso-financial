@@ -812,8 +812,19 @@ select.si option{background:#0a0518;}
       </button>
       <button class="btn btn-gold" id="scanWlBtn" onclick="scanWatchlist()" style="font-size:.8rem;padding:.45rem 1rem;">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Scan All Stocks
+        Scan All
       </button>
+      <button class="btn" id="addStockBtn" onclick="showAddStock()" style="font-size:.8rem;padding:.45rem 1rem;border-color:rgba(255,255,255,.15);">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Stock
+      </button>
+      <div id="addStockPane" style="display:none;flex:1;min-width:220px;">
+        <div style="display:flex;gap:.4rem;align-items:stretch;">
+          <input id="addStockInput" type="text" placeholder="Symbol (e.g. TATAMOTORS, HINDUNILVR)" style="flex:1;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:.4rem;padding:.4rem .6rem;font-family:var(--fm);font-size:.78rem;color:#fff;outline:none;">
+          <button class="btn btn-p" onclick="addStock()" style="font-size:.75rem;padding:.35rem .7rem;white-space:nowrap;">Add</button>
+          <button onclick="document.getElementById('addStockPane').style.display='none';document.getElementById('addStockBtn').style.display=''" style="background:none;border:none;color:var(--muted);font-size:.8rem;cursor:pointer;padding:0 .3rem;">✕</button>
+        </div>
+      </div>
       <div style="flex:1;"></div>
       <div id="wlStatus" style="font-family:var(--fm);font-size:.72rem;color:var(--muted);align-self:center;"></div>
     </div>
@@ -2742,18 +2753,17 @@ function loadWatchlistUI() {
         var arrow = isUp ? '▲' : isDown ? '▼' : '―';
         var rsi = s.rsi !== null && s.rsi !== undefined ? s.rsi : null;
 
-        html += '<div class="card card-corner wl-card" style="padding:.85rem 1rem;cursor:pointer;" onclick="askAboutStock(\'' + s.symbol + '\',\'' + escHtml(s.name) + '\')" title="Click to analyze ' + escHtml(s.name) + ' in chat">' +
+        html += '<div class="card card-corner wl-card" style="padding:.85rem 1rem;cursor:pointer;background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.08);" onclick="askAboutStock(\'' + s.symbol + '\',\'' + escHtml(s.name) + '\')" title="Click to analyze ' + escHtml(s.name) + ' in chat">' +
           '<div class="card-shine"></div>' +
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.3rem;">' +
-            '<div><div style="font-weight:600;font-size:.88rem;color:var(--white);">' + escHtml(s.name) + '</div>' +
-            '<div style="font-family:var(--fm);font-size:.65rem;color:var(--muted);letter-spacing:.06em;">' + s.symbol.replace('.NS','') + '</div></div>' +
-            '<div style="text-align:right;"><div style="font-family:var(--fh);font-size:1.1rem;font-weight:700;color:var(--white);">₹' + fmtNum(s.price) + '</div>' +
+            '<div><div style="font-weight:600;font-size:.88rem;color:#000;">' + escHtml(s.name) + '</div>' +
+            '<div style="font-family:var(--fm);font-size:.65rem;color:#555;letter-spacing:.06em;">' + s.symbol.replace('.NS','') + '</div></div>' +
+            '<div style="text-align:right;"><div style="font-family:var(--fh);font-size:1.1rem;font-weight:700;color:#000;">₹' + fmtNum(s.price) + '</div>' +
             '<div style="font-family:var(--fm);font-size:.7rem;color:' + changeColor + ';">' + arrow + ' ' + fmtChangePct(change) + '</div></div>' +
           '</div>' +
           '<div style="display:flex;gap:.6rem;margin-top:.35rem;flex-wrap:wrap;font-family:var(--fm);font-size:.65rem;">' +
-            '<span style="color:' + (rsi !== null && rsi > 70 ? 'var(--red)' : rsi !== null && rsi < 30 ? 'var(--green)' : 'var(--muted)') + ';">RSI: ' + (rsi !== null ? rsi.toFixed(1) : 'N/A') + '</span>' +
-            '<span style="color:var(--muted);">Vol: ' + (s.volume ? (s.volume/1000000).toFixed(1)+'M' : 'N/A') + '</span>' +
-            (s.marketCap ? '<span style="color:var(--muted);">MCap: ₹' + (s.marketCap/10000000).toFixed(1) + 'Cr</span>' : '') +
+            '<span style="color:#555;">RSI: ' + (rsi !== null ? rsi.toFixed(1) : 'N/A') + '</span>' +
+            '<span style="color:#555;">Vol: ' + (s.volume ? (s.volume/1000000).toFixed(1)+'M' : 'N/A') + '</span>' +
           '</div>' +
         '</div>';
       });
@@ -2764,6 +2774,53 @@ function loadWatchlistUI() {
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem 0;color:var(--red);">Failed to load: ' + err.message + '</div>';
       status.textContent = 'Error';
     });
+}
+
+function showAddStock() {
+  document.getElementById('addStockBtn').style.display = 'none';
+  document.getElementById('addStockPane').style.display = 'flex';
+  document.getElementById('addStockInput').focus();
+}
+
+function addStock() {
+  var input = document.getElementById('addStockInput');
+  var symbol = input.value.trim().toUpperCase();
+  if (!symbol) return;
+  input.disabled = true;
+  input.placeholder = 'Adding...';
+  fetch('/api/watchlist/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ symbol: symbol })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    input.disabled = false;
+    input.value = '';
+    input.placeholder = 'Symbol (e.g. TATAMOTORS, HINDUNILVR)';
+    document.getElementById('addStockPane').style.display = 'none';
+    document.getElementById('addStockBtn').style.display = '';
+    toast(data.message || 'Stock added!');
+    loadWatchlistUI();
+  })
+  .catch(function(err) {
+    input.disabled = false;
+    input.placeholder = 'Error: ' + err.message;
+  });
+}
+
+function addSuggestedStock(symbol) {
+  fetch('/api/watchlist/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ symbol: symbol })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    toast(data.message || symbol + ' added!');
+    loadWatchlistUI();
+  })
+  .catch(function(err) { toast('Error: ' + err.message); });
 }
 
 function scanWatchlist() {
@@ -2778,27 +2835,45 @@ function scanWatchlist() {
   fetch('/api/watchlist/scan')
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      content.textContent = data.analysis || 'No analysis returned.';
+      var analysis = data.analysis || 'No analysis returned.';
+      content.textContent = analysis;
       btn.disabled = false;
       btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Scan All Stocks';
+
+      // Parse suggested stocks from analysis
+      var suggestMatch = analysis.match(/SUGGESTED:\s*([A-Z,\s]+)/i);
+      if (suggestMatch) {
+        var suggested = suggestMatch[1].split(',').map(function(s) { return s.trim().toUpperCase().replace('.NS',''); }).filter(Boolean);
+        if (suggested.length) {
+          var suggestBar = document.createElement('div');
+          suggestBar.style.cssText = 'margin-top:.8rem;padding-top:.8rem;border-top:1px solid rgba(255,255,255,.1);';
+          suggestBar.innerHTML = '<div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem;">Suggested Additions</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:.4rem;">' +
+            suggested.map(function(sym) {
+              return '<button onclick="addSuggestedStock(\'' + sym + '\')" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);border-radius:.3rem;padding:.25rem .55rem;font-family:var(--fm);font-size:.72rem;color:var(--gold);cursor:pointer;white-space:nowrap;">+ ' + sym + '</button>';
+            }).join('') +
+            '</div>';
+          content.parentNode.appendChild(suggestBar);
+        }
+      }
       if (data.stocks) {
         // Update the grid with indicator data from scan
         var grid = document.getElementById('wlGrid');
         var html = '';
         data.stocks.forEach(function(s) {
           var rsi = s.rsi;
-          html += '<div class="card card-corner wl-card" style="padding:.85rem 1rem;cursor:pointer;" onclick="askAboutStock(\'' + s.symbol + '\',\'' + escHtml(s.name) + '\')" title="Click to analyze">' +
+          html += '<div class="card card-corner wl-card" style="padding:.85rem 1rem;cursor:pointer;background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.08);" onclick="askAboutStock(\'' + s.symbol + '\',\'' + escHtml(s.name) + '\')" title="Click to analyze">' +
             '<div class="card-shine"></div>' +
             '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.3rem;">' +
-              '<div><div style="font-weight:600;font-size:.88rem;color:var(--white);">' + escHtml(s.name) + '</div>' +
-              '<div style="font-family:var(--fm);font-size:.65rem;color:var(--muted);letter-spacing:.06em;">' + (s.symbol||'').replace('.NS','') + '</div></div>' +
-              '<div style="text-align:right;"><div style="font-family:var(--fh);font-size:1.1rem;font-weight:700;color:var(--white);">₹' + fmtNum(s.price) + '</div>' +
+              '<div><div style="font-weight:600;font-size:.88rem;color:#000;">' + escHtml(s.name) + '</div>' +
+              '<div style="font-family:var(--fm);font-size:.65rem;color:#555;letter-spacing:.06em;">' + (s.symbol||'').replace('.NS','') + '</div></div>' +
+              '<div style="text-align:right;"><div style="font-family:var(--fh);font-size:1.1rem;font-weight:700;color:#000;">₹' + fmtNum(s.price) + '</div>' +
               '<div style="font-family:var(--fm);font-size:.7rem;color:' + (s.changePercent >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + (s.changePercent >= 0 ? '▲' : '▼') + ' ' + fmtChangePct(s.changePercent) + '</div></div>' +
             '</div>' +
             '<div style="display:flex;gap:.6rem;margin-top:.35rem;flex-wrap:wrap;font-family:var(--fm);font-size:.65rem;">' +
-              '<span style="color:' + (rsi !== null && rsi !== undefined && rsi > 70 ? 'var(--red)' : rsi !== null && rsi !== undefined && rsi < 30 ? 'var(--green)' : 'var(--muted)') + ';">RSI: ' + (rsi !== null && rsi !== undefined ? rsi.toFixed(1) : 'N/A') + '</span>' +
-              (s.sma50Above200 !== null ? '<span style="color:' + (s.sma50Above200 ? 'var(--green)' : 'var(--red)') + ';">SMA ' + (s.sma50Above200 ? 'Bull' : 'Bear') + '</span>' : '') +
-              (s.macd !== null && s.macdSignal !== null ? '<span style="color:' + (s.macd > s.macdSignal ? 'var(--green)' : 'var(--red)') + ';">MACD ' + (s.macd > s.macdSignal ? '▲' : '▼') + '</span>' : '') +
+              '<span style="color:#555;">RSI: ' + (rsi !== null && rsi !== undefined ? rsi.toFixed(1) : 'N/A') + '</span>' +
+              (s.sma50Above200 !== null ? '<span style="color:' + (s.sma50Above200 ? '#16a34a' : '#dc2626') + ';">SMA ' + (s.sma50Above200 ? 'Bull' : 'Bear') + '</span>' : '') +
+              (s.macd !== null && s.macdSignal !== null ? '<span style="color:' + (s.macd > s.macdSignal ? '#16a34a' : '#dc2626') + ';">MACD ' + (s.macd > s.macdSignal ? '▲' : '▼') + '</span>' : '') +
             '</div>' +
           '</div>';
         });

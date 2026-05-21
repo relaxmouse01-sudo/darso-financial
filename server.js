@@ -405,55 +405,44 @@ async function handleWatchlist(req, res) {
     sendJson(res, 200, { stocks: [] });
     return;
   }
-  const symbols = stocks.map(s => s.symbol);
-  const batchSize = 5;
-  const results = [];
-  for (let i = 0; i < symbols.length; i += batchSize) {
-    const batch = symbols.slice(i, i + batchSize);
-    const promises = batch.map(fetchYahooQuote);
-    const quotes = await Promise.all(promises);
-    for (let j = 0; j < quotes.length; j++) {
-      const stock = stocks[i + j];
-      const q = quotes[j];
-      if (q) {
-        results.push({
-          symbol: stock.symbol,
-          name: stock.name,
-          nse: stock.nse,
-          price: q.regularMarketPrice,
-          change: q.regularMarketChange,
-          changePercent: q.regularMarketChangePercent,
-          volume: q.regularMarketVolume,
-          marketCap: q.marketCap,
-          high: q.regularMarketDayHigh,
-          low: q.regularMarketDayLow,
-          peRatio: q.trailingPE,
-          dividendYield: q.dividendYield,
-          fiftyTwoWeekHigh: q.fiftyTwoWeekHigh,
-          fiftyTwoWeekLow: q.fiftyTwoWeekLow
-        });
-      } else {
-        const fb = getStockFallback(stock.symbol);
-        results.push({
-          symbol: stock.symbol,
-          name: stock.name,
-          nse: stock.nse,
-          price: fb.price,
-          change: fb.change,
-          changePercent: fb.changePercent,
-          volume: fb.volume,
-          marketCap: null,
-          high: fb.high,
-          low: fb.low,
-          peRatio: null,
-          dividendYield: null,
-          fiftyTwoWeekHigh: null,
-          fiftyTwoWeekLow: null
-        });
-      }
-    }
-  }
+  // Use fallback directly for immediate response (Yahoo v7 doesn't work for Indian stocks)
+  const results = stocks.map(s => {
+    const fb = getStockFallback(s.symbol);
+    return {
+      symbol: s.symbol,
+      name: s.name,
+      nse: s.nse,
+      price: fb.price,
+      change: fb.change,
+      changePercent: fb.changePercent,
+      volume: fb.volume,
+      marketCap: null,
+      high: fb.high || null,
+      low: fb.low || null,
+      peRatio: null,
+      dividendYield: null,
+      fiftyTwoWeekHigh: null,
+      fiftyTwoWeekLow: null
+    };
+  });
   sendJson(res, 200, { stocks: results });
+}
+
+async function handleWatchlistAdd(req, res) {
+  const payload = await readJson(req);
+  let symbol = (payload.symbol || '').trim().toUpperCase();
+  let name = (payload.name || '').trim();
+  if (!symbol) { sendJson(res, 400, { error: 'symbol is required' }); return; }
+  if (!symbol.includes('.')) symbol += '.NS';
+  if (!name) name = symbol;
+  const stocks = loadWatchlist();
+  if (stocks.some(s => s.symbol === symbol)) {
+    sendJson(res, 200, { stocks, message: 'Already in watchlist' });
+    return;
+  }
+  stocks.push({ symbol, name, nse: symbol.replace('.NS','') });
+  fs.writeFileSync(WATCHLIST_FILE, JSON.stringify(stocks, null, 2));
+  sendJson(res, 200, { stocks, message: `${name} added to watchlist` });
 }
 
 async function handleStockInfo(req, res) {
@@ -544,11 +533,12 @@ async function handleWatchlistScan(req, res) {
     `SMA50>200: ${s.sma50Above200 === null ? 'N/A' : s.sma50Above200 ? 'Yes' : 'No'}`
   ).join('\n');
 
-  const prompt = `You are a market analyst. Analyze these 10 Indian stocks and tell me:
+  const prompt = `You are a market analyst. Analyze these Indian stocks and tell me:
 1. Which ones look BULLISH (based on RSI, MACD, SMA crossover, price momentum)
 2. Which ones look BEARISH
-3. Any new stocks worth watching (based on sector trends or patterns)
+3. Suggest 3-5 new stocks worth watching (with NSE symbols) that are NOT in the current list
 4. A short summary of the overall market sentiment
+5. End with a line: "SUGGESTED:" followed by comma-separated NSE symbols you recommend adding
 
 Current market data:
 ${marketSummary}
@@ -1254,6 +1244,10 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'GET' && req.url === '/api/watchlist/scan') {
     handleWatchlistScan(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/watchlist/add') {
+    handleWatchlistAdd(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && req.url === '/api/portfolio') {
