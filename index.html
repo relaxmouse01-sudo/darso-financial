@@ -19,6 +19,9 @@ body{background:#0b0719;color:var(--white);font-family:var(--fb);overflow-x:hidd
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:rgba(168,85,247,.4);border-radius:2px;}
+#deepDivePanel::-webkit-scrollbar{width:5px;}
+#deepDivePanel::-webkit-scrollbar-track{background:rgba(255,255,255,.04);border-radius:3px;}
+#deepDivePanel::-webkit-scrollbar-thumb{background:rgba(168,85,247,.35);border-radius:3px;}
 
 /* CANVAS */
 #sc{position:fixed;inset:0;z-index:0;pointer-events:none;}
@@ -562,7 +565,7 @@ select.si option{background:#0a0518;}
         <input id="ddSymbol" class="si" placeholder="Company name or symbol e.g. AAPL, Adani, Tesla" style="flex:1;min-width:200px;pointer-events:auto;">
         <button type="button" class="btn btn-g" onclick="var s=document.getElementById('ddSymbol').value.trim();if(s){companyDeepDive(s.toUpperCase())}else{toast('Enter a company name')}" style="white-space:nowrap;pointer-events:auto;">Deep Dive</button>
       </div>
-      <div id="deepDivePanel" style="display:none;max-width:800px;margin-top:1rem;text-align:left;max-height:65vh;overflow-y:auto;pointer-events:auto;"></div>
+      <div id="deepDivePanel" style="display:none;max-width:800px;margin-top:1rem;text-align:left;max-height:65vh;overflow-y:auto;pointer-events:auto;scroll-behavior:smooth;"></div>
       <a class="stocktower-btn" href="#stock-ticker" style="margin-top:.5rem;">Live Demo</a>
     </div>
   </div>
