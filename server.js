@@ -29,6 +29,7 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'openai/gpt-4.1-mini';
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || '';
 const ELEVENLABS_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY || '';
 
 // Portfolio management functions
 function loadPortfolio() {
@@ -160,30 +161,13 @@ function getStockFallback(symbol) {
 async function handleStockChart(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const symbol = (url.searchParams.get('symbol') || '').trim().toUpperCase();
-  const range = url.searchParams.get('range') || '3mo';
   if (!symbol) { sendJson(res, 400, { error: 'symbol parameter required' }); return; }
-  const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-  const yahooOpts = { headers: { 'User-Agent': ua, 'Accept': 'application/json', 'Referer': 'https://finance.yahoo.com/' } };
-  const hosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
-  for (const host of hosts) {
-    try {
-      const upstream = await fetch(`https://${host}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`, yahooOpts);
-      if (upstream.ok) {
-        const data = await upstream.json().catch(() => ({}));
-        const result = data.chart && data.chart.result && data.chart.result[0];
-        if (result && result.timestamp && result.indicators && result.indicators.quote) {
-          const timestamps = result.timestamp;
-          const quotes = result.indicators.quote[0];
-          const chartData = [];
-          for (let i = 0; i < timestamps.length; i++) {
-            if (quotes.close && quotes.close[i] != null) {
-              chartData.push({ t: timestamps[i] * 1000, o: quotes.open[i], h: quotes.high[i], l: quotes.low[i], c: quotes.close[i], v: quotes.volume[i] });
-            }
-          }
-          if (chartData.length) { sendJson(res, 200, { symbol, chartData }); return; }
-        }
-      }
-    } catch (_) {}
+
+  // Try Finnhub first, fallback to Yahoo (handled inside fetchCandles)
+  const candles = await fetchCandles(symbol, 90);
+  if (candles.length > 0) {
+    sendJson(res, 200, { symbol, chartData: candles });
+    return;
   }
   sendJson(res, 200, { symbol, chartData: [] });
 }
@@ -341,6 +325,54 @@ function computeIndicators(candles) {
   };
 }
 
+async function fetchFinnhubQuote(symbol) {
+  if (!FINNHUB_API_KEY) return null;
+  // Finnhub free tier doesn't support all exchanges; return null to fall through
+  try {
+    const resp = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_API_KEY}`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (!data || data.c === undefined || data.c === null || data.c === 0) return null;
+    return {
+      regularMarketPrice: data.c,
+      regularMarketChange: data.d ?? 0,
+      regularMarketChangePercent: data.dp ?? 0,
+      regularMarketVolume: data.v ?? 0,
+      regularMarketDayLow: data.l,
+      regularMarketDayHigh: data.h,
+      regularMarketOpen: data.o,
+      regularMarketPreviousClose: data.pc,
+      marketCap: null,
+      trailingPE: null,
+      dividendYield: null,
+      fiftyTwoWeekLow: null,
+      fiftyTwoWeekHigh: null
+    };
+  } catch { return null; }
+}
+
+async function fetchFinnhubCandles(symbol, days = 180) {
+  if (!FINNHUB_API_KEY) return [];
+  const to = Math.floor(Date.now() / 1000);
+  const from = to - days * 86400;
+  try {
+    const resp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=D&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`);
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    if (data.s !== 'ok' || !data.t || !data.c) return [];
+    const candles = [];
+    for (let i = 0; i < data.t.length; i++) {
+      if (data.c[i] === null || data.c[i] === undefined) continue;
+      candles.push({
+        t: data.t[i] * 1000,
+        o: data.o[i], h: data.h[i], l: data.l[i], c: data.c[i], v: data.v[i]
+      });
+    }
+    return candles;
+  } catch { return []; }
+}
+
+// Yahoo Finance fallback for exchanges Finnhub doesn't support (e.g. NSE India)
 async function fetchYahooQuote(symbol) {
   const hosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
   const yahooOpts = { headers: { 'User-Agent': 'Mozilla/5.0' } };
@@ -351,7 +383,7 @@ async function fetchYahooQuote(symbol) {
       if (!resp.ok) continue;
       const data = await resp.json();
       const q = data?.quoteResponse?.result?.[0];
-      if (q) return q;
+      if (q && q.regularMarketPrice) return q;
     } catch {}
   }
   return null;
@@ -378,15 +410,26 @@ async function fetchYahooCandles(symbol, range = '6mo') {
       const candles = [];
       for (let i = 0; i < timestamps.length; i++) {
         if (c[i] === null || c[i] === undefined) continue;
-        candles.push({
-          t: timestamps[i] * 1000,
-          o: o[i], h: h[i], l: l[i], c: c[i], v: v[i]
-        });
+        candles.push({ t: timestamps[i] * 1000, o: o[i], h: h[i], l: l[i], c: c[i], v: v[i] });
       }
       return candles;
     } catch {}
   }
   return [];
+}
+
+// Fetch quote with Finnhub first, fallback to Yahoo
+async function fetchQuote(symbol) {
+  const finn = await fetchFinnhubQuote(symbol);
+  if (finn) return finn;
+  return fetchYahooQuote(symbol);
+}
+
+// Fetch candles with Finnhub first, fallback to Yahoo
+async function fetchCandles(symbol, days = 180) {
+  const finn = await fetchFinnhubCandles(symbol, days);
+  if (finn.length > 0) return finn;
+  return fetchYahooCandles(symbol);
 }
 
 // ─── Watchlist Handlers ─────────────────────────────────────────────────
@@ -405,26 +448,27 @@ async function handleWatchlist(req, res) {
     sendJson(res, 200, { stocks: [] });
     return;
   }
-  // Use fallback directly for immediate response (Yahoo v7 doesn't work for Indian stocks)
-  const results = stocks.map(s => {
+  const results = await Promise.all(stocks.map(async (s) => {
+    const q = await fetchQuote(s.symbol);
+    if (q) {
+      return {
+        symbol: s.symbol, name: s.name, nse: s.nse,
+        price: q.regularMarketPrice,
+        change: q.regularMarketChange,
+        changePercent: q.regularMarketChangePercent,
+        volume: q.regularMarketVolume,
+        high: q.regularMarketDayHigh,
+        low: q.regularMarketDayLow
+      };
+    }
     const fb = getStockFallback(s.symbol);
     return {
-      symbol: s.symbol,
-      name: s.name,
-      nse: s.nse,
-      price: fb.price,
-      change: fb.change,
+      symbol: s.symbol, name: s.name, nse: s.nse,
+      price: fb.price, change: fb.change,
       changePercent: fb.changePercent,
-      volume: fb.volume,
-      marketCap: null,
-      high: fb.high || null,
-      low: fb.low || null,
-      peRatio: null,
-      dividendYield: null,
-      fiftyTwoWeekHigh: null,
-      fiftyTwoWeekLow: null
+      volume: fb.volume, high: fb.high, low: fb.low
     };
-  });
+  }));
   sendJson(res, 200, { stocks: results });
 }
 
@@ -453,8 +497,8 @@ async function handleStockInfo(req, res) {
     return;
   }
   let [quote, candles] = await Promise.all([
-    fetchYahooQuote(symbol),
-    fetchYahooCandles(symbol)
+    fetchQuote(symbol),
+    fetchCandles(symbol)
   ]);
   const indicators = computeIndicators(candles);
   const latestCandle = candles.length > 0 ? candles[candles.length - 1] : null;
@@ -498,8 +542,8 @@ async function handleWatchlistScan(req, res) {
     const batch = symbols.slice(i, i + batchSize);
     const promises = batch.map(async (sym) => {
       const [quoteData, candles] = await Promise.all([
-        fetchYahooQuote(sym),
-        fetchYahooCandles(sym)
+        fetchQuote(sym),
+        fetchCandles(sym)
       ]);
       const ind = computeIndicators(candles);
       const stock = stocks.find(s => s.symbol === sym);
