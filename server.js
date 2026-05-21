@@ -1071,6 +1071,56 @@ async function handleAdminStats(req, res, url) {
   });
 }
 
+async function handleAdminAdapt(req, res, url) {
+  var token = url.searchParams.get('token') || '';
+  if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  if (!OPENROUTER_API_KEY) { sendJson(res, 500, { error: 'AI not configured' }); return; }
+
+  var t = loadTracking();
+  var topEndpoints = Object.entries(t.endpointCounts || {}).sort(function(a,b){return b[1]-a[1]}).slice(0,5).map(function(e){return e[0]});
+  var topPages = Object.entries(t.pageViews || {}).sort(function(a,b){return b[1]-a[1]}).slice(0,5).map(function(e){return e[0]});
+  var totalReqs = t.totalRequests || 0;
+  var uniqueVis = t.uniqueIps.length || 0;
+
+  var prompt = 'You are an AI product strategist. Given this usage data for DARSO (a personal AI agency platform):\n' +
+    '- Total requests: ' + totalReqs + '\n' +
+    '- Unique visitors: ' + uniqueVis + '\n' +
+    '- Top endpoints: ' + JSON.stringify(topEndpoints) + '\n' +
+    '- Top pages: ' + JSON.stringify(topPages) + '\n\n' +
+    'Suggest 2-3 actionable improvements to increase user engagement or retention. Give a short reasoning for each. ' +
+    'Respond in JSON format: {"suggestions":[{"title":"...","reasoning":"..."}]}. No markdown.';
+
+  var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + OPENROUTER_API_KEY,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'http://localhost:3000',
+    },
+    body: JSON.stringify({
+      model: OPENROUTER_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 1024,
+    }),
+  });
+  var body = await upstream.json();
+  var content = (body.choices && body.choices[0] && body.choices[0].message && body.choices[0].message.content) || '';
+  try {
+    var parsed = JSON.parse(content);
+    sendJson(res, 200, parsed);
+  } catch (_) {
+    try {
+      var m = content.match(/```json\s*([\s\S]*?)```/);
+      if (m) {
+        sendJson(res, 200, JSON.parse(m[1]));
+        return;
+      }
+    } catch(_2) {}
+    sendJson(res, 200, { suggestions: [{ title:'Review analytics manually', reasoning:'AI could not parse suggestions from usage data' }] });
+  }
+}
+
 // ── CHART PREDICTION ──────────────────────────────────────────
 async function handleChartPredict(req, res) {
   if (!OPENROUTER_API_KEY) { sendJson(res, 500, { error: 'AI not configured' }); return; }
@@ -1404,6 +1454,11 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url.startsWith('/api/admin/stats')) {
     const url = new URL(req.url, 'http://localhost');
     handleAdminStats(req, res, url).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'GET' && req.url.startsWith('/api/admin/adapt')) {
+    const url = new URL(req.url, 'http://localhost');
+    handleAdminAdapt(req, res, url).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'POST' && req.url === '/api/company/profile') {

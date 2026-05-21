@@ -31,6 +31,9 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
 .stat-card .value{font-family:var(--fh);font-size:1.6rem;font-weight:600;}
 .stat-card .sub{font-size:.78rem;color:var(--muted);margin-top:.25rem;}
 .tab-bar{display:flex;gap:.25rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0;}
+.adapt-float{position:fixed;bottom:2rem;right:2rem;z-index:999;background:var(--cyan);color:#000;border:none;border-radius:3rem;padding:.85rem 2rem;font-family:var(--fh);font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 0 30px rgba(34,211,238,.5);transition:all .3s;animation:pulseGlow 2s infinite;}
+.adapt-float:hover{transform:scale(1.08);box-shadow:0 0 50px rgba(34,211,238,.8);}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 20px rgba(34,211,238,.4)}50%{box-shadow:0 0 40px rgba(34,211,238,.8)}}
 .tab-btn{background:none;border:none;color:var(--muted);padding:.6rem 1.2rem;font-family:var(--fb);font-size:.85rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
 .tab-btn:hover{color:var(--white);}
 .tab-btn.active{color:var(--purple);border-bottom-color:var(--purple);}
@@ -90,6 +93,9 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
     <input type="password" id="adminPass" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
     <button onclick="login()">Sign In</button>
     <div class="login-error" id="loginError">Incorrect password</div>
+    <hr style="border-color:var(--border);margin:1.2rem 0;">
+    <button onclick="login();setTimeout(adaptNow,500)" style="background:var(--cyan);color:#000;font-weight:700;font-size:.95rem;">⚡ ADAPT — AI Suggestions</button>
+    <p style="color:var(--muted);font-size:.72rem;margin-top:.5rem;">Login first, then AI analyzes usage data for improvements</p>
   </div>
 </div>
 
@@ -99,7 +105,8 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
       <h1>DARSO Admin Dashboard</h1>
       <span id="lastUpdated">Loading...</span>
     </div>
-    <div>
+    <div style="display:flex;gap:.5rem;">
+      <button onclick="adaptNow()" id="adaptHeaderBtn" style="background:var(--cyan);color:#000;font-weight:600;padding:.5rem 1.2rem;border:none;border-radius:.4rem;cursor:pointer;font-family:var(--fb);font-size:.8rem;">Adapt</button>
       <button onclick="logout()">Sign Out</button>
     </div>
   </div>
@@ -115,6 +122,7 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
     <button class="tab-btn active" data-tab="analytics" onclick="switchTab('analytics',this)">Analytics</button>
     <button class="tab-btn" data-tab="endpoints" onclick="switchTab('endpoints',this)">Endpoints</button>
     <button class="tab-btn" data-tab="company" onclick="switchTab('company',this)">Company AI</button>
+    <button class="tab-btn" data-tab="adaptive" onclick="switchTab('adaptive',this);loadAdaptive()">Adaptive</button>
   </div>
 
   <div class="tab-content active" id="tab-analytics">
@@ -142,11 +150,10 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
   <div class="tab-content" id="tab-company">
     <div class="company-section">
       <h3>Company Intelligence</h3>
-      <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;">Enter a company name or ticker. Darso will generate a comprehensive profile, 5-year financials, and you can ask specific questions.</p>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;">Enter a company name or ticker. Darso will generate a comprehensive profile and 5-year financials.</p>
       <div class="company-input-group">
         <input type="text" id="companyInput" placeholder="e.g. Adani, Reliance, Apple, TSLA" onkeydown="if(event.key==='Enter')runCompanyDeepDive()">
         <button onclick="runCompanyDeepDive()">Deep Dive</button>
-        <button class="cyan" onclick="document.getElementById('chatCompanyName').textContent=document.getElementById('companyInput').value.trim();initCompanyChat()">Ask AI</button>
       </div>
       <div id="companyLoading" style="display:none;text-align:center;padding:2rem;color:var(--muted);font-size:.9rem;">
         <span class="loading-dots"></span> Loading company data...
@@ -154,16 +161,34 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
       <div class="company-result" id="companyResult"></div>
       <div id="companyFinancialsResult"></div>
     </div>
-    <div class="company-section" id="companyChatSection" style="display:none;">
-      <h3>Personalised AI: <span id="chatCompanyName" style="color:var(--purple);"></span></h3>
-      <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;">Ask anything about this company. The AI acts as a specialist analyst focused exclusively on it.</p>
-      <div class="chat-area">
-        <div class="chat-msgs" id="companyChatMsgs"></div>
-        <div class="chat-input">
-          <input type="text" id="companyChatInput" placeholder="Ask about this company..." onkeydown="if(event.key==='Enter')askCompany()">
-          <button onclick="askCompany()">Ask</button>
-        </div>
+  </div>
+
+  <div class="tab-content" id="tab-adaptive">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+      <div>
+        <h3 style="font-family:var(--fh);font-size:1.1rem;">Adaptive Intelligence</h3>
+        <p style="color:var(--muted);font-size:.82rem;">AI-generated suggestions based on real-time usage analytics</p>
       </div>
+      <button onclick="runAdaptive()" id="adaptBtn" style="padding:.65rem 1.25rem;background:var(--cyan);color:#000;border:none;border-radius:.5rem;font-family:var(--fb);font-size:.85rem;cursor:pointer;">Analyze & Suggest</button>
+    </div>
+    <div id="adaptiveSuggestions" style="display:grid;gap:1rem;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:2rem;text-align:center;color:var(--muted);font-size:.9rem;">
+        Click <strong style="color:var(--cyan);">Analyze & Suggest</strong> to generate AI-powered improvements based on current site usage data.
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="adapt-float" onclick="adaptNow()">✦ ADAPT</button>
+
+<!-- ADAPT MODAL -->
+<div id="adaptModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeAdaptModal()">
+  <div style="background:#0b0719;border:1px solid var(--border);border-radius:1rem;padding:2rem;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;position:relative;">
+    <button onclick="closeAdaptModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;">✖</button>
+    <h3 style="font-family:var(--fh);font-size:1.2rem;margin-bottom:.25rem;">Adaptive Suggestions</h3>
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:1.5rem;">AI-powered improvements based on your usage data</p>
+    <div id="adaptModalBody" style="display:grid;gap:1rem;">
+      <div style="text-align:center;padding:1.5rem;color:var(--muted);">Analyzing...</div>
     </div>
   </div>
 </div>
@@ -210,6 +235,93 @@ function refresh() {
     .then(function(r) { if (r.ok) return r.json(); })
     .then(function(data) { if (data) renderDashboard(data); })
     .catch(function() {});
+}
+
+function loadAdaptive() { }
+
+function adaptNow() {
+  document.getElementById('adaptModal').style.display = 'flex';
+  document.getElementById('adaptModalBody').innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:.9rem;"><span class="loading-dots"></span> AI is analyzing your usage data...</div>';
+  var btn = document.getElementById('adaptHeaderBtn');
+  btn.textContent = 'Adapting...';
+  btn.disabled = true;
+  fetch('/api/admin/adapt?token=' + encodeURIComponent(TOKEN))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      btn.textContent = 'Adapt';
+      btn.disabled = false;
+      if (d.error) {
+        document.getElementById('adaptModalBody').innerHTML = '<div style="color:var(--red);padding:1rem;text-align:center;">Error: ' + esc(d.error) + '</div>';
+        return;
+      }
+      var items = d.suggestions || [];
+      if (!items.length) {
+        document.getElementById('adaptModalBody').innerHTML = '<div style="color:var(--muted);padding:1.5rem;text-align:center;">No suggestions generated yet.</div>';
+        return;
+      }
+      var html = '';
+      items.forEach(function(s, i) {
+        html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.25rem;">' +
+          '<div style="display:flex;align-items:flex-start;gap:.75rem;">' +
+            '<div style="background:var(--cyan);color:#000;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;">' + (i+1) + '</div>' +
+            '<div style="flex:1;">' +
+              '<div style="font-family:var(--fh);font-size:1rem;font-weight:600;margin-bottom:.4rem;">' + esc(s.title) + '</div>' +
+              '<div style="font-size:.85rem;color:#d0d0e0;line-height:1.6;">' + esc(s.reasoning) + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      document.getElementById('adaptModalBody').innerHTML = html;
+    })
+    .catch(function(e) {
+      btn.textContent = 'Adapt';
+      btn.disabled = false;
+      document.getElementById('adaptModalBody').innerHTML = '<div style="color:var(--red);padding:1rem;text-align:center;">Failed: ' + esc(e.message) + '</div>';
+    });
+}
+
+function closeAdaptModal() {
+  document.getElementById('adaptModal').style.display = 'none';
+}
+
+function runAdaptive() {
+  var btn = document.getElementById('adaptBtn');
+  btn.textContent = 'Analyzing...';
+  btn.disabled = true;
+  document.getElementById('adaptiveSuggestions').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);font-size:.9rem;"><span class="loading-dots"></span> AI is analyzing your usage data...</div>';
+  fetch('/api/admin/adapt?token=' + encodeURIComponent(TOKEN))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      btn.textContent = 'Analyze & Suggest';
+      btn.disabled = false;
+      if (d.error) {
+        document.getElementById('adaptiveSuggestions').innerHTML = '<div style="grid-column:1/-1;background:var(--card);border:1px solid var(--red);border-radius:.75rem;padding:1.5rem;color:var(--red);">Error: ' + esc(d.error) + '</div>';
+        return;
+      }
+      var items = d.suggestions || [];
+      if (!items.length) {
+        document.getElementById('adaptiveSuggestions').innerHTML = '<div style="grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;color:var(--muted);">No suggestions generated yet.</div>';
+        return;
+      }
+      var html = '';
+      items.forEach(function(s, i) {
+        html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.25rem;">' +
+          '<div style="display:flex;align-items:flex-start;gap:.75rem;">' +
+            '<div style="background:var(--cyan);color:#000;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;">' + (i+1) + '</div>' +
+            '<div style="flex:1;">' +
+              '<div style="font-family:var(--fh);font-size:1rem;font-weight:600;margin-bottom:.4rem;">' + esc(s.title) + '</div>' +
+              '<div style="font-size:.85rem;color:#d0d0e0;line-height:1.6;">' + esc(s.reasoning) + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      document.getElementById('adaptiveSuggestions').innerHTML = html;
+    })
+    .catch(function(e) {
+      btn.textContent = 'Analyze & Suggest';
+      btn.disabled = false;
+      document.getElementById('adaptiveSuggestions').innerHTML = '<div style="grid-column:1/-1;background:var(--card);border:1px solid var(--red);border-radius:.75rem;padding:1.5rem;color:var(--red);">Failed: ' + esc(e.message) + '</div>';
+    });
 }
 
 function renderDashboard(data) {
@@ -468,48 +580,6 @@ function renderFinancials(data) {
 
   el = document.getElementById('companyFinancialsResult');
   el.innerHTML = html;
-}
-
-// ── COMPANY CHAT ────────────────────────────────────────────────
-function initCompanyChat() {
-  var name = document.getElementById('chatCompanyName').textContent;
-  if (!name) return;
-  COMPANY = name;
-  document.getElementById('companyChatSection').style.display = 'block';
-  document.getElementById('companyChatMsgs').innerHTML = '';
-  addCompanyChatMsg('ai', 'I am a specialist analyst focused on <strong>' + esc(name) + '</strong>. Ask me anything about this company — its financials, management, competitive position, or growth prospects.');
-}
-
-function askCompany() {
-  var input = document.getElementById('companyChatInput');
-  var question = input.value.trim();
-  if (!question) return;
-  COMPANY = document.getElementById('chatCompanyName').textContent;
-  if (!COMPANY) { return; }
-  input.value = '';
-  addCompanyChatMsg('user', question);
-
-  fetch('/api/company/ask', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ company: COMPANY, question: question })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    addCompanyChatMsg('ai', data.reply || 'No response');
-  })
-  .catch(function(err) {
-    addCompanyChatMsg('ai', 'Error: ' + err.message);
-  });
-}
-
-function addCompanyChatMsg(role, text) {
-  var el = document.getElementById('companyChatMsgs');
-  var div = document.createElement('div');
-  div.className = 'cm ' + role;
-  div.innerHTML = text;
-  el.appendChild(div);
-  el.scrollTop = el.scrollHeight;
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
