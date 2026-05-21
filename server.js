@@ -78,43 +78,6 @@ function readJson(req) {
   });
 }
 
-async function handleChat(req, res) {
-  if (!OPENROUTER_API_KEY) {
-    sendJson(res, 500, { error: 'OPENROUTER_API_KEY is not configured' });
-    return;
-  }
-  const payload = await readJson(req);
-  const messages = Array.isArray(payload.messages) ? payload.messages.slice(-12) : [];
-  if (!messages.length) {
-    sendJson(res, 400, { error: 'messages are required' });
-    return;
-  }
-
-  const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'http://localhost:3000',
-      'X-Title': 'DARSO Financial Intelligence'
-    },
-    body: JSON.stringify({
-      model: payload.model || OPENROUTER_MODEL,
-      messages,
-      max_tokens: 420,
-      temperature: 0.42
-    })
-  });
-
-  const data = await upstream.json().catch(() => ({}));
-  if (!upstream.ok) {
-    sendJson(res, upstream.status, { error: data.error?.message || 'OpenRouter request failed' });
-    return;
-  }
-
-  sendJson(res, 200, { reply: data.choices?.[0]?.message?.content || '' });
-}
-
 async function handleTts(req, res) {
   if (!ELEVENLABS_API_KEY) {
     sendJson(res, 500, { error: 'ELEVENLABS_API_KEY is not configured' });
@@ -166,7 +129,17 @@ function getStockFallback(symbol) {
     'ETH-USD': { name:'Ethereum', price:3481, currency:'USD', high:3850, low:3150 },
     'GC=F': { name:'Gold Futures', price:2341, currency:'USD', high:2455, low:2280 },
     'SOL-USD': { name:'Solana', price:178.50, currency:'USD', high:198.25, low:165.10 },
-    'INR=X': { name:'USD/INR', price:83.42, currency:'INR', high:84.85, low:82.15 }
+    'INR=X': { name:'USD/INR', price:83.42, currency:'INR', high:84.85, low:82.15 },
+    'RELIANCE.NS': { name:'Reliance Industries', price:1235, currency:'INR', high:1375, low:1180 },
+    'TCS.NS': { name:'Tata Consultancy Services', price:3890, currency:'INR', high:4250, low:3560 },
+    'HDFCBANK.NS': { name:'HDFC Bank', price:1685, currency:'INR', high:1800, low:1500 },
+    'ICICIBANK.NS': { name:'ICICI Bank', price:1250, currency:'INR', high:1430, low:1180 },
+    'INFY.NS': { name:'Infosys', price:1680, currency:'INR', high:1850, low:1480 },
+    'ITC.NS': { name:'ITC', price:485, currency:'INR', high:540, low:390 },
+    'SBIN.NS': { name:'State Bank of India', price:830, currency:'INR', high:920, low:700 },
+    'BHARTIARTL.NS': { name:'Bharti Airtel', price:1600, currency:'INR', high:1780, low:1380 },
+    'WIPRO.NS': { name:'Wipro', price:510, currency:'INR', high:590, low:420 },
+    'LT.NS': { name:'Larsen & Toubro', price:3500, currency:'INR', high:3900, low:3100 }
   };
   const base = baseValues[symbol] || { name:symbol, price:100 + Math.random()*90, currency:'USD', high:120, low:80 };
   var change = (Math.random() - 0.48) * base.price * 0.015;
@@ -284,6 +257,390 @@ async function handleStock(req, res) {
 
   const fallback = symbols.map(getStockFallback);
   sendJson(res, 200, { quotes: fallback, fallback: true });
+}
+
+// ─── Technical Indicator Helpers ─────────────────────────────────────────
+
+function calcSMA(data, period) {
+  const result = [];
+  for (let i = 0; i < data.length; i++) {
+    if (i < period - 1) { result.push(null); continue; }
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += data[j];
+    result.push(sum / period);
+  }
+  return result;
+}
+
+function calcEMA(data, period) {
+  const result = [];
+  const k = 2 / (period + 1);
+  let ema = data[0];
+  for (let i = 0; i < data.length; i++) {
+    if (i === 0) { ema = data[0]; result.push(ema); continue; }
+    ema = data[i] * k + ema * (1 - k);
+    result.push(ema);
+  }
+  return result;
+}
+
+function calcRSI(data, period) {
+  const result = [];
+  let gains = 0, losses = 0;
+  for (let i = 0; i < data.length; i++) {
+    if (i === 0) { result.push(null); continue; }
+    const diff = data[i] - data[i - 1];
+    const gain = diff > 0 ? diff : 0;
+    const loss = diff < 0 ? -diff : 0;
+    if (i < period) {
+      gains += gain;
+      losses += loss;
+      result.push(null);
+      continue;
+    }
+    if (i === period) {
+      gains /= period;
+      losses /= period;
+    } else {
+      gains = (gains * (period - 1) + gain) / period;
+      losses = (losses * (period - 1) + loss) / period;
+    }
+    const rs = losses === 0 ? 100 : gains / losses;
+    result.push(100 - 100 / (1 + rs));
+  }
+  return result;
+}
+
+function calcMACD(data) {
+  const ema12 = calcEMA(data, 12);
+  const ema26 = calcEMA(data, 26);
+  const macdLine = ema12.map((v, i) => v !== null && ema26[i] !== null ? v - ema26[i] : null);
+  const signal = calcEMA(macdLine.filter(v => v !== null), 9);
+  let sigIdx = 0;
+  const fullSignal = macdLine.map(v => v !== null ? signal[sigIdx++] : null);
+  const histogram = macdLine.map((v, i) => v !== null && fullSignal[i] !== null ? v - fullSignal[i] : null);
+  return { macdLine, signal: fullSignal, histogram };
+}
+
+function computeIndicators(candles) {
+  if (!candles || candles.length < 50) return {};
+  const closes = candles.map(c => c.c);
+  const sma50 = calcSMA(closes, 50);
+  const sma200 = calcSMA(closes, 200);
+  const rsi = calcRSI(closes, 14);
+  const macd = calcMACD(closes);
+  return {
+    sma50: sma50[sma50.length - 1],
+    sma200: sma200[sma200.length - 1],
+    rsi: rsi[rsi.length - 1],
+    macd: macd.macdLine[macd.macdLine.length - 1],
+    macdSignal: macd.signal[macd.signal.length - 1],
+    macdHistogram: macd.histogram[macd.histogram.length - 1],
+    sma50Above200: sma50[sma50.length - 1] !== null && sma200[sma200.length - 1] !== null
+      ? sma50[sma50.length - 1] > sma200[sma200.length - 1] : null
+  };
+}
+
+async function fetchYahooQuote(symbol) {
+  const hosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
+  const yahooOpts = { headers: { 'User-Agent': 'Mozilla/5.0' } };
+  for (const host of hosts) {
+    try {
+      const url = `https://${host}/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
+      const resp = await fetch(url, yahooOpts);
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      const q = data?.quoteResponse?.result?.[0];
+      if (q) return q;
+    } catch {}
+  }
+  return null;
+}
+
+async function fetchYahooCandles(symbol, range = '6mo') {
+  const hosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
+  const yahooOpts = { headers: { 'User-Agent': 'Mozilla/5.0' } };
+  for (const host of hosts) {
+    try {
+      const url = `https://${host}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
+      const resp = await fetch(url, yahooOpts);
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      const result = data?.chart?.result?.[0];
+      if (!result) continue;
+      const timestamps = result.timestamp || [];
+      const quote = result.indicators?.quote?.[0] || {};
+      const o = quote.open || [];
+      const h = quote.high || [];
+      const l = quote.low || [];
+      const c = quote.close || [];
+      const v = quote.volume || [];
+      const candles = [];
+      for (let i = 0; i < timestamps.length; i++) {
+        if (c[i] === null || c[i] === undefined) continue;
+        candles.push({
+          t: timestamps[i] * 1000,
+          o: o[i], h: h[i], l: l[i], c: c[i], v: v[i]
+        });
+      }
+      return candles;
+    } catch {}
+  }
+  return [];
+}
+
+// ─── Watchlist Handlers ─────────────────────────────────────────────────
+
+const WATCHLIST_FILE = path.join(__dirname, 'watchlist.json');
+
+function loadWatchlist() {
+  if (!fs.existsSync(WATCHLIST_FILE)) return [];
+  try { return JSON.parse(fs.readFileSync(WATCHLIST_FILE, 'utf8')); }
+  catch { return []; }
+}
+
+async function handleWatchlist(req, res) {
+  const stocks = loadWatchlist();
+  if (!stocks.length) {
+    sendJson(res, 200, { stocks: [] });
+    return;
+  }
+  const symbols = stocks.map(s => s.symbol);
+  const batchSize = 5;
+  const results = [];
+  for (let i = 0; i < symbols.length; i += batchSize) {
+    const batch = symbols.slice(i, i + batchSize);
+    const promises = batch.map(fetchYahooQuote);
+    const quotes = await Promise.all(promises);
+    for (let j = 0; j < quotes.length; j++) {
+      const stock = stocks[i + j];
+      const q = quotes[j];
+      if (q) {
+        results.push({
+          symbol: stock.symbol,
+          name: stock.name,
+          nse: stock.nse,
+          price: q.regularMarketPrice,
+          change: q.regularMarketChange,
+          changePercent: q.regularMarketChangePercent,
+          volume: q.regularMarketVolume,
+          marketCap: q.marketCap,
+          high: q.regularMarketDayHigh,
+          low: q.regularMarketDayLow,
+          peRatio: q.trailingPE,
+          dividendYield: q.dividendYield,
+          fiftyTwoWeekHigh: q.fiftyTwoWeekHigh,
+          fiftyTwoWeekLow: q.fiftyTwoWeekLow
+        });
+      } else {
+        const fb = getStockFallback(stock.symbol);
+        results.push({
+          symbol: stock.symbol,
+          name: stock.name,
+          nse: stock.nse,
+          price: fb.price,
+          change: fb.change,
+          changePercent: fb.changePercent,
+          volume: fb.volume,
+          marketCap: null,
+          high: fb.high,
+          low: fb.low,
+          peRatio: null,
+          dividendYield: null,
+          fiftyTwoWeekHigh: null,
+          fiftyTwoWeekLow: null
+        });
+      }
+    }
+  }
+  sendJson(res, 200, { stocks: results });
+}
+
+async function handleStockInfo(req, res) {
+  const url = new URL(req.url, 'http://localhost');
+  const symbol = url.searchParams.get('symbol');
+  if (!symbol) {
+    sendJson(res, 400, { error: 'symbol is required' });
+    return;
+  }
+  let [quote, candles] = await Promise.all([
+    fetchYahooQuote(symbol),
+    fetchYahooCandles(symbol)
+  ]);
+  const indicators = computeIndicators(candles);
+  const latestCandle = candles.length > 0 ? candles[candles.length - 1] : null;
+  const prevCandle = candles.length > 1 ? candles[candles.length - 2] : null;
+  const fallbackPrice = latestCandle ? latestCandle.c : null;
+  if (!quote && fallbackPrice) {
+    quote = {
+      regularMarketPrice: fallbackPrice,
+      regularMarketChange: prevCandle ? fallbackPrice - prevCandle.c : 0,
+      regularMarketChangePercent: prevCandle ? ((fallbackPrice - prevCandle.c) / prevCandle.c) * 100 : 0,
+      regularMarketVolume: latestCandle.v,
+      regularMarketDayLow: latestCandle.l,
+      regularMarketDayHigh: latestCandle.h,
+      fiftyTwoWeekLow: null,
+      fiftyTwoWeekHigh: null,
+      trailingPE: null,
+      marketCap: null
+    };
+  }
+  sendJson(res, 200, {
+    symbol,
+    quote,
+    candles: candles.slice(-30),
+    indicators,
+    latestCandle,
+    prevCandle,
+    candleCount: candles.length
+  });
+}
+
+async function handleWatchlistScan(req, res) {
+  if (!OPENROUTER_API_KEY) {
+    sendJson(res, 500, { error: 'OPENROUTER_API_KEY not configured' });
+    return;
+  }
+  const stocks = loadWatchlist();
+  const symbols = stocks.map(s => s.symbol);
+  const batchSize = 5;
+  const allData = [];
+  for (let i = 0; i < symbols.length; i += batchSize) {
+    const batch = symbols.slice(i, i + batchSize);
+    const promises = batch.map(async (sym) => {
+      const [quoteData, candles] = await Promise.all([
+        fetchYahooQuote(sym),
+        fetchYahooCandles(sym)
+      ]);
+      const ind = computeIndicators(candles);
+      const stock = stocks.find(s => s.symbol === sym);
+      const lastCandle = candles.length > 0 ? candles[candles.length - 1] : null;
+      const price = quoteData?.regularMarketPrice || (lastCandle ? lastCandle.c : null);
+      const changePct = quoteData?.regularMarketChangePercent !== undefined ? quoteData.regularMarketChangePercent
+        : (candles.length > 1 && lastCandle ? ((lastCandle.c - candles[candles.length - 2].c) / candles[candles.length - 2].c) * 100 : null);
+      return {
+        symbol: sym,
+        name: stock ? stock.name : sym,
+        price,
+        changePercent: changePct,
+        rsi: ind.rsi,
+        macd: ind.macd,
+        macdSignal: ind.macdSignal,
+        sma50: ind.sma50,
+        sma200: ind.sma200,
+        sma50Above200: ind.sma50Above200
+      };
+    });
+    const results = await Promise.all(promises);
+    allData.push(...results);
+  }
+
+  const marketSummary = allData.map(s =>
+    `${s.name} (${s.symbol}): ₹${s.price?.toFixed(2) || 'N/A'}, ` +
+    `Change: ${s.changePercent?.toFixed(2) || 'N/A'}%, ` +
+    `RSI(14): ${s.rsi?.toFixed(1) || 'N/A'}, ` +
+    `MACD: ${s.macd?.toFixed(2) || 'N/A'}, ` +
+    `SMA50: ${s.sma50?.toFixed(2) || 'N/A'}, SMA200: ${s.sma200?.toFixed(2) || 'N/A'}, ` +
+    `SMA50>200: ${s.sma50Above200 === null ? 'N/A' : s.sma50Above200 ? 'Yes' : 'No'}`
+  ).join('\n');
+
+  const prompt = `You are a market analyst. Analyze these 10 Indian stocks and tell me:
+1. Which ones look BULLISH (based on RSI, MACD, SMA crossover, price momentum)
+2. Which ones look BEARISH
+3. Any new stocks worth watching (based on sector trends or patterns)
+4. A short summary of the overall market sentiment
+
+Current market data:
+${marketSummary}
+
+Format your response with clear sections and emoji markers.`;
+
+  try {
+    const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'http://localhost:3000',
+        'X-Title': 'DARSO Market Scan'
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 800,
+        temperature: 0.3
+      })
+    });
+    const data = await upstream.json().catch(() => ({}));
+    const analysis = data?.choices?.[0]?.message?.content || 'Analysis failed.';
+    sendJson(res, 200, { stocks: allData, analysis });
+  } catch (err) {
+    sendJson(res, 500, { error: err.message });
+  }
+}
+
+// ─── Stock-aware Chat ────────────────────────────────────────────────────
+
+async function handleChat(req, res) {
+  if (!OPENROUTER_API_KEY) {
+    sendJson(res, 500, { error: 'OPENROUTER_API_KEY is not configured' });
+    return;
+  }
+  const payload = await readJson(req);
+  const messages = Array.isArray(payload.messages) ? payload.messages.slice(-12) : [];
+  if (!messages.length) {
+    sendJson(res, 400, { error: 'messages are required' });
+    return;
+  }
+
+  let stockContext = payload.stockContext || null;
+  if (stockContext) {
+    const q = stockContext.quote;
+    const ind = stockContext.indicators || {};
+    const candle = stockContext.latestCandle;
+    const contextMsg = {
+      role: 'system',
+      content:
+        `Current market data for ${stockContext.symbol}:\n` +
+        `Price: ₹${q?.regularMarketPrice || 'N/A'}\n` +
+        `Change: ${q?.regularMarketChangePercent?.toFixed(2) || 'N/A'}%\n` +
+        `Volume: ${q?.regularMarketVolume?.toLocaleString() || 'N/A'}\n` +
+        `Day Range: ${q?.regularMarketDayLow || 'N/A'} - ${q?.regularMarketDayHigh || 'N/A'}\n` +
+        `52W Range: ${q?.fiftyTwoWeekLow || 'N/A'} - ${q?.fiftyTwoWeekHigh || 'N/A'}\n` +
+        `PE Ratio: ${q?.trailingPE || 'N/A'}\n` +
+        `RSI(14): ${ind.rsi?.toFixed(1) || 'N/A'}\n` +
+        `MACD: ${ind.macd?.toFixed(2) || 'N/A'} | Signal: ${ind.macdSignal?.toFixed(2) || 'N/A'}\n` +
+        `SMA50: ${ind.sma50?.toFixed(2) || 'N/A'} | SMA200: ${ind.sma200?.toFixed(2) || 'N/A'}\n` +
+        `SMA50 above SMA200: ${ind.sma50Above200 === null ? 'N/A' : ind.sma50Above200 ? 'Yes (Bullish)' : 'No (Bearish)'}\n` +
+        `${candle ? `Latest candle: O=${candle.o} H=${candle.h} L=${candle.l} C=${candle.c} V=${candle.v}` : ''}\n` +
+        `Use this data to answer the user's question about ${stockContext.name || stockContext.symbol}.`
+    };
+    messages.unshift(contextMsg);
+  }
+
+  const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'http://localhost:3000',
+      'X-Title': 'DARSO Financial Intelligence'
+    },
+    body: JSON.stringify({
+      model: payload.model || OPENROUTER_MODEL,
+      messages,
+      max_tokens: 420,
+      temperature: 0.42
+    })
+  });
+
+  const data = await upstream.json().catch(() => ({}));
+  if (!upstream.ok) {
+    sendJson(res, upstream.status, { error: data.error?.message || 'OpenRouter request failed' });
+    return;
+  }
+
+  sendJson(res, 200, { reply: data.choices?.[0]?.message?.content || '' });
 }
 
 async function handleTrade(req, res) {
@@ -879,12 +1236,24 @@ const server = http.createServer((req, res) => {
     handleTts(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
+  if (req.method === 'GET' && req.url.startsWith('/api/stock/info')) {
+    handleStockInfo(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
   if (req.method === 'GET' && req.url.startsWith('/api/stock/chart')) {
     handleStockChart(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && req.url.startsWith('/api/stock')) {
     handleStock(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'GET' && req.url === '/api/watchlist') {
+    handleWatchlist(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'GET' && req.url === '/api/watchlist/scan') {
+    handleWatchlistScan(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && req.url === '/api/portfolio') {

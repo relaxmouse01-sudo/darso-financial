@@ -1,0 +1,12 @@
+[
+  { "symbol": "RELIANCE.NS", "name": "Reliance Industries", "nse": "RELIANCE" },
+  { "symbol": "TCS.NS", "name": "Tata Consultancy Services", "nse": "TCS" },
+  { "symbol": "HDFCBANK.NS", "name": "HDFC Bank", "nse": "HDFCBANK" },
+  { "symbol": "ICICIBANK.NS", "name": "ICICI Bank", "nse": "ICICIBANK" },
+  { "symbol": "INFY.NS", "name": "Infosys", "nse": "INFY" },
+  { "symbol": "ITC.NS", "name": "ITC", "nse": "ITC" },
+  { "symbol": "SBIN.NS", "name": "State Bank of India", "nse": "SBIN" },
+  { "symbol": "BHARTIARTL.NS", "name": "Bharti Airtel", "nse": "BHARTIARTL" },
+  { "symbol": "WIPRO.NS", "name": "Wipro", "nse": "WIPRO" },
+  { "symbol": "LT.NS", "name": "Larsen & Toubro", "nse": "LT" }
+]

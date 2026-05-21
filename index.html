@@ -507,6 +507,7 @@ select.si option{background:#0a0518;}
     <a href="#ai-invest">Auto-Invest</a>
     <a href="#stock-portfolio">Stock Portfolio</a>
     <a href="#voice">Voice AI</a>
+    <a href="#market-watch">Market Watch</a>
     <a href="#fees">Fee X-Ray</a>
     <a href="#spin">Spin Filter</a>
     <a href="/admin" target="_blank" style="color:var(--purple) !important;">Admin</a>
@@ -529,6 +530,7 @@ select.si option{background:#0a0518;}
   <a href="#ai-invest" onclick="document.getElementById('mm').classList.remove('open')">Auto-Invest</a>
   <a href="#stock-portfolio" onclick="document.getElementById('mm').classList.remove('open')">Stock Portfolio</a>
   <a href="#voice" onclick="document.getElementById('mm').classList.remove('open')">Voice AI</a>
+  <a href="#market-watch" onclick="document.getElementById('mm').classList.remove('open')">Market Watch</a>
   <a href="#fees" onclick="document.getElementById('mm').classList.remove('open')">Fee X-Ray</a>
   <a href="#spin" onclick="document.getElementById('mm').classList.remove('open')">Spin Filter</a>
   <a href="/admin" target="_blank" onclick="document.getElementById('mm').classList.remove('open')" style="color:var(--purple) !important;">Admin</a>
@@ -791,6 +793,47 @@ select.si option{background:#0a0518;}
 </section>
 
 <div class="div-line"><div class="div-dot"></div></div>
+
+<!-- ════════════════ MARKET WATCH ════════════════ -->
+<section id="market-watch" style="padding:5rem 0;">
+  <div class="nb" style="width:500px;height:400px;background:radial-gradient(ellipse,rgba(245,158,11,.08) 0%,transparent 70%);bottom:-120px;right:-80px;"></div>
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(0,255,136,.25);background:rgba(0,255,136,.06);color:var(--green);margin-bottom:1.5rem;">
+      <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>
+      Market Watch
+    </div>
+    <h2 class="rv d1"><span class="gb">Live</span> Watchlist</h2>
+    <p class="lead rv d2">Real-time quotes, RSI, MACD, and SMA signals for your shortlisted stocks.</p>
+
+    <div class="rv d3" style="display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;">
+      <button class="btn btn-p" id="refreshWlBtn" onclick="loadWatchlistUI()" style="font-size:.8rem;padding:.45rem 1rem;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+      <button class="btn btn-gold" id="scanWlBtn" onclick="scanWatchlist()" style="font-size:.8rem;padding:.45rem 1rem;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Scan All Stocks
+      </button>
+      <div style="flex:1;"></div>
+      <div id="wlStatus" style="font-family:var(--fm);font-size:.72rem;color:var(--muted);align-self:center;"></div>
+    </div>
+
+    <div id="wlGrid" class="rv d3" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.65rem;">
+      <div style="grid-column:1/-1;text-align:center;padding:3rem 0;color:var(--muted);font-size:.85rem;">Loading watchlist...</div>
+    </div>
+
+    <!-- Scan result area -->
+    <div id="wlScanResult" style="display:none;margin-top:1.25rem;">
+      <div class="card card-corner" style="padding:1.5rem;">
+        <div class="card-shine"></div>
+        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;">AI Market Scan</div>
+        <div id="wlScanContent" style="font-size:.85rem;color:#d0d0e0;line-height:1.7;white-space:pre-wrap;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="div-line"><div class="div-dot" style="background:rgba(245,158,11,.5);box-shadow:0 0 10px rgba(245,158,11,.3);"></div></div>
 
 <!-- ════════════════ VOICE AI ════════════════ -->
 <section id="voice">
@@ -2660,6 +2703,196 @@ async function runAIAutoInvest() {
   }
 }
 
+// ── MARKET WATCH ──────────────────────────────────────────────────
+
+function fmtNum(n) {
+  if (n === null || n === undefined) return 'N/A';
+  return n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+}
+
+function fmtChangePct(n) {
+  if (n === null || n === undefined) return '';
+  var sign = n >= 0 ? '+' : '';
+  return sign + n.toFixed(2) + '%';
+}
+
+function loadWatchlistUI() {
+  var grid = document.getElementById('wlGrid');
+  var status = document.getElementById('wlStatus');
+  status.textContent = 'Loading...';
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem 0;color:var(--muted);font-size:.82rem;"><div style="width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto .6rem;"></div>Fetching live data...</div>';
+
+  fetch('/api/watchlist')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var stocks = data.stocks || [];
+      if (!stocks.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem 0;color:var(--muted);">No stocks in watchlist.</div>';
+        status.textContent = '';
+        return;
+      }
+      var html = '';
+      var up = 0, down = 0;
+      stocks.forEach(function(s) {
+        var change = s.changePercent;
+        var isUp = change !== null && change >= 0;
+        var isDown = change !== null && change < 0;
+        if (isUp) up++; else if (isDown) down++;
+        var changeColor = isUp ? 'var(--green)' : isDown ? 'var(--red)' : 'var(--muted)';
+        var arrow = isUp ? '▲' : isDown ? '▼' : '―';
+        var rsi = s.rsi !== null && s.rsi !== undefined ? s.rsi : null;
+
+        html += '<div class="card card-corner wl-card" style="padding:.85rem 1rem;cursor:pointer;" onclick="askAboutStock(\'' + s.symbol + '\',\'' + escHtml(s.name) + '\')" title="Click to analyze ' + escHtml(s.name) + ' in chat">' +
+          '<div class="card-shine"></div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.3rem;">' +
+            '<div><div style="font-weight:600;font-size:.88rem;color:var(--white);">' + escHtml(s.name) + '</div>' +
+            '<div style="font-family:var(--fm);font-size:.65rem;color:var(--muted);letter-spacing:.06em;">' + s.symbol.replace('.NS','') + '</div></div>' +
+            '<div style="text-align:right;"><div style="font-family:var(--fh);font-size:1.1rem;font-weight:700;color:var(--white);">₹' + fmtNum(s.price) + '</div>' +
+            '<div style="font-family:var(--fm);font-size:.7rem;color:' + changeColor + ';">' + arrow + ' ' + fmtChangePct(change) + '</div></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:.6rem;margin-top:.35rem;flex-wrap:wrap;font-family:var(--fm);font-size:.65rem;">' +
+            '<span style="color:' + (rsi !== null && rsi > 70 ? 'var(--red)' : rsi !== null && rsi < 30 ? 'var(--green)' : 'var(--muted)') + ';">RSI: ' + (rsi !== null ? rsi.toFixed(1) : 'N/A') + '</span>' +
+            '<span style="color:var(--muted);">Vol: ' + (s.volume ? (s.volume/1000000).toFixed(1)+'M' : 'N/A') + '</span>' +
+            (s.marketCap ? '<span style="color:var(--muted);">MCap: ₹' + (s.marketCap/10000000).toFixed(1) + 'Cr</span>' : '') +
+          '</div>' +
+        '</div>';
+      });
+      grid.innerHTML = html;
+      status.textContent = up + ' ▲ ' + down + ' ▼ · ' + stocks.length + ' stocks';
+    })
+    .catch(function(err) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem 0;color:var(--red);">Failed to load: ' + err.message + '</div>';
+      status.textContent = 'Error';
+    });
+}
+
+function scanWatchlist() {
+  var btn = document.getElementById('scanWlBtn');
+  var result = document.getElementById('wlScanResult');
+  var content = document.getElementById('wlScanContent');
+  btn.disabled = true;
+  btn.innerHTML = '<div style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;"></div> Scanning...';
+  result.style.display = 'block';
+  content.textContent = 'Analyzing 10 stocks with AI...';
+
+  fetch('/api/watchlist/scan')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      content.textContent = data.analysis || 'No analysis returned.';
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Scan All Stocks';
+      if (data.stocks) {
+        // Update the grid with indicator data from scan
+        var grid = document.getElementById('wlGrid');
+        var html = '';
+        data.stocks.forEach(function(s) {
+          var rsi = s.rsi;
+          html += '<div class="card card-corner wl-card" style="padding:.85rem 1rem;cursor:pointer;" onclick="askAboutStock(\'' + s.symbol + '\',\'' + escHtml(s.name) + '\')" title="Click to analyze">' +
+            '<div class="card-shine"></div>' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.3rem;">' +
+              '<div><div style="font-weight:600;font-size:.88rem;color:var(--white);">' + escHtml(s.name) + '</div>' +
+              '<div style="font-family:var(--fm);font-size:.65rem;color:var(--muted);letter-spacing:.06em;">' + (s.symbol||'').replace('.NS','') + '</div></div>' +
+              '<div style="text-align:right;"><div style="font-family:var(--fh);font-size:1.1rem;font-weight:700;color:var(--white);">₹' + fmtNum(s.price) + '</div>' +
+              '<div style="font-family:var(--fm);font-size:.7rem;color:' + (s.changePercent >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + (s.changePercent >= 0 ? '▲' : '▼') + ' ' + fmtChangePct(s.changePercent) + '</div></div>' +
+            '</div>' +
+            '<div style="display:flex;gap:.6rem;margin-top:.35rem;flex-wrap:wrap;font-family:var(--fm);font-size:.65rem;">' +
+              '<span style="color:' + (rsi !== null && rsi !== undefined && rsi > 70 ? 'var(--red)' : rsi !== null && rsi !== undefined && rsi < 30 ? 'var(--green)' : 'var(--muted)') + ';">RSI: ' + (rsi !== null && rsi !== undefined ? rsi.toFixed(1) : 'N/A') + '</span>' +
+              (s.sma50Above200 !== null ? '<span style="color:' + (s.sma50Above200 ? 'var(--green)' : 'var(--red)') + ';">SMA ' + (s.sma50Above200 ? 'Bull' : 'Bear') + '</span>' : '') +
+              (s.macd !== null && s.macdSignal !== null ? '<span style="color:' + (s.macd > s.macdSignal ? 'var(--green)' : 'var(--red)') + ';">MACD ' + (s.macd > s.macdSignal ? '▲' : '▼') + '</span>' : '') +
+            '</div>' +
+          '</div>';
+        });
+        grid.innerHTML = html;
+      }
+    })
+    .catch(function(err) {
+      content.textContent = 'Scan failed: ' + err.message;
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Scan All Stocks';
+    });
+}
+
+function askAboutStock(symbol, name) {
+  // Scroll to voice section, add a query
+  document.getElementById('voice').scrollIntoView({ behavior: 'smooth' });
+  setTimeout(function() {
+    // Show loading state in chat
+    var msgs = document.getElementById('chatMsgs');
+    var am = document.createElement('div'); am.className = 'ma purple';
+    am.innerHTML = '<span class="vtag vtp">FETCHING DATA</span><div class="mpart"><div class="mpl">Loading live data for ' + escHtml(name) + '...</div></div>';
+    msgs.appendChild(am);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    // Fetch stock info
+    fetch('/api/stock/info?symbol=' + encodeURIComponent(symbol))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        // Remove loading message
+        am.remove();
+        // Send query with stock context
+        var stockContext = {
+          symbol: symbol,
+          name: name,
+          quote: data.quote,
+          indicators: data.indicators,
+          latestCandle: data.latestCandle
+        };
+        var userMsg = 'Analyze ' + name + ' (' + symbol.replace('.NS','') + ') — give me current price, RSI, MACD, SMA signals, candlestick data, and your verdict on direction.';
+
+        // Add user message
+        var um = document.createElement('div'); um.className = 'ma you';
+        um.innerHTML = '<div class="mpart">' + esc(userMsg) + '</div>';
+        msgs.appendChild(um);
+        msgs.scrollTop = msgs.scrollHeight;
+
+        // Build messages array with context
+        var history = window.chatHistory || [];
+        var msgsPayload = [];
+        // Add a system context message with the stock data
+        var sysCtx = 'Current market data for ' + name + ' (' + symbol + '):\n' +
+          'Price: ₹' + fmtNum(data.quote?.regularMarketPrice) + '\n' +
+          'Change: ' + fmtChangePct(data.quote?.regularMarketChangePercent) + '\n' +
+          'Volume: ' + (data.quote?.regularMarketVolume?.toLocaleString('en-IN') || 'N/A') + '\n' +
+          'Day Range: ' + fmtNum(data.quote?.regularMarketDayLow) + ' - ' + fmtNum(data.quote?.regularMarketDayHigh) + '\n' +
+          '52W Range: ' + fmtNum(data.quote?.fiftyTwoWeekLow) + ' - ' + fmtNum(data.quote?.fiftyTwoWeekHigh) + '\n' +
+          'PE Ratio: ' + (data.quote?.trailingPE?.toFixed(2) || 'N/A') + '\n' +
+          'RSI(14): ' + (data.indicators?.rsi?.toFixed(1) || 'N/A') + '\n' +
+          'MACD: ' + (data.indicators?.macd?.toFixed(2) || 'N/A') + ' | Signal: ' + (data.indicators?.macdSignal?.toFixed(2) || 'N/A') + '\n' +
+          'SMA50: ' + fmtNum(data.indicators?.sma50) + ' | SMA200: ' + fmtNum(data.indicators?.sma200) + '\n' +
+          'SMA50 above SMA200: ' + (data.indicators?.sma50Above200 === null ? 'N/A' : data.indicators.sma50Above200 ? 'Yes (Bullish)' : 'No (Bearish)') + '\n' +
+          (data.latestCandle ? 'Latest Candle: O=' + data.latestCandle.o + ' H=' + data.latestCandle.h + ' L=' + data.latestCandle.l + ' C=' + data.latestCandle.c + ' V=' + data.latestCandle.v : '');
+
+        msgsPayload.push({ role: 'user', content: sysCtx + '\n\nBased on this data, answer: ' + userMsg });
+
+        fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: msgsPayload, max_tokens: 800 })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
+          var reply = document.createElement('div'); reply.className = 'ma purple';
+          reply.innerHTML = '<span class="vtag vtp">MARKET ANALYSIS</span><div class="mpart" style="white-space:pre-wrap;color:#d4d0f0;line-height:1.6;">' + esc(resp.reply || 'No response') + '</div>';
+          msgs.appendChild(reply);
+          msgs.scrollTop = msgs.scrollHeight;
+          window.chatHistory = (window.chatHistory || []).concat(msgsPayload, [{ role: 'assistant', content: resp.reply || '' }]);
+          speakText(resp.reply || '', function() {});
+        })
+        .catch(function(err) {
+          var em = document.createElement('div'); em.className = 'ma purple';
+          em.innerHTML = '<div class="mpart" style="color:var(--red);">Error: ' + err.message + '</div>';
+          msgs.appendChild(em);
+        });
+      })
+      .catch(function(err) {
+        am.remove();
+        var em = document.createElement('div'); em.className = 'ma purple';
+        em.innerHTML = '<div class="mpart" style="color:var(--red);">Failed to load data for ' + escHtml(name) + ': ' + err.message + '</div>';
+        msgs.appendChild(em);
+      });
+  }, 500);
+}
+
 // ── INIT ──────────────────────────────────────────────────────────
 setTimeout(function() {
   // animate ALL static numeric elements on page
@@ -2669,11 +2902,12 @@ setTimeout(function() {
     if (txt.match(/^[-+¥€£$Y]?[\d,]+\.?\d/)) setTextAnimated(all[i], txt);
   }
 }, 150);
-uFee(); uBudget(); runAdvisor(); updateDashboard(); loadPortfolio();
+uFee(); uBudget(); runAdvisor(); updateDashboard(); loadPortfolio(); loadWatchlistUI();
 
 // Refresh stock data every 60 seconds
 setInterval(updateDashboard, 60000);
 setInterval(loadPortfolio, 60000);
+setInterval(loadWatchlistUI, 120000);
 
 // Welcome message
 setTimeout(function() {
