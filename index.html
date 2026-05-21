@@ -838,7 +838,7 @@ select.si option{background:#0a0518;}
       <div class="card card-corner" style="padding:1.5rem;">
         <div class="card-shine"></div>
         <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;">AI Market Scan</div>
-        <div id="wlScanContent" style="font-size:.85rem;color:#d0d0e0;line-height:1.7;white-space:pre-wrap;"></div>
+        <div id="wlScanContent" style="font-size:.85rem;color:#000;line-height:1.7;white-space:pre-wrap;"></div>
       </div>
     </div>
   </div>
@@ -2757,13 +2757,13 @@ function loadWatchlistUI() {
           '<div class="card-shine"></div>' +
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.3rem;">' +
             '<div><div style="font-weight:600;font-size:.88rem;color:#000;">' + escHtml(s.name) + '</div>' +
-            '<div style="font-family:var(--fm);font-size:.65rem;color:#555;letter-spacing:.06em;">' + s.symbol.replace('.NS','') + '</div></div>' +
+            '<div style="font-family:var(--fm);font-size:.65rem;color:#000;letter-spacing:.06em;">' + s.symbol.replace('.NS','') + '</div></div>' +
             '<div style="text-align:right;"><div style="font-family:var(--fh);font-size:1.1rem;font-weight:700;color:#000;">₹' + fmtNum(s.price) + '</div>' +
             '<div style="font-family:var(--fm);font-size:.7rem;color:' + changeColor + ';">' + arrow + ' ' + fmtChangePct(change) + '</div></div>' +
           '</div>' +
           '<div style="display:flex;gap:.6rem;margin-top:.35rem;flex-wrap:wrap;font-family:var(--fm);font-size:.65rem;">' +
-            '<span style="color:#555;">RSI: ' + (rsi !== null ? rsi.toFixed(1) : 'N/A') + '</span>' +
-            '<span style="color:#555;">Vol: ' + (s.volume ? (s.volume/1000000).toFixed(1)+'M' : 'N/A') + '</span>' +
+            '<span style="color:#000;">RSI: ' + (rsi !== null ? rsi.toFixed(1) : 'N/A') + '</span>' +
+            '<span style="color:#000;">Vol: ' + (s.volume ? (s.volume/1000000).toFixed(1)+'M' : 'N/A') + '</span>' +
           '</div>' +
         '</div>';
       });
@@ -2866,12 +2866,12 @@ function scanWatchlist() {
             '<div class="card-shine"></div>' +
             '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.3rem;">' +
               '<div><div style="font-weight:600;font-size:.88rem;color:#000;">' + escHtml(s.name) + '</div>' +
-              '<div style="font-family:var(--fm);font-size:.65rem;color:#555;letter-spacing:.06em;">' + (s.symbol||'').replace('.NS','') + '</div></div>' +
+              '<div style="font-family:var(--fm);font-size:.65rem;color:#000;letter-spacing:.06em;">' + (s.symbol||'').replace('.NS','') + '</div></div>' +
               '<div style="text-align:right;"><div style="font-family:var(--fh);font-size:1.1rem;font-weight:700;color:#000;">₹' + fmtNum(s.price) + '</div>' +
               '<div style="font-family:var(--fm);font-size:.7rem;color:' + (s.changePercent >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + (s.changePercent >= 0 ? '▲' : '▼') + ' ' + fmtChangePct(s.changePercent) + '</div></div>' +
             '</div>' +
             '<div style="display:flex;gap:.6rem;margin-top:.35rem;flex-wrap:wrap;font-family:var(--fm);font-size:.65rem;">' +
-              '<span style="color:#555;">RSI: ' + (rsi !== null && rsi !== undefined ? rsi.toFixed(1) : 'N/A') + '</span>' +
+              '<span style="color:#000;">RSI: ' + (rsi !== null && rsi !== undefined ? rsi.toFixed(1) : 'N/A') + '</span>' +
               (s.sma50Above200 !== null ? '<span style="color:' + (s.sma50Above200 ? '#16a34a' : '#dc2626') + ';">SMA ' + (s.sma50Above200 ? 'Bull' : 'Bear') + '</span>' : '') +
               (s.macd !== null && s.macdSignal !== null ? '<span style="color:' + (s.macd > s.macdSignal ? '#16a34a' : '#dc2626') + ';">MACD ' + (s.macd > s.macdSignal ? '▲' : '▼') + '</span>' : '') +
             '</div>' +
