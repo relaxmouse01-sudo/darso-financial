@@ -835,9 +835,9 @@ select.si option{background:#0a0518;}
 
     <!-- Scan result area -->
     <div id="wlScanResult" style="display:none;margin-top:1.25rem;">
-      <div class="card card-corner" style="padding:1.5rem;">
+      <div class="card card-corner" style="padding:1.5rem;background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.08);">
         <div class="card-shine"></div>
-        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;">AI Market Scan</div>
+        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#000;margin-bottom:.6rem;">AI Market Scan</div>
         <div id="wlScanContent" style="font-size:.85rem;color:#000;line-height:1.7;white-space:pre-wrap;"></div>
       </div>
     </div>
@@ -2846,8 +2846,8 @@ function scanWatchlist() {
         var suggested = suggestMatch[1].split(',').map(function(s) { return s.trim().toUpperCase().replace('.NS',''); }).filter(Boolean);
         if (suggested.length) {
           var suggestBar = document.createElement('div');
-          suggestBar.style.cssText = 'margin-top:.8rem;padding-top:.8rem;border-top:1px solid rgba(255,255,255,.1);';
-          suggestBar.innerHTML = '<div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem;">Suggested Additions</div>' +
+          suggestBar.style.cssText = 'margin-top:.8rem;padding-top:.8rem;border-top:1px solid rgba(0,0,0,.1);';
+          suggestBar.innerHTML = '<div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#000;margin-bottom:.5rem;">Suggested Additions</div>' +
             '<div style="display:flex;flex-wrap:wrap;gap:.4rem;">' +
             suggested.map(function(sym) {
               return '<button onclick="addSuggestedStock(\'' + sym + '\')" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);border-radius:.3rem;padding:.25rem .55rem;font-family:var(--fm);font-size:.72rem;color:var(--gold);cursor:pointer;white-space:nowrap;">+ ' + sym + '</button>';
