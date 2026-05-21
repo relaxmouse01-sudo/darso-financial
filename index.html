@@ -459,6 +459,9 @@ select.si option{background:#0a0518;}
 .stocktower-content .si{border-color:rgba(0,0,0,.2);color:#000;background:rgba(255,255,255,.2);font-family:'Figtree',sans-serif;font-size:.85rem;pointer-events:auto;}
 .stocktower-content .si::placeholder{color:rgba(0,0,0,.35);font-family:'Figtree',sans-serif;}
 .stocktower-content .btn-g{background:#000;color:white;border:none;font-family:'Figtree',sans-serif;letter-spacing:.06em;pointer-events:auto;}
+.btn-gold{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.25rem;background:var(--gold);color:#000;border:none;border-radius:.5rem;font-family:var(--fb);font-size:.85rem;cursor:pointer;transition:opacity .2s;}
+.btn-gold:hover{opacity:.85;}
+.btn-gold:disabled{opacity:.4;cursor:default;}
 .stocktower-content .btn-g:hover{background:#222;}
 @keyframes stfade{to{opacity:1;transform:translateY(0);}}
 
@@ -504,6 +507,7 @@ select.si option{background:#0a0518;}
     <a href="#ai-invest">Auto-Invest</a>
     <a href="#stock-portfolio">Stock Portfolio</a>
     <a href="#voice">Voice AI</a>
+    <a href="#chart-predict">Chart Predict</a>
     <a href="#fees">Fee X-Ray</a>
     <a href="#spin">Spin Filter</a>
     <a href="/admin" target="_blank" style="color:var(--purple) !important;">Admin</a>
@@ -526,6 +530,7 @@ select.si option{background:#0a0518;}
   <a href="#ai-invest" onclick="document.getElementById('mm').classList.remove('open')">Auto-Invest</a>
   <a href="#stock-portfolio" onclick="document.getElementById('mm').classList.remove('open')">Stock Portfolio</a>
   <a href="#voice" onclick="document.getElementById('mm').classList.remove('open')">Voice AI</a>
+  <a href="#chart-predict" onclick="document.getElementById('mm').classList.remove('open')">Chart Predict</a>
   <a href="#fees" onclick="document.getElementById('mm').classList.remove('open')">Fee X-Ray</a>
   <a href="#spin" onclick="document.getElementById('mm').classList.remove('open')">Spin Filter</a>
   <a href="/admin" target="_blank" onclick="document.getElementById('mm').classList.remove('open')" style="color:var(--purple) !important;">Admin</a>
@@ -895,6 +900,51 @@ select.si option{background:#0a0518;}
 </section>
 
 <div class="div-line"><div class="div-dot" style="background:var(--cyan);box-shadow:0 0 10px var(--cyan);"></div></div>
+
+<!-- ════════════════ CHART PREDICTOR ════════════════ -->
+<section id="chart-predict" style="padding:5rem 0;">
+  <div class="nb" style="width:500px;height:400px;background:radial-gradient(ellipse,rgba(245,158,11,.12) 0%,transparent 70%);bottom:-120px;right:-100px;"></div>
+  <div class="container" style="position:relative;z-index:5;">
+    <div class="badge rv" style="border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:var(--gold);margin-bottom:1.5rem;">
+      <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>
+      Chart Predictor
+    </div>
+    <h2 class="rv d1"><span class="gb">AI Chart</span> Prediction</h2>
+    <p class="lead rv d2">Upload a screenshot of any stock chart. Darso analyzes the pattern and predicts whether it's going <strong>UP</strong> or <strong>DOWN</strong>.</p>
+
+    <div class="g2 rv d3" style="gap:1.5rem;align-items:start;">
+      <div class="card card-corner cgd" style="padding:1.5rem;">
+        <div class="card-shine"></div>
+        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;">Upload Chart Image</div>
+        <div id="cpDropZone" style="border:2px dashed rgba(245,158,11,.3);border-radius:.75rem;padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;" onclick="document.getElementById('cpFile').click()" ondragover="this.style.borderColor='var(--gold)';this.style.background='rgba(245,158,11,.08)'" ondragleave="this.style.borderColor='rgba(245,158,11,.3)';this.style.background='transparent'" ondrop="handleCPDrop(event)">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(245,158,11,.4)" stroke-width="1.5" style="margin-bottom:.75rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div style="color:var(--muted);font-size:.85rem;">Drop a chart screenshot here or <span style="color:var(--gold);text-decoration:underline;">browse</span></div>
+          <div style="color:rgba(200,185,255,.3);font-size:.72rem;margin-top:.4rem;">Supports JPG, PNG, WEBP</div>
+        </div>
+        <input type="file" id="cpFile" accept="image/*" style="display:none;" onchange="handleCPFile(this)">
+        <div id="cpPreview" style="display:none;margin-top:.75rem;position:relative;">
+          <img id="cpImg" style="width:100%;border-radius:.5rem;border:1px solid var(--border);max-height:300px;object-fit:contain;">
+          <button onclick="clearCP()" style="position:absolute;top:.4rem;right:.4rem;background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:.8rem;">✖</button>
+        </div>
+        <button class="btn btn-gold" id="cpBtn" onclick="predictChart()" style="width:100%;justify-content:center;margin-top:.75rem;" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Predict
+        </button>
+      </div>
+      <div class="card card-corner cc" id="cpResult" style="display:none;padding:1.5rem;">
+        <div class="card-shine"></div>
+        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin-bottom:.8rem;">Prediction Result</div>
+        <div id="cpLoading" style="display:none;text-align:center;padding:2rem;color:var(--muted);">
+          <div style="width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto .75rem;"></div>
+          Analyzing chart pattern...
+        </div>
+        <div id="cpContent"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="div-line"><div class="div-dot" style="background:var(--green);box-shadow:0 0 10px var(--green);"></div></div>
 
 <!-- ════════════════ PORTFOLIO ════════════════ -->
 <section id="portfolio">
@@ -2235,6 +2285,87 @@ function askDeepDive() {
       msgs.innerHTML += '<div style="color:var(--red);font-size:.85rem;">Error: ' + escHtml(e.message) + '</div>';
     });
 }
+// ── CHART PREDICTOR ──────────────────────────────────────────
+var CP_IMAGE_B64 = '';
+function handleCPFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  readCPFile(file);
+}
+function handleCPDrop(e) {
+  e.preventDefault();
+  var file = e.dataTransfer.files[0];
+  if (!file) return;
+  document.getElementById('cpDropZone').style.borderColor = 'rgba(245,158,11,.3)';
+  document.getElementById('cpDropZone').style.background = 'transparent';
+  readCPFile(file);
+}
+function readCPFile(file) {
+  if (file.size > 10 * 1024 * 1024) { toast('Image too large (max 10MB)'); return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    CP_IMAGE_B64 = e.target.result.split(',')[1];
+    document.getElementById('cpImg').src = e.target.result;
+    document.getElementById('cpPreview').style.display = 'block';
+    document.getElementById('cpBtn').disabled = false;
+    document.getElementById('cpDropZone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function clearCP() {
+  CP_IMAGE_B64 = '';
+  document.getElementById('cpPreview').style.display = 'none';
+  document.getElementById('cpBtn').disabled = true;
+  document.getElementById('cpDropZone').style.display = 'block';
+  document.getElementById('cpFile').value = '';
+  document.getElementById('cpResult').style.display = 'none';
+}
+async function predictChart() {
+  if (!CP_IMAGE_B64) { toast('Upload a chart image first'); return; }
+  var result = document.getElementById('cpResult');
+  var content = document.getElementById('cpContent');
+  var loading = document.getElementById('cpLoading');
+  result.style.display = 'block';
+  loading.style.display = 'block';
+  content.innerHTML = '';
+  document.getElementById('cpBtn').disabled = true;
+  try {
+    var res = await fetch('/api/predict/chart', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({image:CP_IMAGE_B64}) });
+    var data = await res.json();
+    loading.style.display = 'none';
+    document.getElementById('cpBtn').disabled = false;
+    if (data.error) { content.innerHTML = '<div style="color:var(--red);">' + escHtml(data.error) + '</div>'; return; }
+    var direction = data.prediction === 'UP' ? '▲' : '▼';
+    var dirColor = data.prediction === 'UP' ? 'var(--green)' : 'var(--red)';
+    var confColor = data.confidence === 'High' ? 'var(--green)' : data.confidence === 'Medium' ? 'var(--gold)' : 'var(--red)';
+    content.innerHTML =
+      '<div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">' +
+        '<div style="flex:1;min-width:120px;padding:.75rem;background:rgba(255,255,255,.04);border-radius:.5rem;text-align:center;">' +
+          '<div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);">Prediction</div>' +
+          '<div style="font-size:2rem;font-weight:700;color:' + dirColor + ';">' + direction + ' ' + escHtml(data.prediction) + '</div>' +
+        '</div>' +
+        '<div style="flex:1;min-width:120px;padding:.75rem;background:rgba(255,255,255,.04);border-radius:.5rem;text-align:center;">' +
+          '<div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);">Confidence</div>' +
+          '<div style="font-size:1.3rem;font-weight:700;color:' + confColor + ';">' + escHtml(data.confidence) + '</div>' +
+        '</div>' +
+        '<div style="flex:1;min-width:120px;padding:.75rem;background:rgba(255,255,255,.04);border-radius:.5rem;text-align:center;">' +
+          '<div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);">Trend</div>' +
+          '<div style="font-size:1.1rem;font-weight:600;">' + escHtml(data.trend) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap;">' +
+        '<div style="padding:.35rem .65rem;background:rgba(255,255,255,.06);border-radius:.4rem;font-size:.78rem;"><span style="color:var(--muted);">Pattern:</span> ' + escHtml(data.pattern) + '</div>' +
+        '<div style="padding:.35rem .65rem;background:rgba(255,255,255,.06);border-radius:.4rem;font-size:.78rem;"><span style="color:var(--muted);">Support:</span> ' + escHtml(data.support) + '</div>' +
+        '<div style="padding:.35rem .65rem;background:rgba(255,255,255,.06);border-radius:.4rem;font-size:.78rem;"><span style="color:var(--muted);">Resistance:</span> ' + escHtml(data.resistance) + '</div>' +
+      '</div>' +
+      '<div style="font-size:.88rem;line-height:1.7;color:#d0d0e0;padding:.75rem;background:rgba(255,255,255,.04);border-radius:.5rem;">' + escHtml(data.analysis) + '</div>';
+  } catch (e) {
+    loading.style.display = 'none';
+    document.getElementById('cpBtn').disabled = false;
+    content.innerHTML = '<div style="color:var(--red);">Error: ' + escHtml(e.message) + '</div>';
+  }
+}
+
 async function updateDashboard() {
   try {
     var res = await fetch('/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD');

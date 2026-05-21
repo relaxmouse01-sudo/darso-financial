@@ -680,6 +680,52 @@ async function handleAdminStats(req, res, url) {
   });
 }
 
+// ── CHART PREDICTION ──────────────────────────────────────────
+async function handleChartPredict(req, res) {
+  if (!OPENROUTER_API_KEY) { sendJson(res, 500, { error: 'AI not configured' }); return; }
+  var payload = await readJson(req);
+  var imageBase64 = payload.image || '';
+  if (!imageBase64) { sendJson(res, 400, { error: 'Image data required' }); return; }
+
+  var dataUrl = 'data:image/png;base64,' + imageBase64;
+  var prompt = 'You are an expert technical analyst. Analyze this stock chart image and provide a concise prediction. Focus on:\n\n1. Chart pattern you observe (e.g., head and shoulders, triangle, flag, wedge, double top/bottom)\n2. Key support and resistance levels\n3. Trend direction (bullish/bearish/sideways)\n4. Volume analysis if visible\n5. Price prediction: is it more likely to go UP or DOWN in the next 1-2 weeks?\n6. Confidence level (Low/Medium/High)\n\nRespond in this exact JSON format (no markdown, no extra text):\n{\n  "pattern": "observed pattern name or \'unclear\'",\n  "trend": "bullish|bearish|sideways",\n  "prediction": "UP or DOWN",\n  "confidence": "Low|Medium|High",\n  "support": "key support level or \'N/A\'",\n  "resistance": "key resistance level or \'N/A\'",\n  "analysis": "2-3 sentence explanation of your reasoning"\n}';
+
+  var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + OPENROUTER_API_KEY,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'http://localhost:3000',
+      'X-Title': 'DARSO Chart Predictor'
+    },
+    body: JSON.stringify({
+      model: 'openai/gpt-4o-mini',
+      messages: [
+        { role: 'user', content: [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: dataUrl } }
+        ]}
+      ],
+      max_tokens: 800,
+      temperature: 0.3
+    })
+  });
+
+  var data = await upstream.json().catch(function(){ return {}; });
+  if (!upstream.ok) {
+    sendJson(res, 500, { error: (data.error && data.error.message) || 'AI request failed' });
+    return;
+  }
+
+  var raw = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+  raw = raw.replace(/```json|```/g, '').trim();
+  var start = raw.indexOf('{'), end = raw.lastIndexOf('}');
+  if (start === -1 || end === -1) { sendJson(res, 500, { error: 'AI response was not valid JSON' }); return; }
+
+  try { sendJson(res, 200, JSON.parse(raw.slice(start, end + 1))); }
+  catch (e) { sendJson(res, 500, { error: 'Failed to parse prediction' }); }
+}
+
 // ── COMPANY DEEP-DIVE ────────────────────────────────────────────
 var COMPANY_CACHE = {};
 function getCompanyKey(name) { return name.trim().toUpperCase(); }
@@ -882,6 +928,10 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'POST' && req.url === '/api/company/ask') {
     handleCompanyAsk(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/predict/chart') {
+    handleChartPredict(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && (req.url === '/admin' || req.url === '/admin.html')) {
