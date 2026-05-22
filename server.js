@@ -1076,6 +1076,76 @@ async function handleAdminAdapt(req, res, url) {
   if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
   if (!OPENROUTER_API_KEY) { sendJson(res, 500, { error: 'AI not configured' }); return; }
 
+  var companyName = (url.searchParams.get('company') || '').trim();
+
+  // If a company is specified, act as a personal AI agent for that company
+  if (companyName) {
+    // Try to get cached profile
+    var key = getCompanyKey(companyName);
+    var cached = COMPANY_CACHE[key];
+    var profileData = '';
+    if (cached) {
+      var prof = cached.profile || cached;
+      profileData += 'Company: ' + (prof.name || companyName) + '\n';
+      if (prof.ticker && prof.ticker !== 'N/A') profileData += 'Ticker: ' + prof.ticker + '\n';
+      if (prof.sector) profileData += 'Sector: ' + prof.sector + '\n';
+      if (prof.industry) profileData += 'Industry: ' + prof.industry + '\n';
+      if (prof.description) profileData += 'Description: ' + prof.description + '\n';
+      if (prof.employees) profileData += 'Employees: ' + prof.employees + '\n';
+      if (prof.segments && prof.segments.length) {
+        profileData += 'Business Segments:\n';
+        prof.segments.forEach(function(s){ profileData += '  - ' + s.name + ' (' + (s.revenuePct||0) + '% of revenue): ' + (s.description||'') + '\n'; });
+      }
+      if (prof.competitors && prof.competitors.length) {
+        profileData += 'Competitors: ' + prof.competitors.join(', ') + '\n';
+      }
+      if (cached.financials || cached.ratios) {
+        var fin = cached.financials || {};
+        var ratios = cached.ratios || {};
+        profileData += '\nFinancial Data:\n';
+        if (fin.revenue) profileData += 'Revenue (2020-2024): ' + JSON.stringify(fin.revenue) + '\n';
+        if (fin.netIncome) profileData += 'Net Income: ' + JSON.stringify(fin.netIncome) + '\n';
+        if (fin.totalDebt) profileData += 'Total Debt: ' + JSON.stringify(fin.totalDebt) + '\n';
+        if (fin.freeCashFlow) profileData += 'Free Cash Flow: ' + JSON.stringify(fin.freeCashFlow) + '\n';
+        if (ratios.peRatio) profileData += 'P/E: ' + ratios.peRatio + '\n';
+        if (ratios.debtToEquity) profileData += 'D/E: ' + ratios.debtToEquity + '\n';
+        if (ratios.roe) profileData += 'ROE: ' + ratios.roe + '%\n';
+        if (ratios.currentRatio) profileData += 'Current Ratio: ' + ratios.currentRatio + '\n';
+      }
+    }
+
+    var prompt = 'You are a personal AI business agent for ' + companyName + '. Your job is to monitor, analyze, and advise on this company as if it is your own business.\n\n' +
+      (profileData ? 'Here is the data available:\n' + profileData + '\n\n' : 'No detailed profile cached yet. Use your general knowledge.\n\n') +
+      'Analyze this company as a personal AI agent. Cover:\n' +
+      '1. PRODUCT ANALYSIS — List the company\'s main products/services. Identify any flaws, weaknesses, or risks in their product lineup. Suggest improvements.\n' +
+      '2. FINANCIAL HEALTH — Analyze revenue trends, profitability, debt levels, cash flow. Flag any red flags or concerns. Suggest corrections.\n' +
+      '3. CORRECTIVE ACTIONS — What specific actions should the company take to fix the issues you identified?\n' +
+      '4. MONITORING — What key metrics should be tracked weekly/monthly to stay ahead of problems?\n\n' +
+      'Be direct, critical, and actionable. Respond in JSON format only:\n' +
+      '{"products":[{"name":"...","flaws":"...","fix":"..."}],"financialHealth":{"status":"healthy|warning|critical","redFlags":["..."],"corrections":["..."]},"correctiveActions":["..."],"monitoring":{"metrics":["..."],"frequency":"..."}}';
+
+    var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + OPENROUTER_API_KEY,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'http://localhost:3000',
+      },
+      body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: prompt }], temperature: 0.5, max_tokens: 2048 }),
+    });
+    var body = await upstream.json();
+    var content = (body.choices && body.choices[0] && body.choices[0].message && body.choices[0].message.content) || '';
+    try {
+      var parsed = JSON.parse(content.replace(/```json|```/g, '').trim());
+      sendJson(res, 200, parsed);
+    } catch (_) {
+      try { var m = content.match(/```json\s*([\s\S]*?)```/); if (m) { sendJson(res, 200, JSON.parse(m[1])); return; } } catch(_2) {}
+      sendJson(res, 200, { products: [], financialHealth: { status: 'unknown', redFlags: [], corrections: [] }, correctiveActions: ['AI response could not be parsed'], monitoring: { metrics: [], frequency: 'weekly' } });
+    }
+    return;
+  }
+
+  // Fallback: usage-based suggestions (original behavior)
   var t = loadTracking();
   var topEndpoints = Object.entries(t.endpointCounts || {}).sort(function(a,b){return b[1]-a[1]}).slice(0,5).map(function(e){return e[0]});
   var topPages = Object.entries(t.pageViews || {}).sort(function(a,b){return b[1]-a[1]}).slice(0,5).map(function(e){return e[0]});
@@ -1097,12 +1167,7 @@ async function handleAdminAdapt(req, res, url) {
       'Content-Type': 'application/json',
       'HTTP-Referer': 'http://localhost:3000',
     },
-    body: JSON.stringify({
-      model: OPENROUTER_MODEL,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 1024,
-    }),
+    body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 1024 }),
   });
   var body = await upstream.json();
   var content = (body.choices && body.choices[0] && body.choices[0].message && body.choices[0].message.content) || '';
@@ -1110,12 +1175,10 @@ async function handleAdminAdapt(req, res, url) {
     var parsed = JSON.parse(content);
     sendJson(res, 200, parsed);
   } catch (_) {
-    try {
-      var m = content.match(/```json\s*([\s\S]*?)```/);
-      if (m) {
-        sendJson(res, 200, JSON.parse(m[1]));
-        return;
-      }
+    try { var m = content.match(/```json\s*([\s\S]*?)```/); if (m) { sendJson(res, 200, JSON.parse(m[1])); return; } } catch(_2) {}
+    sendJson(res, 200, { suggestions: [{ title:'Review analytics manually', reasoning:'AI could not parse suggestions from usage data' }] });
+  }
+}
     } catch(_2) {}
     sendJson(res, 200, { suggestions: [{ title:'Review analytics manually', reasoning:'AI could not parse suggestions from usage data' }] });
   }

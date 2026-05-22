@@ -1,19 +1,19 @@
 {
-  "totalRequests": 82,
+  "totalRequests": 518,
   "uniqueIps": [
     "::1"
   ],
   "endpointCounts": {
     "/admin": 5,
     "/api/health": 8,
-    "/api/admin/stats": 18,
-    "/api/stock": 27,
-    "/api/watchlist": 8,
+    "/api/admin/stats": 155,
+    "/api/stock": 257,
+    "/api/watchlist": 31,
     "/api/stock/info": 5,
     "/api/watchlist/add": 1,
     "/": 1,
     "/lucyyy.mp4": 1,
-    "/api/portfolio": 5,
+    "/api/portfolio": 51,
     "/favicon.ico": 1,
     "/api/tts": 1,
     "/api/admin/adapt": 1
@@ -23,7 +23,8 @@
     "2026-05-20T16": 2,
     "2026-05-21T02": 9,
     "2026-05-21T03": 8,
-    "2026-05-21T14": 60
+    "2026-05-21T14": 345,
+    "2026-05-21T15": 151
   },
   "pageViews": {
     "/": 1,
@@ -32,495 +33,603 @@
   },
   "requestLog": [
     {
-      "time": 1779290982891,
+      "time": 1779375883134,
       "ip": "::1",
-      "url": "/admin",
+      "url": "/api/admin/stats?token=",
       "method": "GET"
     },
     {
-      "time": 1779290983001,
+      "time": 1779375898138,
       "ip": "::1",
-      "url": "/api/health",
+      "url": "/api/admin/stats?token=",
       "method": "GET"
     },
     {
-      "time": 1779290983023,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779294330176,
-      "ip": "::1",
-      "url": "/api/stock?symbols=AAPL",
-      "method": "GET"
-    },
-    {
-      "time": 1779294341732,
-      "ip": "::1",
-      "url": "/api/stock?symbols=AAPL",
-      "method": "GET"
-    },
-    {
-      "time": 1779331923979,
-      "ip": "::1",
-      "url": "/api/watchlist",
-      "method": "GET"
-    },
-    {
-      "time": 1779331957700,
-      "ip": "::1",
-      "url": "/api/health",
-      "method": "GET"
-    },
-    {
-      "time": 1779331991028,
-      "ip": "::1",
-      "url": "/api/health",
-      "method": "GET"
-    },
-    {
-      "time": 1779332065314,
-      "ip": "::1",
-      "url": "/api/health",
-      "method": "GET"
-    },
-    {
-      "time": 1779332070462,
-      "ip": "::1",
-      "url": "/api/watchlist",
-      "method": "GET"
-    },
-    {
-      "time": 1779332077083,
-      "ip": "::1",
-      "url": "/api/stock/info?symbol=ICICIBANK.NS",
-      "method": "GET"
-    },
-    {
-      "time": 1779332188902,
-      "ip": "::1",
-      "url": "/api/health",
-      "method": "GET"
-    },
-    {
-      "time": 1779332194908,
-      "ip": "::1",
-      "url": "/api/stock/info?symbol=ICICIBANK.NS",
-      "method": "GET"
-    },
-    {
-      "time": 1779332203440,
-      "ip": "::1",
-      "url": "/api/watchlist",
-      "method": "GET"
-    },
-    {
-      "time": 1779332906344,
-      "ip": "::1",
-      "url": "/api/health",
-      "method": "GET"
-    },
-    {
-      "time": 1779332927358,
-      "ip": "::1",
-      "url": "/api/watchlist",
-      "method": "GET"
-    },
-    {
-      "time": 1779332934901,
-      "ip": "::1",
-      "url": "/api/watchlist/add",
-      "method": "POST"
-    },
-    {
-      "time": 1779333208729,
-      "ip": "::1",
-      "url": "/api/stock/info?symbol=ICICIBANK.NS",
-      "method": "GET"
-    },
-    {
-      "time": 1779333337540,
-      "ip": "::1",
-      "url": "/api/stock/info?symbol=ICICIBANK.NS",
-      "method": "GET"
-    },
-    {
-      "time": 1779333366162,
-      "ip": "::1",
-      "url": "/api/health",
-      "method": "GET"
-    },
-    {
-      "time": 1779333372315,
-      "ip": "::1",
-      "url": "/api/stock/info?symbol=ICICIBANK.NS",
-      "method": "GET"
-    },
-    {
-      "time": 1779333380394,
-      "ip": "::1",
-      "url": "/api/watchlist",
-      "method": "GET"
-    },
-    {
-      "time": 1779373214778,
-      "ip": "::1",
-      "url": "/admin",
-      "method": "GET"
-    },
-    {
-      "time": 1779373396062,
-      "ip": "::1",
-      "url": "/admin",
-      "method": "GET"
-    },
-    {
-      "time": 1779373476418,
-      "ip": "::1",
-      "url": "/admin",
-      "method": "GET"
-    },
-    {
-      "time": 1779373553822,
-      "ip": "::1",
-      "url": "/",
-      "method": "GET"
-    },
-    {
-      "time": 1779373553858,
-      "ip": "::1",
-      "url": "/lucyyy.mp4",
-      "method": "GET"
-    },
-    {
-      "time": 1779373554460,
-      "ip": "::1",
-      "url": "/api/health",
-      "method": "GET"
-    },
-    {
-      "time": 1779373554463,
+      "time": 1779375905366,
       "ip": "::1",
       "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
       "method": "GET"
     },
     {
-      "time": 1779373554894,
+      "time": 1779375905369,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
+      "method": "GET"
+    },
+    {
+      "time": 1779375905374,
+      "ip": "::1",
+      "url": "/api/portfolio",
+      "method": "GET"
+    },
+    {
+      "time": 1779375905398,
+      "ip": "::1",
+      "url": "/api/stock?symbols=AAPL",
+      "method": "GET"
+    },
+    {
+      "time": 1779375905714,
+      "ip": "::1",
+      "url": "/api/stock?symbols=TSLA",
+      "method": "GET"
+    },
+    {
+      "time": 1779375905901,
+      "ip": "::1",
+      "url": "/api/stock?symbols=NVDA",
+      "method": "GET"
+    },
+    {
+      "time": 1779375913141,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779375928150,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779375943142,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779375958271,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779375965281,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
+      "method": "GET"
+    },
+    {
+      "time": 1779375965287,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
+      "method": "GET"
+    },
+    {
+      "time": 1779375965290,
+      "ip": "::1",
+      "url": "/api/portfolio",
+      "method": "GET"
+    },
+    {
+      "time": 1779375965293,
       "ip": "::1",
       "url": "/api/watchlist",
       "method": "GET"
     },
     {
-      "time": 1779373554916,
-      "ip": "::1",
-      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
-      "method": "GET"
-    },
-    {
-      "time": 1779373554920,
-      "ip": "::1",
-      "url": "/api/portfolio",
-      "method": "GET"
-    },
-    {
-      "time": 1779373555193,
+      "time": 1779375965300,
       "ip": "::1",
       "url": "/api/stock?symbols=AAPL",
       "method": "GET"
     },
     {
-      "time": 1779373555198,
-      "ip": "::1",
-      "url": "/favicon.ico",
-      "method": "GET"
-    },
-    {
-      "time": 1779373555693,
+      "time": 1779375965774,
       "ip": "::1",
       "url": "/api/stock?symbols=TSLA",
       "method": "GET"
     },
     {
-      "time": 1779373555935,
+      "time": 1779375965976,
       "ip": "::1",
       "url": "/api/stock?symbols=NVDA",
       "method": "GET"
     },
     {
-      "time": 1779373555968,
-      "ip": "::1",
-      "url": "/api/tts",
-      "method": "POST"
-    },
-    {
-      "time": 1779373557706,
-      "ip": "::1",
-      "url": "/admin",
-      "method": "GET"
-    },
-    {
-      "time": 1779373560710,
-      "ip": "::1",
-      "url": "/api/admin/adapt?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779373572860,
+      "time": 1779375973277,
       "ip": "::1",
       "url": "/api/admin/stats?token=",
       "method": "GET"
     },
     {
-      "time": 1779373587861,
+      "time": 1779375988273,
       "ip": "::1",
       "url": "/api/admin/stats?token=",
       "method": "GET"
     },
     {
-      "time": 1779373602860,
+      "time": 1779376003273,
       "ip": "::1",
       "url": "/api/admin/stats?token=",
       "method": "GET"
     },
     {
-      "time": 1779373615071,
+      "time": 1779376025283,
       "ip": "::1",
       "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
       "method": "GET"
     },
     {
-      "time": 1779373615078,
+      "time": 1779376025286,
       "ip": "::1",
       "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
       "method": "GET"
     },
     {
-      "time": 1779373615080,
+      "time": 1779376025288,
       "ip": "::1",
       "url": "/api/portfolio",
       "method": "GET"
     },
     {
-      "time": 1779373615092,
+      "time": 1779376025292,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779376025298,
       "ip": "::1",
       "url": "/api/stock?symbols=AAPL",
       "method": "GET"
     },
     {
-      "time": 1779373615449,
+      "time": 1779376025773,
       "ip": "::1",
       "url": "/api/stock?symbols=TSLA",
       "method": "GET"
     },
     {
-      "time": 1779373615704,
+      "time": 1779376026010,
       "ip": "::1",
       "url": "/api/stock?symbols=NVDA",
       "method": "GET"
     },
     {
-      "time": 1779373617872,
+      "time": 1779376085288,
       "ip": "::1",
       "url": "/api/admin/stats?token=",
       "method": "GET"
     },
     {
-      "time": 1779373632877,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779373647871,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779373662878,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779373675011,
+      "time": 1779376085311,
       "ip": "::1",
       "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
       "method": "GET"
     },
     {
-      "time": 1779373675015,
+      "time": 1779376085313,
       "ip": "::1",
       "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
       "method": "GET"
     },
     {
-      "time": 1779373675018,
+      "time": 1779376085316,
       "ip": "::1",
       "url": "/api/portfolio",
       "method": "GET"
     },
     {
-      "time": 1779373675020,
+      "time": 1779376085318,
       "ip": "::1",
       "url": "/api/watchlist",
       "method": "GET"
     },
     {
-      "time": 1779373675140,
+      "time": 1779376085327,
       "ip": "::1",
       "url": "/api/stock?symbols=AAPL",
       "method": "GET"
     },
     {
-      "time": 1779373675504,
+      "time": 1779376085789,
       "ip": "::1",
       "url": "/api/stock?symbols=TSLA",
       "method": "GET"
     },
     {
-      "time": 1779373675729,
+      "time": 1779376085982,
       "ip": "::1",
       "url": "/api/stock?symbols=NVDA",
       "method": "GET"
     },
     {
-      "time": 1779373677881,
+      "time": 1779376145292,
       "ip": "::1",
       "url": "/api/admin/stats?token=",
       "method": "GET"
     },
     {
-      "time": 1779373692882,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779373707885,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779373722883,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779373735009,
+      "time": 1779376145295,
       "ip": "::1",
       "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
       "method": "GET"
     },
     {
-      "time": 1779373735011,
-      "ip": "::1",
-      "url": "/api/portfolio",
-      "method": "GET"
-    },
-    {
-      "time": 1779373735013,
+      "time": 1779376145297,
       "ip": "::1",
       "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
       "method": "GET"
     },
     {
-      "time": 1779373735021,
+      "time": 1779376145302,
+      "ip": "::1",
+      "url": "/api/portfolio",
+      "method": "GET"
+    },
+    {
+      "time": 1779376145310,
       "ip": "::1",
       "url": "/api/stock?symbols=AAPL",
       "method": "GET"
     },
     {
-      "time": 1779373735472,
+      "time": 1779376145818,
       "ip": "::1",
       "url": "/api/stock?symbols=TSLA",
       "method": "GET"
     },
     {
-      "time": 1779373735709,
+      "time": 1779376146046,
       "ip": "::1",
       "url": "/api/stock?symbols=NVDA",
       "method": "GET"
     },
     {
-      "time": 1779373737893,
+      "time": 1779376205288,
       "ip": "::1",
       "url": "/api/admin/stats?token=",
       "method": "GET"
     },
     {
-      "time": 1779373752891,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779373767891,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779373782890,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779373795020,
+      "time": 1779376205298,
       "ip": "::1",
       "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
       "method": "GET"
     },
     {
-      "time": 1779373795030,
+      "time": 1779376205301,
       "ip": "::1",
       "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
       "method": "GET"
     },
     {
-      "time": 1779373795034,
+      "time": 1779376205303,
       "ip": "::1",
       "url": "/api/portfolio",
       "method": "GET"
     },
     {
-      "time": 1779373795036,
+      "time": 1779376205305,
       "ip": "::1",
       "url": "/api/watchlist",
       "method": "GET"
     },
     {
-      "time": 1779373795069,
+      "time": 1779376205313,
       "ip": "::1",
       "url": "/api/stock?symbols=AAPL",
       "method": "GET"
     },
     {
-      "time": 1779373795417,
+      "time": 1779376205697,
       "ip": "::1",
       "url": "/api/stock?symbols=TSLA",
       "method": "GET"
     },
     {
-      "time": 1779373795630,
+      "time": 1779376205939,
       "ip": "::1",
       "url": "/api/stock?symbols=NVDA",
       "method": "GET"
     },
     {
-      "time": 1779373797901,
+      "time": 1779376265298,
       "ip": "::1",
       "url": "/api/admin/stats?token=",
       "method": "GET"
     },
     {
-      "time": 1779373812905,
+      "time": 1779376265304,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
+      "method": "GET"
+    },
+    {
+      "time": 1779376265308,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
+      "method": "GET"
+    },
+    {
+      "time": 1779376265311,
+      "ip": "::1",
+      "url": "/api/portfolio",
+      "method": "GET"
+    },
+    {
+      "time": 1779376265320,
+      "ip": "::1",
+      "url": "/api/stock?symbols=AAPL",
+      "method": "GET"
+    },
+    {
+      "time": 1779376265715,
+      "ip": "::1",
+      "url": "/api/stock?symbols=TSLA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376265936,
+      "ip": "::1",
+      "url": "/api/stock?symbols=NVDA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376325300,
       "ip": "::1",
       "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779376325311,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
+      "method": "GET"
+    },
+    {
+      "time": 1779376325314,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
+      "method": "GET"
+    },
+    {
+      "time": 1779376325316,
+      "ip": "::1",
+      "url": "/api/portfolio",
+      "method": "GET"
+    },
+    {
+      "time": 1779376325318,
+      "ip": "::1",
+      "url": "/api/watchlist",
+      "method": "GET"
+    },
+    {
+      "time": 1779376325327,
+      "ip": "::1",
+      "url": "/api/stock?symbols=AAPL",
+      "method": "GET"
+    },
+    {
+      "time": 1779376325802,
+      "ip": "::1",
+      "url": "/api/stock?symbols=TSLA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376326025,
+      "ip": "::1",
+      "url": "/api/stock?symbols=NVDA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376385306,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
+      "method": "GET"
+    },
+    {
+      "time": 1779376385309,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
+      "method": "GET"
+    },
+    {
+      "time": 1779376385314,
+      "ip": "::1",
+      "url": "/api/portfolio",
+      "method": "GET"
+    },
+    {
+      "time": 1779376385316,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779376385325,
+      "ip": "::1",
+      "url": "/api/stock?symbols=AAPL",
+      "method": "GET"
+    },
+    {
+      "time": 1779376385756,
+      "ip": "::1",
+      "url": "/api/stock?symbols=TSLA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376385970,
+      "ip": "::1",
+      "url": "/api/stock?symbols=NVDA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376445333,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779376445337,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
+      "method": "GET"
+    },
+    {
+      "time": 1779376445339,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
+      "method": "GET"
+    },
+    {
+      "time": 1779376445341,
+      "ip": "::1",
+      "url": "/api/portfolio",
+      "method": "GET"
+    },
+    {
+      "time": 1779376445342,
+      "ip": "::1",
+      "url": "/api/watchlist",
+      "method": "GET"
+    },
+    {
+      "time": 1779376445350,
+      "ip": "::1",
+      "url": "/api/stock?symbols=AAPL",
+      "method": "GET"
+    },
+    {
+      "time": 1779376445764,
+      "ip": "::1",
+      "url": "/api/stock?symbols=TSLA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376445983,
+      "ip": "::1",
+      "url": "/api/stock?symbols=NVDA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376505315,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
+      "method": "GET"
+    },
+    {
+      "time": 1779376505318,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
+      "method": "GET"
+    },
+    {
+      "time": 1779376505320,
+      "ip": "::1",
+      "url": "/api/portfolio",
+      "method": "GET"
+    },
+    {
+      "time": 1779376505322,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779376505332,
+      "ip": "::1",
+      "url": "/api/stock?symbols=AAPL",
+      "method": "GET"
+    },
+    {
+      "time": 1779376505678,
+      "ip": "::1",
+      "url": "/api/stock?symbols=TSLA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376505910,
+      "ip": "::1",
+      "url": "/api/stock?symbols=NVDA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376518393,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779376528190,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779376543182,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779376558180,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779376563969,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
+      "method": "GET"
+    },
+    {
+      "time": 1779376563977,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
+      "method": "GET"
+    },
+    {
+      "time": 1779376563981,
+      "ip": "::1",
+      "url": "/api/portfolio",
+      "method": "GET"
+    },
+    {
+      "time": 1779376563989,
+      "ip": "::1",
+      "url": "/api/watchlist",
+      "method": "GET"
+    },
+    {
+      "time": 1779376564047,
+      "ip": "::1",
+      "url": "/api/stock?symbols=AAPL",
+      "method": "GET"
+    },
+    {
+      "time": 1779376564536,
+      "ip": "::1",
+      "url": "/api/stock?symbols=TSLA",
+      "method": "GET"
+    },
+    {
+      "time": 1779376564769,
+      "ip": "::1",
+      "url": "/api/stock?symbols=NVDA",
       "method": "GET"
     }
   ]
