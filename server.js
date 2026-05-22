@@ -1179,10 +1179,6 @@ async function handleAdminAdapt(req, res, url) {
     sendJson(res, 200, { suggestions: [{ title:'Review analytics manually', reasoning:'AI could not parse suggestions from usage data' }] });
   }
 }
-    } catch(_2) {}
-    sendJson(res, 200, { suggestions: [{ title:'Review analytics manually', reasoning:'AI could not parse suggestions from usage data' }] });
-  }
-}
 
 // ── CHART PREDICTION ──────────────────────────────────────────
 async function handleChartPredict(req, res) {
