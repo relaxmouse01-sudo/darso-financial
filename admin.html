@@ -182,11 +182,33 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
             <h3 style="font-family:var(--fh);font-size:1.1rem;">Trading Bot</h3>
             <span id="botStatusBadge" style="font-size:.72rem;text-transform:uppercase;padding:.25rem .7rem;border-radius:.3rem;background:rgba(255,255,255,.06);color:var(--muted);">Offline</span>
           </div>
-          <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem;">AI monitors your stocks every 5 min, analyzes technical indicators, and trades automatically.</p>
+          <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem;">AI monitors your stocks every 5 min, analyzes RSI/MACD/SMA, and trades automatically.</p>
           <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
             <button onclick="startBot()" id="botStartBtn" style="flex:1;padding:.7rem;background:var(--green);color:#000;border:none;border-radius:.5rem;font-weight:700;font-family:var(--fb);font-size:.9rem;cursor:pointer;">▶ Start Bot</button>
             <button onclick="stopBot()" id="botStopBtn" style="flex:1;padding:.7rem;background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red);border-radius:.5rem;font-weight:600;font-family:var(--fb);font-size:.9rem;cursor:pointer;">■ Stop</button>
           </div>
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;padding:.5rem;background:rgba(255,255,255,.03);border-radius:.4rem;">
+            <label style="font-size:.82rem;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:.5rem;flex:1;">
+              <input type="checkbox" id="botTrainingMode" checked onchange="toggleTraining()" style="accent-color:var(--cyan);width:16px;height:16px;">
+              <span><strong style="color:var(--cyan);">Training Mode</strong> — paper trade only, no real orders</span>
+            </label>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:1rem;">
+            <div style="background:rgba(255,255,255,.03);border-radius:.4rem;padding:.5rem;text-align:center;">
+              <div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);">Win Rate</div>
+              <div style="font-size:1.2rem;font-weight:700;color:var(--green);" id="botWinRate">0%</div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border-radius:.4rem;padding:.5rem;text-align:center;">
+              <div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);">Trades</div>
+              <div style="font-size:1.2rem;font-weight:700;color:var(--white);" id="botTotalTrades">0</div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border-radius:.4rem;padding:.5rem;text-align:center;">
+              <div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);">P&L</div>
+              <div style="font-size:1.2rem;font-weight:700;color:var(--gold);" id="botPnl">₹0</div>
+            </div>
+          </div>
+          <button onclick="runBacktest()" id="backtestBtn" style="width:100%;padding:.6rem;background:rgba(34,211,238,.1);border:1px solid var(--cyan);color:var(--cyan);border-radius:.5rem;cursor:pointer;font-family:var(--fb);font-size:.85rem;margin-bottom:.75rem;">🧪 Run Backtest (1 year historical)</button>
+          <div id="backtestResult" style="display:none;margin-bottom:.75rem;"></div>
           <div id="botInfo" style="font-size:.82rem;color:var(--muted);">
             <div style="padding:.3rem 0;">Last cycle: <span id="botLastCycle" style="color:#d0d0e0;">—</span></div>
             <div style="padding:.3rem 0;">Cycles run: <span id="botCycleCount" style="color:#d0d0e0;">0</span></div>
@@ -570,67 +592,42 @@ function loadBot() {
     .then(function(d){
       BOT_STOCKS = d.stocks || [];
       renderBotStockList();
-      if (d.running) {
-        document.getElementById('botStatusBadge').textContent = '● Running';
-        document.getElementById('botStatusBadge').style.color = 'var(--green)';
-        document.getElementById('botStatusBadge').style.background = 'rgba(0,255,136,.12)';
-        document.getElementById('botStartBtn').disabled = true;
-      } else {
-        document.getElementById('botStatusBadge').textContent = 'Offline';
-        document.getElementById('botStatusBadge').style.color = 'var(--muted)';
-        document.getElementById('botStatusBadge').style.background = 'rgba(255,255,255,.06)';
-        document.getElementById('botStartBtn').disabled = false;
-      }
+      var isRunning = d.running;
+      document.getElementById('botStatusBadge').textContent = isRunning ? '● Running' : 'Offline';
+      document.getElementById('botStatusBadge').style.color = isRunning ? 'var(--green)' : 'var(--muted)';
+      document.getElementById('botStatusBadge').style.background = isRunning ? 'rgba(0,255,136,.12)' : 'rgba(255,255,255,.06)';
+      document.getElementById('botStartBtn').disabled = isRunning;
+      document.getElementById('botTrainingMode').checked = d.training !== false;
       document.getElementById('botCycleCount').textContent = d.cycleCount || 0;
       document.getElementById('botLastSummary').textContent = d.lastSummary || '—';
       document.getElementById('botLastCycle').textContent = d.lastCycle ? new Date(d.lastCycle).toLocaleTimeString() : '—';
+      var perf = d.performance || {};
+      document.getElementById('botWinRate').textContent = (perf.winRate || 0) + '%';
+      document.getElementById('botTotalTrades').textContent = perf.total || 0;
+      document.getElementById('botWinRate').style.color = perf.winRate >= 50 ? 'var(--green)' : 'var(--red)';
+      document.getElementById('botPnl').textContent = '₹' + (perf.pnl || 0).toLocaleString();
+      document.getElementById('botPnl').style.color = (perf.pnl || 0) >= 0 ? 'var(--green)' : 'var(--red)';
       renderBotLog(d.log || []);
     });
 }
 
-function addBotStock() {
-  var input = document.getElementById('botStockInput');
-  var symbol = input.value.trim().toUpperCase();
-  if (!symbol) return;
-  if (BOT_STOCKS.includes(symbol)) { input.value = ''; return; }
-  if (BOT_STOCKS.length >= 10) { return; }
-  BOT_STOCKS.push(symbol);
-  input.value = '';
-  saveBotStocks();
-  renderBotStockList();
-}
-
-function removeBotStock(sym) {
-  BOT_STOCKS = BOT_STOCKS.filter(function(s){ return s !== sym; });
-  saveBotStocks();
-  renderBotStockList();
-}
-
-function saveBotStocks() {
-  fetch('/api/bot/config', {
+function toggleTraining() {
+  var training = document.getElementById('botTrainingMode').checked;
+  fetch('/api/bot/training', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: TOKEN, stocks: BOT_STOCKS })
+    body: JSON.stringify({ token: TOKEN, training: training })
   });
-}
-
-function renderBotStockList() {
-  var el = document.getElementById('botStockList');
-  if (!BOT_STOCKS.length) { el.innerHTML = '<div style="color:var(--muted);font-size:.82rem;">No stocks added yet.</div>'; return; }
-  el.innerHTML = BOT_STOCKS.map(function(s){
-    return '<div style="display:inline-flex;align-items:center;gap:.35rem;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);border-radius:.4rem;padding:.3rem .6rem;font-size:.8rem;">' +
-      '<span style="color:var(--white);font-family:var(--fm);">' + s + '</span>' +
-      '<button onclick="removeBotStock(\'' + s + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:0;line-height:1;">×</button></div>';
-  }).join('');
 }
 
 function startBot() {
   if (!BOT_STOCKS.length) { return; }
+  var training = document.getElementById('botTrainingMode').checked;
   document.getElementById('botStartBtn').textContent = 'Starting...';
   fetch('/api/bot/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: TOKEN })
+    body: JSON.stringify({ token: TOKEN, training: training })
   })
   .then(function(r){ return r.json(); })
   .then(function(d){
@@ -638,6 +635,42 @@ function startBot() {
     loadBot();
   })
   .catch(function(){ document.getElementById('botStartBtn').textContent = '▶ Start Bot'; });
+}
+
+function runBacktest() {
+  if (!BOT_STOCKS.length) { return; }
+  var btn = document.getElementById('backtestBtn');
+  btn.textContent = 'Running backtest...';
+  btn.disabled = true;
+  document.getElementById('backtestResult').style.display = 'block';
+  document.getElementById('backtestResult').innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">Running AI against 1 year of data...</div>';
+  fetch('/api/bot/backtest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: TOKEN, stocks: BOT_STOCKS })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    btn.textContent = '🧪 Run Backtest (1 year historical)';
+    btn.disabled = false;
+    var html = '<div style="background:rgba(255,255,255,.04);border-radius:.5rem;padding:.75rem;margin-bottom:.5rem;display:flex;gap:1rem;justify-content:space-around;">' +
+      '<div style="text-align:center;"><div style="font-size:.65rem;text-transform:uppercase;color:var(--muted);">Win Rate</div><div style="font-size:1.1rem;font-weight:700;' + (d.winRate >= 50 ? 'color:var(--green)' : 'color:var(--red)') + ';">' + d.winRate + '%</div></div>' +
+      '<div style="text-align:center;"><div style="font-size:.65rem;text-transform:uppercase;color:var(--muted);">Correct</div><div style="font-size:1.1rem;font-weight:700;color:var(--white);">' + d.wins + '/' + d.total + '</div></div>' +
+      '</div><div style="font-size:.78rem;max-height:200px;overflow-y:auto;">';
+    (d.results || []).forEach(function(r){
+      var c = r.correct ? 'var(--green)' : 'var(--red)';
+      html += '<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
+        '<span style="color:var(--white);font-family:var(--fm);">' + r.symbol + '</span>' +
+        '<span style="color:' + (r.action === 'BUY' ? 'var(--green)' : r.action === 'SELL' ? 'var(--red)' : 'var(--gold)') + ';">' + r.action + '</span>' +
+        '<span style="color:' + c + ';">' + r.profitPct + '%</span></div>';
+    });
+    html += '</div>';
+    document.getElementById('backtestResult').innerHTML = html;
+  })
+  .catch(function(){
+    btn.textContent = '🧪 Run Backtest (1 year historical)';
+    btn.disabled = false;
+  });
 }
 
 function stopBot() {

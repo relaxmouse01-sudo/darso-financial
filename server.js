@@ -1184,12 +1184,75 @@ async function angelPlaceOrder(brokerConfig, symbol, type, quantity, price) {
 }
 
 function loadBotConfig() {
-  if (!fs.existsSync(BOT_CONFIG_FILE)) return { stocks: [], running: false };
+  if (!fs.existsSync(BOT_CONFIG_FILE)) return { stocks: [], running: false, training: true, cycles: [], performance: { total:0, wins:0, losses:0, winRate:0, pnl:0 } };
   try { return JSON.parse(fs.readFileSync(BOT_CONFIG_FILE, 'utf8')); }
-  catch { return { stocks: [], running: false }; }
+  catch { return { stocks: [], running: false, training: true, cycles: [], performance: { total:0, wins:0, losses:0, winRate:0, pnl:0 } }; }
 }
 function saveBotConfig(config) {
   fs.writeFileSync(BOT_CONFIG_FILE, JSON.stringify(config, null, 2));
+}
+function evaluatePastDecisions(config) {
+  var perf = config.performance || { total:0, wins:0, losses:0, winRate:0, pnl:0 };
+  var pending = config.pendingDecisions || [];
+  if (!pending.length) { config.performance = perf; return config; }
+  var newPending = [];
+  for (var p of pending) {
+    p.age = (p.age || 0) + 1;
+    if (p.age >= 3) {
+      perf.total++;
+      if ((p.action === 'BUY' && p.priceChange > 0) || (p.action === 'SELL' && p.priceChange < 0)) {
+        perf.wins++; perf.pnl = (perf.pnl || 0) + Math.abs(p.priceChange * (p.quantity || 1));
+      } else {
+        perf.losses++; perf.pnl = (perf.pnl || 0) - Math.abs(p.priceChange * (p.quantity || 1));
+      }
+    } else {
+      newPending.push(p);
+    }
+  }
+  perf.winRate = perf.total > 0 ? (perf.wins / perf.total * 100).toFixed(1) : 0;
+  config.performance = perf;
+  config.pendingDecisions = newPending;
+  saveBotConfig(config);
+  return config;
+}
+
+async function runBacktest(req, res) {
+  var payload = await readJson(req);
+  if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var stocks = payload.stocks || [];
+  if (!stocks.length) { sendJson(res, 400, { error: 'No stocks' }); return; }
+  var results = [];
+  for (var s of stocks) {
+    try {
+      var cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1d&range=1y');
+      var cData = await cRes.json();
+      var ch = cData.chart && cData.chart.result && cData.chart.result[0];
+      if (!ch || !ch.timestamp || !ch.indicators || !ch.indicators.quote) continue;
+      var closes = ch.indicators.quote[0].close || [];
+      var valid = closes.filter(function(v){return v!=null;});
+      var ind = computeIndicators(valid);
+      var half = Math.floor(valid.length / 2);
+      var pastCloses = valid.slice(0, half);
+      var futureCloses = valid.slice(half);
+      var pastInd = computeIndicators(pastCloses);
+      var prompt = 'Backtest: ' + s + ' last close=' + pastCloses[pastCloses.length-1] + ' RSI=' + (pastInd.rsi||0).toFixed(1) + ' MACD=' + (pastInd.macd||0).toFixed(2) + ' SMA50=' + (pastInd.sma50||0).toFixed(1) + ' SMA200=' + (pastInd.sma200||0).toFixed(1) + '\nBUY or SELL or HOLD? Reply JSON: {"action":"BUY|SELL|HOLD","confidence":"LOW|MED|HIGH"}';
+      var up = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST', headers: { Authorization:'Bearer '+OPENROUTER_API_KEY, 'Content-Type':'application/json', 'HTTP-Referer':'http://localhost:3000' },
+        body: JSON.stringify({ model: OPENROUTER_MODEL, messages:[{role:'user',content:prompt}], temperature:0.3, max_tokens:256 })
+      });
+      var upData = await up.json();
+      var content = (upData.choices && upData.choices[0] && upData.choices[0].message && upData.choices[0].message.content) || '';
+      content = content.replace(/```json|```/g,'').trim();
+      var decision;
+      try { decision = JSON.parse(content); } catch(e) { decision = {action:'HOLD',confidence:'LOW'}; }
+      var entryPrice = pastCloses[pastCloses.length-1];
+      var exitPrice = futureCloses[futureCloses.length-1] || entryPrice;
+      var profit = decision.action === 'BUY' ? ((exitPrice - entryPrice) / entryPrice * 100) : (decision.action === 'SELL' ? ((entryPrice - exitPrice) / entryPrice * 100) : 0);
+      results.push({ symbol: s, action: decision.action, confidence: decision.confidence, entryPrice: entryPrice, exitPrice: exitPrice, profitPct: profit.toFixed(2), correct: profit > 0 });
+    } catch(e) {}
+  }
+  var wins = results.filter(function(r){return r.correct;}).length;
+  sendJson(res, 200, { results: results, total: results.length, wins: wins, winRate: results.length ? (wins/results.length*100).toFixed(1) : 0 });
 }
 
 async function runBotCycle() {
@@ -1204,6 +1267,18 @@ async function runBotCycle() {
     var data = await res.json();
     (data.quoteResponse && data.quoteResponse.result || []).forEach(function(q){ quotes[q.symbol] = q; });
   } catch(e) {}
+  // Update price change for pending decisions before evaluation
+  var pending = config.pendingDecisions || [];
+  for (var p of pending) {
+    var q = quotes[p.symbol] || {};
+    var currentPrice = q.regularMarketPrice || 0;
+    if (currentPrice && p.price) {
+      p.priceChange = ((currentPrice - p.price) / p.price) * 100;
+    }
+  }
+  config.pendingDecisions = pending;
+  // Evaluate past decisions
+  config = evaluatePastDecisions(config);
   for (var s of config.stocks) {
     try {
       var cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1d&range=6mo');
@@ -1243,7 +1318,7 @@ async function runBotCycle() {
   var log = config.log || [];
   config.cycleCount = (config.cycleCount || 0) + 1;
   var brokerConfig = loadBrokerConfig();
-  var useReal = brokerConfig && brokerConfig.connected && brokerConfig.broker === 'angel' && brokerConfig.apiKey && brokerConfig.clientId && brokerConfig.password;
+  var useReal = !config.training && brokerConfig && brokerConfig.connected && brokerConfig.broker === 'angel' && brokerConfig.apiKey && brokerConfig.clientId && brokerConfig.password;
   for (var d of decisions) {
     var q = quotes[d.symbol] || {};
     var price = q.regularMarketPrice || 0;
@@ -1284,6 +1359,18 @@ async function runBotCycle() {
   config.log = log.slice(-100);
   config.lastCycle = Date.now();
   config.lastSummary = decisions.map(function(d){return d.symbol+':'+d.action;}).join(', ');
+  var pending = config.pendingDecisions || [];
+  for (var d of decisions) {
+    if (d.action !== 'HOLD' && d.quantity > 0) {
+      var q = quotes[d.symbol] || {};
+      var currentPrice = q.regularMarketPrice || 0;
+      var existingPending = pending.find(function(p){ return p.symbol === d.symbol && p.action === d.action; });
+      if (!existingPending) {
+        pending.push({ symbol: d.symbol, action: d.action, quantity: d.quantity, price: currentPrice, priceChange: 0, age: 0 });
+      }
+    }
+  }
+  config.pendingDecisions = pending;
   savePortfolio(portfolio);
   savePortfolioHistory(history);
   saveBotConfig(config);
@@ -1303,6 +1390,7 @@ async function handleBotToggle(req, res, start) {
   if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
   var config = loadBotConfig();
   if (start && !config.stocks.length) { sendJson(res, 400, { error: 'No stocks configured' }); return; }
+  if (payload.training !== undefined) config.training = payload.training;
   config.running = start;
   if (start) {
     config.startedAt = Date.now();
@@ -1318,18 +1406,15 @@ async function handleBotToggle(req, res, start) {
   sendJson(res, 200, { running: config.running, stocks: config.stocks.length });
 }
 
-async function handleAdminStats(req, res, url) {
-  var token = url.searchParams.get('token') || '';
-  if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
-  var t = loadTracking();
-  sendJson(res, 200, {
-    totalRequests: t.totalRequests,
-    uniqueVisitors: t.uniqueIps.length,
-    endpoints: t.endpointCounts,
-    hourly: t.hourlyCounts,
-    pageViews: t.pageViews,
-    recentRequests: (t.requestLog || []).slice(-50).reverse()
-  });
+async function handleBotTraining(req, res) {
+  var payload = await readJson(req);
+  if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var config = loadBotConfig();
+  config.training = payload.training !== false;
+  config.running = false;
+  if (BOT_INTERVAL) { clearInterval(BOT_INTERVAL); BOT_INTERVAL = null; }
+  saveBotConfig(config);
+  sendJson(res, 200, { training: config.training });
 }
 
 async function handleAdminAdapt(req, res, url) {
@@ -1822,6 +1907,14 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'POST' && req.url === '/api/bot/stop') {
     handleBotToggle(req, res, false).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/bot/backtest') {
+    runBacktest(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/bot/training') {
+    handleBotTraining(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && req.url.startsWith('/api/admin/adapt')) {
