@@ -6,6 +6,7 @@ const fetch = globalThis.fetch || require('undici').fetch;
 // Portfolio file storage
 const PORTFOLIO_FILE = path.join(__dirname, 'portfolio.json');
 const PORTFOLIO_HISTORY_FILE = path.join(__dirname, 'portfolio-history.json');
+const BROKER_CONFIG_FILE = path.join(__dirname, 'broker-config.json');
 
 function loadEnvFile() {
   const envPath = path.join(__dirname, '.env');
@@ -1057,6 +1058,49 @@ function trackRequest(req) {
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin';
 
+// ── WALLET & BROKER ─────────────────────────────────────────
+function loadBrokerConfig() {
+  if (!fs.existsSync(BROKER_CONFIG_FILE)) return {};
+  try { return JSON.parse(fs.readFileSync(BROKER_CONFIG_FILE, 'utf8')); }
+  catch { return {}; }
+}
+function saveBrokerConfig(config) {
+  fs.writeFileSync(BROKER_CONFIG_FILE, JSON.stringify(config, null, 2));
+}
+
+async function handleWalletDeposit(req, res) {
+  var payload = await readJson(req);
+  if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var amount = parseFloat(payload.amount);
+  if (!amount || amount <= 0) { sendJson(res, 400, { error: 'Invalid amount' }); return; }
+  var portfolio = loadPortfolio();
+  portfolio.cash = (portfolio.cash || 0) + amount;
+  savePortfolio(portfolio);
+  var history = loadPortfolioHistory();
+  history.push({ type: 'deposit', amount: amount, balance: portfolio.cash, time: Date.now() });
+  savePortfolioHistory(history);
+  sendJson(res, 200, { cash: portfolio.cash, message: '₹' + amount.toLocaleString() + ' deposited successfully' });
+}
+
+async function handleBrokerConnect(req, res) {
+  var payload = await readJson(req);
+  if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var broker = payload.broker || 'zerodha';
+  var apiKey = (payload.apiKey || '').trim();
+  var apiSecret = (payload.apiSecret || '').trim();
+  if (!apiKey || !apiSecret) { sendJson(res, 400, { error: 'API Key and Secret required' }); return; }
+  var config = { broker: broker, apiKey: apiKey, apiSecret: '***' + apiSecret.slice(-4), connected: true, connectedAt: Date.now() };
+  saveBrokerConfig(config);
+  sendJson(res, 200, { status: 'connected', broker: config });
+}
+
+async function handleBrokerDisconnect(req, res) {
+  var payload = await readJson(req);
+  if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  saveBrokerConfig({});
+  sendJson(res, 200, { status: 'disconnected' });
+}
+
 async function handleAdminStats(req, res, url) {
   var token = url.searchParams.get('token') || '';
   if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
@@ -1501,11 +1545,42 @@ const server = http.createServer((req, res) => {
     handleAIAutoInvest(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
+  if (req.method === 'GET' && req.url.startsWith('/api/wallet/balance')) {
+    const url = new URL(req.url, 'http://localhost');
+    const token = url.searchParams.get('token') || '';
+    if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+    const portfolio = loadPortfolio();
+    sendJson(res, 200, { cash: portfolio.cash || 0 });
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/wallet/deposit') {
+    handleWalletDeposit(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'GET' && req.url.startsWith('/api/wallet/broker')) {
+    const url = new URL(req.url, 'http://localhost');
+    const token = url.searchParams.get('token') || '';
+    if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+    const broker = loadBrokerConfig();
+    sendJson(res, 200, broker);
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/wallet/broker') {
+    handleBrokerConnect(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'DELETE' && req.url === '/api/wallet/broker') {
+    handleBrokerDisconnect(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
   if (req.method === 'POST' && req.url === '/api/stock/analyze') {
     handleStockAnalysis(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
-  if (req.method === 'GET' && req.url === '/api/portfolio/history') {
+  if (req.method === 'GET' && req.url.startsWith('/api/portfolio/history')) {
+    const url = new URL(req.url, 'http://localhost');
+    const token = url.searchParams.get('token') || '';
+    if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
     const history = loadPortfolioHistory();
     sendJson(res, 200, { history });
     return;

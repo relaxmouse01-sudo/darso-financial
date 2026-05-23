@@ -117,6 +117,7 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
     <button class="tab-btn" data-tab="endpoints" onclick="switchTab('endpoints',this)">Endpoints</button>
     <button class="tab-btn" data-tab="company" onclick="switchTab('company',this)">Company AI</button>
     <button class="tab-btn" data-tab="adaptive" onclick="switchTab('adaptive',this);loadAdaptive()">Adaptive</button>
+    <button class="tab-btn" data-tab="wallet" onclick="switchTab('wallet',this);loadWallet()">Wallet</button>
   </div>
 
   <div class="tab-content active" id="tab-analytics">
@@ -168,6 +169,77 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
     <div id="adaptiveSuggestions" style="display:grid;gap:1rem;">
       <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:2rem;text-align:center;color:var(--muted);font-size:.9rem;">
         Click <strong style="color:var(--cyan);">Analyze & Suggest</strong> to generate AI-powered improvements based on current site usage data.
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-wallet">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;">
+          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.5rem;">Wallet Balance</h3>
+          <div style="font-family:var(--fh);font-size:2.2rem;font-weight:700;color:var(--cyan);" id="walletBalance">₹0</div>
+          <p style="color:var(--muted);font-size:.82rem;margin-top:.25rem;">Available for auto-invest & trading</p>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
+          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.75rem;">Deposit Funds</h3>
+          <div style="display:flex;gap:.5rem;margin-bottom:.5rem;">
+            <input type="number" id="depositAmount" placeholder="Amount" min="100" step="100" value="10000" style="flex:1;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
+            <button onclick="depositFunds()" id="depositBtn" style="padding:.65rem 1.25rem;background:var(--green);color:#000;border:none;border-radius:.5rem;font-weight:700;font-family:var(--fb);font-size:.85rem;cursor:pointer;">Deposit</button>
+          </div>
+          <div style="display:flex;gap:.3rem;flex-wrap:wrap;">
+            <button onclick="document.getElementById('depositAmount').value=5000;depositFunds()" style="padding:.3rem .7rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem;cursor:pointer;">₹5K</button>
+            <button onclick="document.getElementById('depositAmount').value=10000;depositFunds()" style="padding:.3rem .7rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem;cursor:pointer;">₹10K</button>
+            <button onclick="document.getElementById('depositAmount').value=50000;depositFunds()" style="padding:.3rem .7rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem;cursor:pointer;">₹50K</button>
+            <button onclick="document.getElementById('depositAmount').value=100000;depositFunds()" style="padding:.3rem .7rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem;cursor:pointer;">₹1L</button>
+            <button onclick="document.getElementById('depositAmount').value=500000;depositFunds()" style="padding:.3rem .7rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem;cursor:pointer;">₹5L</button>
+          </div>
+          <div id="depositMsg" style="margin-top:.5rem;font-size:.82rem;color:var(--green);display:none;"></div>
+        </div>
+      </div>
+      <div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
+          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.75rem;">Broker Connection</h3>
+          <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem;">Connect your Zerodha account for live auto-invest & trading.</p>
+          <div id="brokerConnected" style="display:none;">
+            <div style="background:rgba(0,255,136,.08);border:1px solid var(--green);border-radius:.5rem;padding:.75rem;margin-bottom:1rem;">
+              <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;">
+                <span style="color:var(--green);font-size:1.2rem;">●</span>
+                <span style="font-weight:600;font-size:.9rem;">Connected</span>
+              </div>
+              <div style="font-size:.8rem;color:var(--muted);">Broker: <span id="brBroker">Zerodha</span></div>
+              <div style="font-size:.8rem;color:var(--muted);">API Key: <span id="brApiKey">-</span></div>
+              <button onclick="disconnectBroker()" style="margin-top:.5rem;padding:.4rem .8rem;background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red);border-radius:.3rem;cursor:pointer;font-size:.78rem;">Disconnect</button>
+            </div>
+          </div>
+          <div id="brokerForm">
+            <div style="margin-bottom:.75rem;">
+              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">Broker</label>
+              <select id="brSelect" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
+                <option value="zerodha">Zerodha (Kite)</option>
+                <option value="angel">Angel One</option>
+                <option value="groww">Groww</option>
+                <option value="upstox">Upstox</option>
+              </select>
+            </div>
+            <div style="margin-bottom:.75rem;">
+              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">API Key</label>
+              <input type="text" id="brApiKeyInput" placeholder="Enter your API key" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">API Secret</label>
+              <input type="password" id="brApiSecretInput" placeholder="API secret / access token" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
+            </div>
+            <button onclick="connectBroker()" id="brConnectBtn" style="width:100%;padding:.7rem;background:var(--purple);color:#fff;border:none;border-radius:.5rem;font-weight:600;font-family:var(--fb);font-size:.9rem;cursor:pointer;">Connect Broker</button>
+            <div id="brMsg" style="margin-top:.5rem;font-size:.82rem;display:none;"></div>
+          </div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;margin-top:1.5rem;">
+          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.5rem;">Transaction History</h3>
+          <div id="txnHistory" style="font-size:.82rem;color:var(--muted);max-height:200px;overflow-y:auto;">
+            <div style="text-align:center;padding:1rem;">Loading...</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -317,6 +389,122 @@ function runPersonalAgent() {
 
 function closeAdaptModal() {
   document.getElementById('adaptModal').style.display = 'none';
+}
+
+// ── WALLET & BROKER ────────────────────────────────────────────
+function loadWallet() {
+  fetch('/api/wallet/balance?token=' + encodeURIComponent(TOKEN))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      document.getElementById('walletBalance').textContent = '₹' + Number(d.cash || 0).toLocaleString();
+    });
+  fetch('/api/wallet/broker?token=' + encodeURIComponent(TOKEN))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.connected) {
+        document.getElementById('brokerConnected').style.display = 'block';
+        document.getElementById('brokerForm').style.display = 'none';
+        document.getElementById('brBroker').textContent = d.broker || 'Zerodha';
+        document.getElementById('brApiKey').textContent = d.apiKey || '-';
+      }
+    });
+  loadTxnHistory();
+}
+
+function depositFunds() {
+  var amt = parseFloat(document.getElementById('depositAmount').value);
+  if (!amt || amt <= 0) { document.getElementById('depositAmount').focus(); return; }
+  var btn = document.getElementById('depositBtn');
+  btn.textContent = 'Processing...';
+  btn.disabled = true;
+  fetch('/api/wallet/deposit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount: amt, token: TOKEN })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    btn.textContent = 'Deposit';
+    btn.disabled = false;
+    if (d.error) { document.getElementById('depositMsg').style.display = 'block'; document.getElementById('depositMsg').style.color = 'var(--red)'; document.getElementById('depositMsg').textContent = d.error; return; }
+    document.getElementById('depositMsg').style.display = 'block';
+    document.getElementById('depositMsg').style.color = 'var(--green)';
+    document.getElementById('depositMsg').textContent = d.message || 'Deposited!';
+    document.getElementById('walletBalance').textContent = '₹' + Number(d.cash || 0).toLocaleString();
+    loadTxnHistory();
+  })
+  .catch(function(e){
+    btn.textContent = 'Deposit';
+    btn.disabled = false;
+    document.getElementById('depositMsg').style.display = 'block';
+    document.getElementById('depositMsg').style.color = 'var(--red)';
+    document.getElementById('depositMsg').textContent = 'Error: ' + e.message;
+  });
+}
+
+function connectBroker() {
+  var broker = document.getElementById('brSelect').value;
+  var apiKey = document.getElementById('brApiKeyInput').value.trim();
+  var apiSecret = document.getElementById('brApiSecretInput').value.trim();
+  if (!apiKey || !apiSecret) { document.getElementById('brMsg').style.display = 'block'; document.getElementById('brMsg').style.color = 'var(--red)'; document.getElementById('brMsg').textContent = 'API Key and Secret required'; return; }
+  var btn = document.getElementById('brConnectBtn');
+  btn.textContent = 'Connecting...';
+  btn.disabled = true;
+  fetch('/api/wallet/broker', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ broker: broker, apiKey: apiKey, apiSecret: apiSecret, token: TOKEN })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    btn.textContent = 'Connect Broker';
+    btn.disabled = false;
+    if (d.error) { document.getElementById('brMsg').style.display = 'block'; document.getElementById('brMsg').style.color = 'var(--red)'; document.getElementById('brMsg').textContent = d.error; return; }
+    document.getElementById('brMsg').style.display = 'block';
+    document.getElementById('brMsg').style.color = 'var(--green)';
+    document.getElementById('brMsg').textContent = '✓ ' + d.broker + ' connected!';
+    document.getElementById('brokerConnected').style.display = 'block';
+    document.getElementById('brokerForm').style.display = 'none';
+    document.getElementById('brBroker').textContent = d.broker || 'Zerodha';
+    document.getElementById('brApiKey').textContent = d.apiKey || '-';
+  })
+  .catch(function(e){
+    btn.textContent = 'Connect Broker';
+    btn.disabled = false;
+    document.getElementById('brMsg').style.display = 'block';
+    document.getElementById('brMsg').style.color = 'var(--red)';
+    document.getElementById('brMsg').textContent = 'Error: ' + e.message;
+  });
+}
+
+function disconnectBroker() {
+  fetch('/api/wallet/broker', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: TOKEN }) })
+    .then(function(){ 
+      document.getElementById('brokerConnected').style.display = 'none';
+      document.getElementById('brokerForm').style.display = 'block';
+      document.getElementById('brMsg').style.display = 'none';
+    });
+}
+
+function loadTxnHistory() {
+  fetch('/api/portfolio/history?token=' + encodeURIComponent(TOKEN))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var el = document.getElementById('txnHistory');
+      var items = d.history || [];
+      if (!items.length) { el.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">No transactions yet.</div>'; return; }
+      var html = '';
+      items.slice().reverse().slice(0,20).forEach(function(t){
+        var type = t.type === 'deposit' ? 'Deposit' : (t.type === 'buy' ? 'Buy' : (t.type === 'sell' ? 'Sell' : t.type));
+        var c = t.type === 'deposit' ? 'var(--green)' : (t.type === 'buy' ? 'var(--cyan)' : 'var(--gold)');
+        html += '<div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
+          '<span style="color:' + c + ';font-weight:500;">' + type + '</span>' +
+          '<span style="color:#d0d0e0;">₹' + Number(t.amount || 0).toLocaleString() + '</span>' +
+          '<span style="color:var(--muted);font-size:.75rem;">' + (t.symbol || '') + '</span></div>';
+      });
+      el.innerHTML = html;
+    })
+    .catch(function(){ document.getElementById('txnHistory').innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">Could not load history.</div>'; });
 }
 
 function runAdaptive() {
