@@ -629,10 +629,13 @@ select.si option{background:#0a0518;}
     <div class="g3" style="gap:1rem;">
       <div class="card card-corner cbl">
         <div class="card-shine"></div>
-        <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#60a5fa;margin-bottom:.6rem;">Investment Amount</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+          <div style="font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#60a5fa;">Investment Amount</div>
+          <div style="font-size:.72rem;color:var(--muted);">Balance: <span id="aiWalletBalance" style="color:var(--cyan);font-weight:600;">₹0</span></div>
+        </div>
         <div style="display:flex;align-items:center;gap:.75rem;">
-          <input type="range" id="aiInvestAmount" min="100" max="100000" step="100" value="10000" oninput="setTextAnimated(document.getElementById('aiInvestAmountLabel'), '$'+parseInt(this.value).toLocaleString())" style="flex:1;">
-          <span class="fv" id="aiInvestAmountLabel" style="min-width:70px;font-size:1rem;">$10,000</span>
+          <input type="range" id="aiInvestAmount" min="100" max="100000" step="100" value="10000" oninput="setTextAnimated(document.getElementById('aiInvestAmountLabel'), '₹'+parseInt(this.value).toLocaleString())" style="flex:1;">
+          <span class="fv" id="aiInvestAmountLabel" style="min-width:70px;font-size:1rem;">₹10,000</span>
         </div>
       </div>
       <div class="card card-corner cbl">
@@ -2472,6 +2475,22 @@ async function analyzePortfolio() {
 var AI_RISK = 'moderate';
 var AI_NUM = 4;
 
+function loadWalletBalance() {
+  fetch('/api/wallet/balance')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var cash = d.cash || 0;
+      document.getElementById('aiWalletBalance').textContent = '₹' + cash.toLocaleString();
+      var slider = document.getElementById('aiInvestAmount');
+      slider.max = Math.max(100, cash);
+      if (parseInt(slider.value) > cash) {
+        slider.value = Math.min(cash, 100000);
+        document.getElementById('aiInvestAmountLabel').textContent = '₹' + parseInt(slider.value).toLocaleString();
+      }
+    })
+    .catch(function(){});
+}
+
 function setAIRisk(val, btn) {
   AI_RISK = val;
   document.querySelectorAll('[id^=aiRisk]').forEach(function(b) { b.className = 'bsm bsm-p'; });
@@ -2502,7 +2521,10 @@ function sigBg(t) {
 
 async function runAIAutoInvest() {
   var amount = parseInt(document.getElementById('aiInvestAmount').value);
-  if (!amount || amount < 100) { toast('Enter at least $100'); return; }
+  if (!amount || amount < 100) { toast('Enter at least ₹100'); return; }
+  var balTxt = document.getElementById('aiWalletBalance').textContent.replace(/[₹,]/g,'');
+  var balance = parseInt(balTxt) || 0;
+  if (amount > balance) { toast('Insufficient balance. Deposit more in Admin > Wallet'); return; }
 
   document.getElementById('aiInvestResult').style.display = 'none';
   var loadEl = document.getElementById('aiInvestLoading');
@@ -2874,12 +2896,13 @@ setTimeout(function() {
     if (txt.match(/^[-+¥€£$Y]?[\d,]+\.?\d/)) setTextAnimated(all[i], txt);
   }
 }, 150);
-uFee(); uBudget(); runAdvisor(); updateDashboard(); loadPortfolio(); loadWatchlistUI();
+uFee(); uBudget(); runAdvisor(); updateDashboard(); loadPortfolio(); loadWatchlistUI(); loadWalletBalance();
 
 // Refresh stock data every 60 seconds
 setInterval(updateDashboard, 60000);
 setInterval(loadPortfolio, 60000);
 setInterval(loadWatchlistUI, 120000);
+setInterval(loadWalletBalance, 60000);
 
 // Welcome message
 setTimeout(function() {

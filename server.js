@@ -1546,9 +1546,6 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (req.method === 'GET' && req.url.startsWith('/api/wallet/balance')) {
-    const url = new URL(req.url, 'http://localhost');
-    const token = url.searchParams.get('token') || '';
-    if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
     const portfolio = loadPortfolio();
     sendJson(res, 200, { cash: portfolio.cash || 0 });
     return;
