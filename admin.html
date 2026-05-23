@@ -243,14 +243,14 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
       <div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
           <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.75rem;">Broker Connection</h3>
-          <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem;">Connect your Zerodha account for live auto-invest & trading.</p>
+          <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem;">Connect your Angel One account for live auto-invest & trading. <a href="https://smartapi.angelbroking.com/" target="_blank" style="color:var(--cyan);">Get API key</a></p>
           <div id="brokerConnected" style="display:none;">
             <div style="background:rgba(0,255,136,.08);border:1px solid var(--green);border-radius:.5rem;padding:.75rem;margin-bottom:1rem;">
               <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;">
                 <span style="color:var(--green);font-size:1.2rem;">●</span>
                 <span style="font-weight:600;font-size:.9rem;">Connected</span>
               </div>
-              <div style="font-size:.8rem;color:var(--muted);">Broker: <span id="brBroker">Zerodha</span></div>
+              <div style="font-size:.8rem;color:var(--muted);">Broker: <span id="brBroker">Angel One</span></div>
               <div style="font-size:.8rem;color:var(--muted);">API Key: <span id="brApiKey">-</span></div>
               <button onclick="disconnectBroker()" style="margin-top:.5rem;padding:.4rem .8rem;background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red);border-radius:.3rem;cursor:pointer;font-size:.78rem;">Disconnect</button>
             </div>
@@ -259,19 +259,27 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
             <div style="margin-bottom:.75rem;">
               <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">Broker</label>
               <select id="brSelect" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
+                <option value="angel">Angel One (SmartAPI)</option>
                 <option value="zerodha">Zerodha (Kite)</option>
-                <option value="angel">Angel One</option>
                 <option value="groww">Groww</option>
                 <option value="upstox">Upstox</option>
               </select>
             </div>
             <div style="margin-bottom:.75rem;">
-              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">API Key</label>
-              <input type="text" id="brApiKeyInput" placeholder="Enter your API key" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
+              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">API Key <span style="color:var(--cyan);font-size:.7rem;">(from SmartAPI dashboard)</span></label>
+              <input type="text" id="brApiKeyInput" placeholder="Your SmartAPI key" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fm);font-size:.85rem;outline:none;">
+            </div>
+            <div style="margin-bottom:.75rem;">
+              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">Client ID <span style="color:var(--cyan);font-size:.7rem;">(your Angel One trading ID)</span></label>
+              <input type="text" id="brClientIdInput" placeholder="e.g. A123456" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fm);font-size:.85rem;outline:none;">
+            </div>
+            <div style="margin-bottom:.75rem;">
+              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">Password / PIN</label>
+              <input type="password" id="brPasswordInput" placeholder="Your trading password" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
             </div>
             <div style="margin-bottom:1rem;">
-              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">API Secret</label>
-              <input type="password" id="brApiSecretInput" placeholder="API secret / access token" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
+              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">TOTP <span style="color:var(--muted);font-size:.7rem;">(optional, leave blank if using password)</span></label>
+              <input type="text" id="brTotpInput" placeholder="TOTP code" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fm);font-size:.85rem;outline:none;">
             </div>
             <button onclick="connectBroker()" id="brConnectBtn" style="width:100%;padding:.7rem;background:var(--purple);color:#fff;border:none;border-radius:.5rem;font-weight:600;font-family:var(--fb);font-size:.9rem;cursor:pointer;">Connect Broker</button>
             <div id="brMsg" style="margin-top:.5rem;font-size:.82rem;display:none;"></div>
@@ -447,8 +455,8 @@ function loadWallet() {
       if (d.connected) {
         document.getElementById('brokerConnected').style.display = 'block';
         document.getElementById('brokerForm').style.display = 'none';
-        document.getElementById('brBroker').textContent = d.broker || 'Zerodha';
-        document.getElementById('brApiKey').textContent = d.apiKey || '-';
+      document.getElementById('brBroker').textContent = d.broker || 'Angel One';
+      document.getElementById('brApiKey').textContent = d.apiKey || '-';
       }
     });
   loadTxnHistory();
@@ -488,15 +496,18 @@ function depositFunds() {
 function connectBroker() {
   var broker = document.getElementById('brSelect').value;
   var apiKey = document.getElementById('brApiKeyInput').value.trim();
-  var apiSecret = document.getElementById('brApiSecretInput').value.trim();
-  if (!apiKey || !apiSecret) { document.getElementById('brMsg').style.display = 'block'; document.getElementById('brMsg').style.color = 'var(--red)'; document.getElementById('brMsg').textContent = 'API Key and Secret required'; return; }
+  var clientId = document.getElementById('brClientIdInput').value.trim();
+  var password = document.getElementById('brPasswordInput').value.trim();
+  var totp = document.getElementById('brTotpInput').value.trim();
+  if (!apiKey) { document.getElementById('brMsg').style.display = 'block'; document.getElementById('brMsg').style.color = 'var(--red)'; document.getElementById('brMsg').textContent = 'API Key is required'; return; }
+  if (!clientId) { document.getElementById('brMsg').style.display = 'block'; document.getElementById('brMsg').style.color = 'var(--red)'; document.getElementById('brMsg').textContent = 'Client ID is required'; return; }
   var btn = document.getElementById('brConnectBtn');
   btn.textContent = 'Connecting...';
   btn.disabled = true;
   fetch('/api/wallet/broker', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ broker: broker, apiKey: apiKey, apiSecret: apiSecret, token: TOKEN })
+    body: JSON.stringify({ broker: broker, apiKey: apiKey, clientId: clientId, password: password, totp: totp, token: TOKEN })
   })
   .then(function(r){ return r.json(); })
   .then(function(d){

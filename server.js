@@ -1089,11 +1089,22 @@ async function handleBrokerConnect(req, res) {
   if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
   var broker = payload.broker || 'zerodha';
   var apiKey = (payload.apiKey || '').trim();
-  var apiSecret = (payload.apiSecret || '').trim();
-  if (!apiKey || !apiSecret) { sendJson(res, 400, { error: 'API Key and Secret required' }); return; }
-  var config = { broker: broker, apiKey: apiKey, apiSecret: '***' + apiSecret.slice(-4), connected: true, connectedAt: Date.now() };
+  var clientId = (payload.clientId || '').trim();
+  var password = (payload.password || '').trim();
+  var totp = (payload.totp || '').trim();
+  if (!apiKey) { sendJson(res, 400, { error: 'API Key required' }); return; }
+  var config = {
+    broker: broker,
+    apiKey: apiKey,
+    apiSecret: clientId ? '***' : '',
+    clientId: clientId,
+    password: password ? '***' : '',
+    totp: totp ? '***' : '',
+    connected: true,
+    connectedAt: Date.now()
+  };
   saveBrokerConfig(config);
-  sendJson(res, 200, { status: 'connected', broker: config });
+  sendJson(res, 200, { status: 'connected', broker: { broker: config.broker, apiKey: config.apiKey, clientId: config.clientId } });
 }
 
 async function handleBrokerDisconnect(req, res) {
@@ -1101,6 +1112,75 @@ async function handleBrokerDisconnect(req, res) {
   if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
   saveBrokerConfig({});
   sendJson(res, 200, { status: 'disconnected' });
+}
+
+// ── ANGEL ONE API ──────────────────────────────────────────────
+var ANGEL_TOKEN = null;
+var ANGEL_TOKEN_EXPIRY = 0;
+
+async function angelLogin(brokerConfig) {
+  if (!brokerConfig || !brokerConfig.apiKey || !brokerConfig.clientId || !brokerConfig.password) return null;
+  try {
+    var res = await fetch('https://apiconnect.angelbroking.com/rest/auth/angelbroking/user/v1/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-UserType': 'USER',
+        'X-SourceID': 'WEB',
+        'X-ClientLocalIP': '127.0.0.1',
+        'X-ClientPublicIP': '127.0.0.1',
+        'X-MACAddress': '00:00:00:00:00:00',
+        'Accept': 'application/json',
+        'X-PrivateKey': brokerConfig.apiKey
+      },
+      body: JSON.stringify({ clientcode: brokerConfig.clientId, password: brokerConfig.password, totp: brokerConfig.totp || '' })
+    });
+    var data = await res.json();
+    if (data.status === true && data.data && data.data.jwtToken) {
+      ANGEL_TOKEN = data.data.jwtToken;
+      ANGEL_TOKEN_EXPIRY = Date.now() + 3600000;
+      return ANGEL_TOKEN;
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
+async function angelPlaceOrder(brokerConfig, symbol, type, quantity, price) {
+  if (!ANGEL_TOKEN || Date.now() > ANGEL_TOKEN_EXPIRY) {
+    var tok = await angelLogin(brokerConfig);
+    if (!tok) return { error: 'Login failed' };
+  }
+  try {
+    var tradingsymbol = symbol.endsWith('.NS') ? symbol.replace('.NS', '') : symbol;
+    var exchange = symbol.endsWith('.NS') ? 'NSE' : (symbol.endsWith('.BO') ? 'BSE' : 'NSE');
+    var transactionType = type === 'BUY' ? 'BUY' : 'SELL';
+    var orderRes = await fetch('https://apiconnect.angelbroking.com/rest/secure/angelbroking/order/v1/placeOrder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + ANGEL_TOKEN,
+        'X-PrivateKey': brokerConfig.apiKey,
+        'X-UserType': 'USER',
+        'X-SourceID': 'WEB'
+      },
+      body: JSON.stringify({
+        variety: 'NORMAL',
+        tradingsymbol: tradingsymbol,
+        symboltoken: '',
+        exchange: exchange,
+        transactiontype: transactionType,
+        ordertype: 'MARKET',
+        producttype: 'DELIVERY',
+        duration: 'DAY',
+        price: '0',
+        squareoff: '0',
+        stoploss: '0',
+        quantity: String(quantity)
+      })
+    });
+    var data = await orderRes.json();
+    return data;
+  } catch(e) { return { error: e.message }; }
 }
 
 function loadBotConfig() {
@@ -1162,29 +1242,41 @@ async function runBotCycle() {
   var history = loadPortfolioHistory();
   var log = config.log || [];
   config.cycleCount = (config.cycleCount || 0) + 1;
+  var brokerConfig = loadBrokerConfig();
+  var useReal = brokerConfig && brokerConfig.connected && brokerConfig.broker === 'angel' && brokerConfig.apiKey && brokerConfig.clientId && brokerConfig.password;
   for (var d of decisions) {
     var q = quotes[d.symbol] || {};
     var price = q.regularMarketPrice || 0;
     if (!price) continue;
     if (d.action === 'BUY' && d.quantity > 0) {
       var cost = d.quantity * price;
+      if (useReal) {
+        var order = await angelPlaceOrder(brokerConfig, d.symbol, 'BUY', d.quantity, price);
+        log.push({ cycle: config.cycleCount, type: 'BUY', symbol: d.symbol, quantity: d.quantity, price: price, reason: d.reason || '', real: order && !order.error ? 'executed' : ('failed: ' + (order.error || 'unknown')) });
+        if (order && order.error) continue;
+      }
       if (cost <= portfolio.cash) {
         var existing = portfolio.holdings.find(function(h){return h.symbol===d.symbol;});
         if (existing) { existing.quantity += d.quantity; existing.avgCost = ((existing.avgCost * (existing.quantity - d.quantity)) + cost) / existing.quantity; }
         else { portfolio.holdings.push({ symbol: d.symbol, quantity: d.quantity, avgCost: price }); }
         portfolio.cash -= cost;
         history.push({ type: 'bot_buy', symbol: d.symbol, quantity: d.quantity, price: price, amount: cost, time: Date.now() });
-        log.push({ cycle: config.cycleCount, type: 'BUY', symbol: d.symbol, quantity: d.quantity, price: price, reason: d.reason || '' });
+        if (!useReal) log.push({ cycle: config.cycleCount, type: 'BUY', symbol: d.symbol, quantity: d.quantity, price: price, reason: d.reason || '' });
       }
     } else if (d.action === 'SELL') {
       var holding = portfolio.holdings.find(function(h){return h.symbol===d.symbol;});
       if (holding) {
         var sellQty = d.quantity > 0 ? Math.min(d.quantity, holding.quantity) : holding.quantity;
+        if (useReal) {
+          var order = await angelPlaceOrder(brokerConfig, d.symbol, 'SELL', sellQty, price);
+          log.push({ cycle: config.cycleCount, type: 'SELL', symbol: d.symbol, quantity: sellQty, price: price, reason: d.reason || '', real: order && !order.error ? 'executed' : ('failed: ' + (order.error || 'unknown')) });
+          if (order && order.error) continue;
+        }
         var proceeds = sellQty * price;
         portfolio.cash += proceeds;
         holding.quantity -= sellQty;
         history.push({ type: 'bot_sell', symbol: d.symbol, quantity: sellQty, price: price, amount: proceeds, time: Date.now() });
-        log.push({ cycle: config.cycleCount, type: 'SELL', symbol: d.symbol, quantity: sellQty, price: price, reason: d.reason || '' });
+        if (!useReal) log.push({ cycle: config.cycleCount, type: 'SELL', symbol: d.symbol, quantity: sellQty, price: price, reason: d.reason || '' });
         if (holding.quantity <= 0) portfolio.holdings = portfolio.holdings.filter(function(h){return h.symbol!==d.symbol;});
       }
     }
