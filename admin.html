@@ -117,6 +117,7 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
     <button class="tab-btn" data-tab="endpoints" onclick="switchTab('endpoints',this)">Endpoints</button>
     <button class="tab-btn" data-tab="company" onclick="switchTab('company',this)">Company AI</button>
     <button class="tab-btn" data-tab="adaptive" onclick="switchTab('adaptive',this);loadAdaptive()">Adaptive</button>
+    <button class="tab-btn" data-tab="bot" onclick="switchTab('bot',this);loadBot()">Bot</button>
     <button class="tab-btn" data-tab="wallet" onclick="switchTab('wallet',this);loadWallet()">Wallet</button>
   </div>
 
@@ -169,6 +170,48 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
     <div id="adaptiveSuggestions" style="display:grid;gap:1rem;">
       <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:2rem;text-align:center;color:var(--muted);font-size:.9rem;">
         Click <strong style="color:var(--cyan);">Analyze & Suggest</strong> to generate AI-powered improvements based on current site usage data.
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-bot">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <h3 style="font-family:var(--fh);font-size:1.1rem;">Trading Bot</h3>
+            <span id="botStatusBadge" style="font-size:.72rem;text-transform:uppercase;padding:.25rem .7rem;border-radius:.3rem;background:rgba(255,255,255,.06);color:var(--muted);">Offline</span>
+          </div>
+          <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem;">AI monitors your stocks every 5 min, analyzes technical indicators, and trades automatically.</p>
+          <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
+            <button onclick="startBot()" id="botStartBtn" style="flex:1;padding:.7rem;background:var(--green);color:#000;border:none;border-radius:.5rem;font-weight:700;font-family:var(--fb);font-size:.9rem;cursor:pointer;">▶ Start Bot</button>
+            <button onclick="stopBot()" id="botStopBtn" style="flex:1;padding:.7rem;background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red);border-radius:.5rem;font-weight:600;font-family:var(--fb);font-size:.9rem;cursor:pointer;">■ Stop</button>
+          </div>
+          <div id="botInfo" style="font-size:.82rem;color:var(--muted);">
+            <div style="padding:.3rem 0;">Last cycle: <span id="botLastCycle" style="color:#d0d0e0;">—</span></div>
+            <div style="padding:.3rem 0;">Cycles run: <span id="botCycleCount" style="color:#d0d0e0;">0</span></div>
+            <div style="padding:.3rem 0;">Last actions: <span id="botLastSummary" style="color:#d0d0e0;">—</span></div>
+          </div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
+          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.75rem;">Monitored Stocks</h3>
+          <p style="color:var(--muted);font-size:.78rem;margin-bottom:.75rem;">Add 3-10 stock symbols the bot will monitor and trade.</p>
+          <div style="display:flex;gap:.5rem;margin-bottom:.75rem;">
+            <input type="text" id="botStockInput" placeholder="e.g. RELIANCE.NS" style="flex:1;padding:.6rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fm);font-size:.85rem;outline:none;text-transform:uppercase;">
+            <button onclick="addBotStock()" style="padding:.6rem 1rem;background:var(--purple);color:#fff;border:none;border-radius:.5rem;cursor:pointer;font-weight:600;">Add</button>
+          </div>
+          <div id="botStockList" style="display:flex;flex-wrap:wrap;gap:.4rem;">
+            <div style="color:var(--muted);font-size:.82rem;">No stocks added yet.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
+          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.75rem;">Bot Trade Log</h3>
+          <div id="botLog" style="font-size:.78rem;max-height:400px;overflow-y:auto;color:var(--muted);">
+            <div style="text-align:center;padding:1rem;">Bot not started yet.</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -505,6 +548,108 @@ function loadTxnHistory() {
       el.innerHTML = html;
     })
     .catch(function(){ document.getElementById('txnHistory').innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">Could not load history.</div>'; });
+}
+
+// ── TRADING BOT ────────────────────────────────────────────────
+var BOT_STOCKS = [];
+
+function loadBot() {
+  fetch('/api/bot/config?token=' + encodeURIComponent(TOKEN))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      BOT_STOCKS = d.stocks || [];
+      renderBotStockList();
+      if (d.running) {
+        document.getElementById('botStatusBadge').textContent = '● Running';
+        document.getElementById('botStatusBadge').style.color = 'var(--green)';
+        document.getElementById('botStatusBadge').style.background = 'rgba(0,255,136,.12)';
+        document.getElementById('botStartBtn').disabled = true;
+      } else {
+        document.getElementById('botStatusBadge').textContent = 'Offline';
+        document.getElementById('botStatusBadge').style.color = 'var(--muted)';
+        document.getElementById('botStatusBadge').style.background = 'rgba(255,255,255,.06)';
+        document.getElementById('botStartBtn').disabled = false;
+      }
+      document.getElementById('botCycleCount').textContent = d.cycleCount || 0;
+      document.getElementById('botLastSummary').textContent = d.lastSummary || '—';
+      document.getElementById('botLastCycle').textContent = d.lastCycle ? new Date(d.lastCycle).toLocaleTimeString() : '—';
+      renderBotLog(d.log || []);
+    });
+}
+
+function addBotStock() {
+  var input = document.getElementById('botStockInput');
+  var symbol = input.value.trim().toUpperCase();
+  if (!symbol) return;
+  if (BOT_STOCKS.includes(symbol)) { input.value = ''; return; }
+  if (BOT_STOCKS.length >= 10) { return; }
+  BOT_STOCKS.push(symbol);
+  input.value = '';
+  saveBotStocks();
+  renderBotStockList();
+}
+
+function removeBotStock(sym) {
+  BOT_STOCKS = BOT_STOCKS.filter(function(s){ return s !== sym; });
+  saveBotStocks();
+  renderBotStockList();
+}
+
+function saveBotStocks() {
+  fetch('/api/bot/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: TOKEN, stocks: BOT_STOCKS })
+  });
+}
+
+function renderBotStockList() {
+  var el = document.getElementById('botStockList');
+  if (!BOT_STOCKS.length) { el.innerHTML = '<div style="color:var(--muted);font-size:.82rem;">No stocks added yet.</div>'; return; }
+  el.innerHTML = BOT_STOCKS.map(function(s){
+    return '<div style="display:inline-flex;align-items:center;gap:.35rem;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);border-radius:.4rem;padding:.3rem .6rem;font-size:.8rem;">' +
+      '<span style="color:var(--white);font-family:var(--fm);">' + s + '</span>' +
+      '<button onclick="removeBotStock(\'' + s + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:0;line-height:1;">×</button></div>';
+  }).join('');
+}
+
+function startBot() {
+  if (!BOT_STOCKS.length) { return; }
+  document.getElementById('botStartBtn').textContent = 'Starting...';
+  fetch('/api/bot/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: TOKEN })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.error) { document.getElementById('botStartBtn').textContent = '▶ Start Bot'; return; }
+    loadBot();
+  })
+  .catch(function(){ document.getElementById('botStartBtn').textContent = '▶ Start Bot'; });
+}
+
+function stopBot() {
+  fetch('/api/bot/stop', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: TOKEN })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){ loadBot(); });
+}
+
+function renderBotLog(log) {
+  var el = document.getElementById('botLog');
+  if (!log || !log.length) { el.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">No trades yet.</div>'; return; }
+  el.innerHTML = log.slice().reverse().slice(0,50).map(function(l){
+    var c = l.type === 'BUY' ? 'var(--green)' : 'var(--red)';
+    return '<div style="display:flex;gap:.5rem;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--fm);">' +
+      '<span style="color:' + c + ';font-weight:600;min-width:40px;">' + l.type + '</span>' +
+      '<span style="color:var(--white);min-width:80px;">' + l.symbol + '</span>' +
+      '<span style="color:#d0d0e0;">' + (l.quantity||'') + ' @ ₹' + (l.price||0).toFixed(2) + '</span>' +
+      '<span style="color:var(--muted);font-size:.72rem;overflow:hidden;text-overflow:ellipsis;">' + (l.reason||'') + '</span></div>';
+  }).join('');
 }
 
 function runAdaptive() {

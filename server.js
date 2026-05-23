@@ -7,6 +7,8 @@ const fetch = globalThis.fetch || require('undici').fetch;
 const PORTFOLIO_FILE = path.join(__dirname, 'portfolio.json');
 const PORTFOLIO_HISTORY_FILE = path.join(__dirname, 'portfolio-history.json');
 const BROKER_CONFIG_FILE = path.join(__dirname, 'broker-config.json');
+const BOT_CONFIG_FILE = path.join(__dirname, 'bot-config.json');
+var BOT_INTERVAL = null;
 
 function loadEnvFile() {
   const envPath = path.join(__dirname, '.env');
@@ -1101,6 +1103,129 @@ async function handleBrokerDisconnect(req, res) {
   sendJson(res, 200, { status: 'disconnected' });
 }
 
+function loadBotConfig() {
+  if (!fs.existsSync(BOT_CONFIG_FILE)) return { stocks: [], running: false };
+  try { return JSON.parse(fs.readFileSync(BOT_CONFIG_FILE, 'utf8')); }
+  catch { return { stocks: [], running: false }; }
+}
+function saveBotConfig(config) {
+  fs.writeFileSync(BOT_CONFIG_FILE, JSON.stringify(config, null, 2));
+}
+
+async function runBotCycle() {
+  var config = loadBotConfig();
+  if (!config.running || !config.stocks.length) return;
+  if (!OPENROUTER_API_KEY) return;
+  var symbols = config.stocks.join(',');
+  var quotes = {};
+  var indicatorsData = {};
+  try {
+    var res = await fetch('https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(symbols));
+    var data = await res.json();
+    (data.quoteResponse && data.quoteResponse.result || []).forEach(function(q){ quotes[q.symbol] = q; });
+  } catch(e) {}
+  for (var s of config.stocks) {
+    try {
+      var cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1d&range=6mo');
+      var cData = await cRes.json();
+      var ch = cData.chart && cData.chart.result && cData.chart.result[0];
+      if (ch && ch.timestamp && ch.indicators && ch.indicators.quote && ch.indicators.quote[0]) {
+        var closes = ch.indicators.quote[0].close || [];
+        indicatorsData[s] = computeIndicators(closes.filter(function(v){return v!=null;}));
+      }
+    } catch(e) {}
+  }
+  var context = 'Current market data and technical indicators for monitored stocks:\n\n';
+  config.stocks.forEach(function(s){
+    var q = quotes[s] || {};
+    var ind = indicatorsData[s] || {};
+    context += s + ': Price=$' + (q.regularMarketPrice || 'N/A') + ' Change=' + (q.regularMarketChangePercent || 0).toFixed(2) + '%' +
+      ' RSI=' + (ind.rsi || 'N/A') + ' MACD=' + (ind.macd || 'N/A') + ' SMA50=' + (ind.sma50 || 'N/A') + ' SMA200=' + (ind.sma200 || 'N/A') +
+      ' SMA50Above200=' + (ind.sma50Above200 ? 'Yes' : 'No') + '\n';
+  });
+  var prompt = 'You are an expert algorithmic trading AI managing a portfolio. Given this market data:\n\n' + context +
+    '\nDecide for each stock: BUY, SELL, or HOLD. Consider RSI (overbought>70, oversold<30), MACD crossovers, SMA trends, and price momentum.\n' +
+    'Respond ONLY with JSON array: [{"symbol":"...","action":"BUY|SELL|HOLD","reason":"...","quantity":N}]. For BUY set quantity, for SELL set quantity to sell (0=all), for HOLD set quantity 0. Max 3-5 BUY signals per cycle. No markdown.';
+
+  var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + OPENROUTER_API_KEY, 'Content-Type': 'application/json', 'HTTP-Referer': 'http://localhost:3000' },
+    body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 2048 }),
+  });
+  var body = await upstream.json();
+  var content = (body.choices && body.choices[0] && body.choices[0].message && body.choices[0].message.content) || '';
+  content = content.replace(/```json|```/g, '').trim();
+  var decisions;
+  try { decisions = JSON.parse(content); } catch(e) { decisions = []; }
+  if (!Array.isArray(decisions)) decisions = [];
+  var portfolio = loadPortfolio();
+  var history = loadPortfolioHistory();
+  var log = config.log || [];
+  config.cycleCount = (config.cycleCount || 0) + 1;
+  for (var d of decisions) {
+    var q = quotes[d.symbol] || {};
+    var price = q.regularMarketPrice || 0;
+    if (!price) continue;
+    if (d.action === 'BUY' && d.quantity > 0) {
+      var cost = d.quantity * price;
+      if (cost <= portfolio.cash) {
+        var existing = portfolio.holdings.find(function(h){return h.symbol===d.symbol;});
+        if (existing) { existing.quantity += d.quantity; existing.avgCost = ((existing.avgCost * (existing.quantity - d.quantity)) + cost) / existing.quantity; }
+        else { portfolio.holdings.push({ symbol: d.symbol, quantity: d.quantity, avgCost: price }); }
+        portfolio.cash -= cost;
+        history.push({ type: 'bot_buy', symbol: d.symbol, quantity: d.quantity, price: price, amount: cost, time: Date.now() });
+        log.push({ cycle: config.cycleCount, type: 'BUY', symbol: d.symbol, quantity: d.quantity, price: price, reason: d.reason || '' });
+      }
+    } else if (d.action === 'SELL') {
+      var holding = portfolio.holdings.find(function(h){return h.symbol===d.symbol;});
+      if (holding) {
+        var sellQty = d.quantity > 0 ? Math.min(d.quantity, holding.quantity) : holding.quantity;
+        var proceeds = sellQty * price;
+        portfolio.cash += proceeds;
+        holding.quantity -= sellQty;
+        history.push({ type: 'bot_sell', symbol: d.symbol, quantity: sellQty, price: price, amount: proceeds, time: Date.now() });
+        log.push({ cycle: config.cycleCount, type: 'SELL', symbol: d.symbol, quantity: sellQty, price: price, reason: d.reason || '' });
+        if (holding.quantity <= 0) portfolio.holdings = portfolio.holdings.filter(function(h){return h.symbol!==d.symbol;});
+      }
+    }
+  }
+  config.log = log.slice(-100);
+  config.lastCycle = Date.now();
+  config.lastSummary = decisions.map(function(d){return d.symbol+':'+d.action;}).join(', ');
+  savePortfolio(portfolio);
+  savePortfolioHistory(history);
+  saveBotConfig(config);
+}
+
+async function handleBotConfigSave(req, res) {
+  var payload = await readJson(req);
+  if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var config = loadBotConfig();
+  if (payload.stocks) config.stocks = payload.stocks;
+  saveBotConfig(config);
+  sendJson(res, 200, config);
+}
+
+async function handleBotToggle(req, res, start) {
+  var payload = await readJson(req);
+  if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var config = loadBotConfig();
+  if (start && !config.stocks.length) { sendJson(res, 400, { error: 'No stocks configured' }); return; }
+  config.running = start;
+  if (start) {
+    config.startedAt = Date.now();
+    saveBotConfig(config);
+    if (BOT_INTERVAL) clearInterval(BOT_INTERVAL);
+    runBotCycle();
+    BOT_INTERVAL = setInterval(runBotCycle, 300000);
+  } else {
+    config.running = false;
+    saveBotConfig(config);
+    if (BOT_INTERVAL) { clearInterval(BOT_INTERVAL); BOT_INTERVAL = null; }
+  }
+  sendJson(res, 200, { running: config.running, stocks: config.stocks.length });
+}
+
 async function handleAdminStats(req, res, url) {
   var token = url.searchParams.get('token') || '';
   if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
@@ -1585,6 +1710,26 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url.startsWith('/api/admin/stats')) {
     const url = new URL(req.url, 'http://localhost');
     handleAdminStats(req, res, url).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'GET' && req.url.startsWith('/api/bot/config')) {
+    const url = new URL(req.url, 'http://localhost');
+    const token = url.searchParams.get('token') || '';
+    if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+    const config = loadBotConfig();
+    sendJson(res, 200, config);
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/bot/config') {
+    handleBotConfigSave(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/bot/start') {
+    handleBotToggle(req, res, true).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/bot/stop') {
+    handleBotToggle(req, res, false).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && req.url.startsWith('/api/admin/adapt')) {
