@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Our Story · Netflix</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#141414;color:#fff;font-family:'Inter',sans-serif;overflow-x:hidden}
+
+/* Loading screen */
+#loading{position:fixed;inset:0;background:#141414;display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:1.5rem;transition:opacity .6s}
+#loading.hidden{opacity:0;pointer-events:none}
+#loading .logo{font-size:2.5rem;font-weight:900;color:#e50914;letter-spacing:-1px}
+#loading .bar{width:240px;height:3px;background:#333;border-radius:3px;overflow:hidden}
+#loading .fill{height:100%;width:0;background:#e50914;border-radius:3px;animation:load 2.2s ease forwards}
+@keyframes load{to{width:100%}}
+
+/* Profile picker */
+#profiles{position:fixed;inset:0;background:#141414;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity .5s,transform .5s;gap:2rem}
+#profiles.hidden{opacity:0;transform:scale(1.05);pointer-events:none}
+#profiles h1{font-size:1.4rem;font-weight:400;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.profile-grid{display:flex;gap:2rem;flex-wrap:wrap;justify-content:center}
+.profile-card{cursor:pointer;text-align:center;transition:transform .3s;width:140px}
+.profile-card:hover{transform:scale(1.08)}
+.profile-card .avatar{width:120px;height:120px;border-radius:12px;margin:0 auto .8rem;overflow:hidden;position:relative}
+.profile-card .avatar img{width:100%;height:100%;object-fit:cover}
+.profile-card .avatar .initials{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.8rem;font-weight:700;color:#fff}
+.profile-card .name{font-size:1.1rem;font-weight:500;color:#aaa}
+.profile-card.add .avatar{background:rgba(255,255,255,.06);border:2px dashed rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:3rem;color:#555}
+
+/* Main app */
+#app{display:none;padding-bottom:4rem}
+#app.active{display:block}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;padding:1rem 3rem;display:flex;align-items:center;gap:2.5rem;background:linear-gradient(180deg,rgba(20,20,20,.95) 0%,transparent 100%);transition:background .3s}
+nav.scrolled{background:rgba(20,20,20,1)}
+nav .brand{font-size:1.8rem;font-weight:900;color:#e50914;letter-spacing:-.5px}
+nav a{color:#ccc;text-decoration:none;font-size:.85rem;font-weight:500;transition:color .2s}
+nav a:hover{color:#fff}
+
+/* Hero */
+.hero{position:relative;height:85vh;min-height:500px;display:flex;align-items:flex-end;padding:0 3rem 6rem;margin-bottom:1.5rem}
+.hero .bg{position:absolute;inset:0;overflow:hidden}
+.hero .bg img,.hero .bg video{width:100%;height:100%;object-fit:cover}
+.hero .bg::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#141414 0%,transparent 40%,transparent 60%,#141414 100%),linear-gradient(0deg,#141414 0%,transparent 40%)}
+.hero .content{position:relative;z-index:2;max-width:650px}
+.hero .content .badge{font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:#e50914;font-weight:600;margin-bottom:.5rem}
+.hero .content h1{font-size:3.5rem;font-weight:900;line-height:1.1;margin-bottom:.6rem}
+.hero .content .meta{display:flex;gap:1rem;font-size:.9rem;color:#bbb;margin-bottom:1rem}
+.hero .content .meta span{display:flex;align-items:center;gap:.3rem}
+.hero .content .meta .match{color:#46d369;font-weight:600}
+.hero .content p{font-size:1.05rem;line-height:1.6;color:#bbb;max-width:550px;margin-bottom:1.5rem}
+.hero .content .btns{display:flex;gap:.8rem}
+.hero .content .btns button{padding:.7rem 2rem;border:none;border-radius:4px;font-size:1rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.5rem;transition:opacity .2s}
+.hero .content .btns .play{background:#fff;color:#000}
+.hero .content .btns .play:hover{opacity:.85}
+.hero .content .btns .info{background:rgba(255,255,255,.12);color:#fff}
+.hero .content .btns .info:hover{background:rgba(255,255,255,.2)}
+
+/* Rows */
+.row{padding:0 3rem;margin-bottom:1.5rem}
+.row h2{font-size:1.3rem;font-weight:600;margin-bottom:.6rem}
+.row .carousel{display:flex;gap:.5rem;overflow-x:auto;padding:.3rem 0;scrollbar-width:none;-ms-overflow-style:none}
+.row .carousel::-webkit-scrollbar{display:none}
+.card{flex:0 0 auto;width:200px;border-radius:6px;overflow:hidden;cursor:pointer;transition:transform .35s ease,box-shadow .35s;position:relative}
+.card:hover{transform:scale(1.06);box-shadow:0 10px 30px rgba(0,0,0,.6);z-index:5}
+.card .thumb{width:100%;aspect-ratio:16/9;background:#2a2a2a;position:relative;overflow:hidden}
+.card .thumb img,.card .thumb video{width:100%;height:100%;object-fit:cover}
+.card .thumb .overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);opacity:0;transition:opacity .3s;display:flex;align-items:center;justify-content:center}
+.card:hover .thumb .overlay{opacity:1}
+.card .thumb .overlay .play-icon{width:50px;height:50px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;transition:transform .3s;background:rgba(0,0,0,.5)}
+.card:hover .thumb .overlay .play-icon{transform:scale(1.1)}
+.card .meta{padding:.6rem 0}
+.card .meta .title{font-size:.9rem;font-weight:600;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .meta .sub{font-size:.75rem;color:#888}
+
+/* Expanded card detail */
+#detail{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:2rem}
+#detail.active{display:flex}
+#detail .modal{background:#181818;border-radius:12px;max-width:700px;width:100%;overflow:hidden;position:relative;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+#detail .modal .close{position:absolute;top:1rem;right:1rem;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:1.2rem;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center}
+#detail .modal .banner{width:100%;aspect-ratio:16/7;background:#2a2a2a;position:relative;overflow:hidden}
+#detail .modal .banner img,.detail .modal .banner video{width:100%;height:100%;object-fit:cover}
+#detail .modal .body{padding:1.5rem 2rem}
+#detail .modal .body h2{font-size:1.6rem;margin-bottom:.3rem}
+#detail .modal .body .meta{display:flex;gap:1rem;font-size:.82rem;color:#888;margin-bottom:1rem}
+#detail .modal .body .desc{font-size:.92rem;line-height:1.7;color:#bbb;margin-bottom:1.5rem}
+#detail .modal .body .btns{display:flex;gap:.8rem}
+#detail .modal .body .btns button{padding:.6rem 1.8rem;border:none;border-radius:4px;font-size:.9rem;font-weight:600;cursor:pointer}
+#detail .modal .body .btns .play{background:#fff;color:#000}
+#detail .modal .body .btns .play:hover{opacity:.85}
+
+/* Heart cursor trail */
+.heart-trail{position:fixed;pointer-events:none;z-index:9999;font-size:1.2rem;animation:floatUp 1.2s ease forwards}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(.6)}}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="logo">OUR STORY</div>
+  <div class="bar"><div class="fill"></div></div>
+</div>
+
+<!-- Profile picker -->
+<div id="profiles">
+  <h1>Who's watching?</h1>
+  <div class="profile-grid">
+    <div class="profile-card" onclick="selectProfile('her')">
+      <div class="avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c)"><div class="initials">&#9829;</div></div>
+      <div class="name">My Love</div>
+    </div>
+    <div class="profile-card" onclick="selectProfile('both')">
+      <div class="avatar" style="background:linear-gradient(135deg,#4facfe,#00f2fe)"><div class="initials" style="font-size:2rem;">Us</div></div>
+      <div class="name">Together</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main app -->
+<div id="app">
+  <nav id="nav">
+    <div class="brand">OUR STORY</div>
+    <a href="#">Home</a>
+    <a href="#">Memories</a>
+    <a href="#">Moments</a>
+    <a href="#">My List</a>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero" id="hero">
+    <div class="bg">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 30%,#0f3460 60%,#e94560 100%);display:flex;align-items:center;justify-content:center;font-size:8rem;opacity:.3;">&#9829;</div>
+    </div>
+    <div class="content">
+      <div class="badge">Celebrating Us</div>
+      <h1 id="heroTitle">Happy Anniversary</h1>
+      <div class="meta">
+        <span class="match">98% Match</span>
+        <span>&#9829; Love</span>
+        <span>Since Day One</span>
+      </div>
+      <p id="heroDesc">Every moment with you is my favorite scene. This is our story — the most beautiful one I'll ever watch.</p>
+      <div class="btns">
+        <button class="play" onclick="playMemory(0)">&#9654; Play Memory</button>
+        <button class="info" onclick="showSurprise()">&#9432; Surprise</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rows -->
+  <div id="rows"></div>
+</div>
+
+<!-- Detail modal -->
+<div id="detail" onclick="if(event.target===this)closeDetail()">
+  <div class="modal">
+    <button class="close" onclick="closeDetail()">&times;</button>
+    <div class="banner" id="detailBanner"></div>
+    <div class="body">
+      <h2 id="detailTitle"></h2>
+      <div class="meta"><span id="detailMeta"></span></div>
+      <div class="desc" id="detailDesc"></div>
+      <div class="btns">
+        <button class="play" id="detailPlay">&#9654; Play</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var memories = [
+  { id:0, title:"The Day We Met", type:"photo", desc:"The beginning of our forever. I still remember every detail — what you wore, how you smiled, the way the world seemed to stop.", date:"Day 1", img:"", bg:"linear-gradient(135deg,#667eea,#764ba2)", emoji:"✨" },
+  { id:1, title:"First Date", type:"photo", desc:"Nervous laughs, stolen glances, and a night I wish would never end. That was the night I knew.", date:"Week 1", img:"", bg:"linear-gradient(135deg,#f093fb,#f5576c)", emoji:"🌹" },
+  { id:2, title:"The First Kiss", type:"photo", desc:"Time stopped. The world faded. There was only you.", date:"Month 1", img:"", bg:"linear-gradient(135deg,#4facfe,#00f2fe)", emoji:"💋" },
+  { id:3, title:"Our First Trip", type:"photo", desc:"Exploring new places together, getting lost on purpose, and finding home in each other's arms.", date:"Month 3", img:"", bg:"linear-gradient(135deg,#43e97b,#38f9d7)", emoji:"✈️" },
+  { id:4, title:"Movie Nights", type:"photo", desc:"Countless nights, endless movies, but I was never watching the screen. I was always watching you.", date:"Always", img:"", bg:"linear-gradient(135deg,#fa709a,#fee140)", emoji:"🎬" },
+  { id:5, title:"The Laughs", type:"photo", desc:"Your laugh is my favorite sound in the universe. I'd do anything to hear it every single day.", date:"Every Day", img:"", bg:"linear-gradient(135deg,#a18cd1,#fbc2eb)", emoji:"😄" },
+  { id:6, title:"Stargazing", type:"photo", desc:"Under the same sky, dreaming of our future. Every star reminded me how lucky I am to have you.", date:"One Night", img:"", bg:"linear-gradient(135deg,#0c3483,#a2b6df)", emoji:"⭐" },
+  { id:7, title:"Cooking Together", type:"photo", desc:"Burning toast, laughing at disasters, and realizing that even a mess is beautiful when we're making it together.", date:"Weekends", img:"", bg:"linear-gradient(135deg,#ffecd2,#fcb69f)", emoji:"🍳" },
+  { id:8, title:"The Song That Plays", type:"photo", desc:"Every love story has a soundtrack. Ours is the most beautiful melody I've ever heard.", date:"Always", img:"", bg:"linear-gradient(135deg,#89f7fe,#66a6ff)", emoji:"🎵" },
+  { id:9, title:"Holding Hands", type:"photo", desc:"Your hand in mine — that's where I belong. No matter where we go, as long as I'm holding you.", date:"Forever", img:"", bg:"linear-gradient(135deg,#fddb92,#d1fdff)", emoji:"🤝" },
+  { id:10, title:"Sunset Chasers", type:"photo", desc:"Every sunset is a promise of a new tomorrow. I want every single one with you.", date:"Evenings", img:"", bg:"linear-gradient(135deg,#ee9ca7,#ffdde1)", emoji:"🌅" },
+  { id:11, title:"Inside Jokes", type:"photo", desc:"The secret language only we understand. Those little moments that no one else gets — those are my favorite.", date:"24/7", img:"", bg:"linear-gradient(135deg,#c3cfe2,#f5f7fa)", emoji:"🤫" },
+  { id:12, title:"Rainy Days", type:"photo", desc:"Cozy under a blanket, watching the rain, stealing kisses. Perfect days because you're there.", date:"Monsoon", img:"", bg:"linear-gradient(135deg,#a1c4fd,#c2e9fb)", emoji:"🌧️" },
+  { id:13, title:"Dancing in the Kitchen", type:"photo", desc:"No music, just us swaying. Those unplanned dances are the ones I'll remember forever.", date:"Late Nights", img:"", bg:"linear-gradient(135deg,#ffecd2,#fcb69f)", emoji:"💃" },
+  { id:14, title:"The Way You Look at Me", type:"photo", desc:"One look from you and I'm home. Your eyes are my favorite place in the world.", date:"Every Time", img:"", bg:"linear-gradient(135deg,#667eea,#764ba2)", emoji:"👀" },
+  { id:15, title:"Our Future", type:"photo", desc:"This is just the beginning. I can't wait to spend the rest of my life creating more memories with you. Happy Anniversary, my love.", date:"Forever & Always", img:"", bg:"linear-gradient(135deg,#e94560,#0f3460)", emoji:"💍" }
+];
+
+var categories = [
+  { name:"Our Journey", items:memories.slice(0,4) },
+  { name:"Everyday Magic", items:memories.slice(4,9) },
+  { name:"Little Things", items:memories.slice(9,14) },
+  { name:"Forever Starts Now", items:memories.slice(14) }
+];
+
+var selectedProfile = 'her';
+
+function selectProfile(p) {
+  selectedProfile = p;
+  document.getElementById('loading').classList.add('hidden');
+  setTimeout(function(){
+    document.getElementById('profiles').classList.add('hidden');
+    document.getElementById('app').classList.add('active');
+    initApp();
+  }, 400);
+}
+
+function initApp() {
+  var container = document.getElementById('rows');
+  container.innerHTML = '';
+  var heroTitle = document.getElementById('heroTitle');
+  heroTitle.textContent = selectedProfile === 'her' ? 'Happy Anniversary, Baby' : 'Happy Anniversary, Us';
+  categories.forEach(function(cat){
+    var section = document.createElement('div');
+    section.className = 'row';
+    section.innerHTML = '<h2>' + cat.name + '</h2><div class="carousel">' +
+      cat.items.map(function(m){
+        return '<div class="card" onclick="openDetail(' + m.id + ')">' +
+          '<div class="thumb">' +
+            '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:' + m.bg + ';">' + m.emoji + '</div>' +
+            '<div class="overlay"><div class="play-icon">&#9654;</div></div>' +
+          '</div>' +
+          '<div class="meta">' +
+            '<div class="title">' + m.title + '</div>' +
+            '<div class="sub">' + m.date + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('') +
+      '</div>';
+    container.appendChild(section);
+  });
+}
+
+function openDetail(id) {
+  var m = memories[id];
+  if (!m) return;
+  document.getElementById('detailBanner').innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;background:' + m.bg + ';">' + m.emoji + '</div>';
+  document.getElementById('detailTitle').textContent = m.title;
+  document.getElementById('detailMeta').textContent = m.date + ' · ' + m.type;
+  document.getElementById('detailDesc').textContent = m.desc;
+  document.getElementById('detailPlay').onclick = function(){ showHeartRain(); };
+  document.getElementById('detail').classList.add('active');
+}
+
+function closeDetail() {
+  document.getElementById('detail').classList.remove('active');
+}
+
+function playMemory(id) {
+  openDetail(id);
+}
+
+var heartInterval;
+
+function showHeartRain() {
+  if (heartInterval) return;
+  heartInterval = setInterval(function(){
+    for (var i=0;i<3;i++) {
+      var h = document.createElement('div');
+      h.textContent = '❤️';
+      h.className = 'heart-trail';
+      h.style.left = (Math.random() * window.innerWidth) + 'px';
+      h.style.top = (window.innerHeight - 20) + 'px';
+      h.style.fontSize = (1 + Math.random() * 1.5) + 'rem';
+      h.style.animationDuration = (1.2 + Math.random() * 0.8) + 's';
+      document.body.appendChild(h);
+      setTimeout(function(el){ el.remove(); }, 2500, h);
+    }
+  }, 200);
+  closeDetail();
+  setTimeout(function(){ clearInterval(heartInterval); heartInterval = null; }, 8000);
+}
+
+function showSurprise() {
+  showHeartRain();
+  var msg = document.createElement('div');
+  msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.85);color:#fff;padding:2.5rem 3rem;border-radius:16px;z-index:300;text-align:center;font-size:1.8rem;font-weight:700;line-height:1.5;animation:fadeUp .5s ease;border:2px solid #e50914;';
+  msg.innerHTML = 'Happy Anniversary, my love!<br><span style="font-size:1rem;color:#bbb;font-weight:400;">You are the best thing that ever happened to me.<br>Here\'s to forever.</span><br><span style="font-size:2.5rem;display:block;margin-top:.8rem;">❤️</span>';
+  document.body.appendChild(msg);
+  setTimeout(function(){ msg.remove(); }, 6000);
+}
+
+// Scroll nav effect
+window.addEventListener('scroll', function(){
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// Heart trail on click
+document.addEventListener('click', function(e){
+  if (e.target.closest('#detail') || e.target.closest('button') || e.target.closest('.card')) return;
+  var h = document.createElement('div');
+  h.textContent = '❤️';
+  h.className = 'heart-trail';
+  h.style.left = (e.clientX - 10) + 'px';
+  h.style.top = (e.clientY - 10) + 'px';
+  document.body.appendChild(h);
+  setTimeout(function(){ h.remove(); }, 1500);
+});
+</script>
+</body>
+</html>

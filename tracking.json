@@ -1,22 +1,25 @@
 {
-  "totalRequests": 518,
+  "totalRequests": 531,
   "uniqueIps": [
     "::1"
   ],
   "endpointCounts": {
-    "/admin": 5,
+    "/admin": 6,
     "/api/health": 8,
-    "/api/admin/stats": 155,
+    "/api/admin/stats": 159,
     "/api/stock": 257,
     "/api/watchlist": 31,
     "/api/stock/info": 5,
     "/api/watchlist/add": 1,
-    "/": 1,
+    "/": 3,
     "/lucyyy.mp4": 1,
     "/api/portfolio": 51,
-    "/favicon.ico": 1,
+    "/favicon.ico": 2,
     "/api/tts": 1,
-    "/api/admin/adapt": 1
+    "/api/admin/adapt": 1,
+    "/api/bot/config": 1,
+    "/admin.html": 2,
+    "/anniversary.html": 2
   },
   "hourlyCounts": {
     "2026-05-20T15": 3,
@@ -24,92 +27,17 @@
     "2026-05-21T02": 9,
     "2026-05-21T03": 8,
     "2026-05-21T14": 345,
-    "2026-05-21T15": 151
+    "2026-05-21T15": 151,
+    "2026-05-23T15": 13
   },
   "pageViews": {
-    "/": 1,
+    "/": 3,
     "/lucyyy.mp4": 1,
-    "/favicon.ico": 1
+    "/favicon.ico": 2,
+    "/admin.html": 2,
+    "/anniversary.html": 2
   },
   "requestLog": [
-    {
-      "time": 1779375883134,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779375898138,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779375905366,
-      "ip": "::1",
-      "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
-      "method": "GET"
-    },
-    {
-      "time": 1779375905369,
-      "ip": "::1",
-      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
-      "method": "GET"
-    },
-    {
-      "time": 1779375905374,
-      "ip": "::1",
-      "url": "/api/portfolio",
-      "method": "GET"
-    },
-    {
-      "time": 1779375905398,
-      "ip": "::1",
-      "url": "/api/stock?symbols=AAPL",
-      "method": "GET"
-    },
-    {
-      "time": 1779375905714,
-      "ip": "::1",
-      "url": "/api/stock?symbols=TSLA",
-      "method": "GET"
-    },
-    {
-      "time": 1779375905901,
-      "ip": "::1",
-      "url": "/api/stock?symbols=NVDA",
-      "method": "GET"
-    },
-    {
-      "time": 1779375913141,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779375928150,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779375943142,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779375958271,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=",
-      "method": "GET"
-    },
-    {
-      "time": 1779375965281,
-      "ip": "::1",
-      "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
-      "method": "GET"
-    },
     {
       "time": 1779375965287,
       "ip": "::1",
@@ -630,6 +558,84 @@
       "time": 1779376564769,
       "ip": "::1",
       "url": "/api/stock?symbols=NVDA",
+      "method": "GET"
+    },
+    {
+      "time": 1779549500554,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779549528510,
+      "ip": "::1",
+      "url": "/",
+      "method": "GET"
+    },
+    {
+      "time": 1779549533723,
+      "ip": "::1",
+      "url": "/admin.html",
+      "method": "GET"
+    },
+    {
+      "time": 1779549681024,
+      "ip": "::1",
+      "url": "/anniversary.html",
+      "method": "GET"
+    },
+    {
+      "time": 1779549681577,
+      "ip": "::1",
+      "url": "/favicon.ico",
+      "method": "GET"
+    },
+    {
+      "time": 1779549704103,
+      "ip": "::1",
+      "url": "/anniversary.html",
+      "method": "GET"
+    },
+    {
+      "time": 1779549888480,
+      "ip": "::1",
+      "url": "/admin.html",
+      "method": "GET"
+    },
+    {
+      "time": 1779549891885,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=admin",
+      "method": "GET"
+    },
+    {
+      "time": 1779549965745,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779550072649,
+      "ip": "::1",
+      "url": "/",
+      "method": "GET"
+    },
+    {
+      "time": 1779550105988,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=",
+      "method": "GET"
+    },
+    {
+      "time": 1779550246520,
+      "ip": "::1",
+      "url": "/admin",
+      "method": "GET"
+    },
+    {
+      "time": 1779550891135,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=darsoadmin",
       "method": "GET"
     }
   ]

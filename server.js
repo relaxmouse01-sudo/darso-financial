@@ -1417,6 +1417,21 @@ async function handleBotTraining(req, res) {
   sendJson(res, 200, { training: config.training });
 }
 
+async function handleAdminStats(req, res, url) {
+  var token = url.searchParams.get('token') || '';
+  if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var t = loadTracking();
+  var recentRequests = (t.requestLog || []).slice(-20).reverse();
+  sendJson(res, 200, {
+    totalRequests: t.totalRequests || 0,
+    uniqueVisitors: (t.uniqueIps || []).length,
+    endpoints: t.endpointCounts || {},
+    pageViews: t.pageViews || {},
+    hourly: t.hourlyCounts || {},
+    recentRequests: recentRequests
+  });
+}
+
 async function handleAdminAdapt(req, res, url) {
   var token = url.searchParams.get('token') || '';
   if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
