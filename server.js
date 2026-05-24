@@ -1470,22 +1470,23 @@ async function runBotCycle() {
     'Continue current approach. Market regime: ' + regime + '.\n\nAvailable strategies:\n  ' + allStrategies;
   var prompt = 'You are an expert algorithmic trading AI. Past performance: ' + (perf.total||0) + ' trades, win rate ' + (perf.winRate||0) + '%, P&L ₹' + (perf.pnl||0).toFixed(0) + '. ' + urgency + '\n\n' +
     strategyGuidance + '\n\n' +
-    'RISK RULES (MANDATORY):\n' +
-    '1. NEVER buy a stock with RSI > 65 (overbought — price likely to drop)\n' +
-    '2. NEVER sell a stock with RSI < 35 (oversold — price likely to bounce)\n' +
-    '3. Only BUY when SMA50 > SMA200 (uptrend confirmed) OR RSI < 35 (oversold bounce play)\n' +
-    '4. Only SELL when SMA50 < SMA200 (downtrend) OR RSI > 65 (overbought) OR price broke below SMA50\n' +
-    '5. Max 2 BUY signals per cycle. Better to do nothing than a bad trade.\n' +
-    '6. If win rate < 50%, use HALF the usual quantity on every trade until win rate recovers.\n\n' +
+    'RISK GUIDELINES (suggestions, not hard rules):\n' +
+    '1. Avoid buying stocks with RSI > 65 (overbought).\n' +
+    '2. Avoid selling stocks with RSI < 35 (oversold).\n' +
+    '3. Prefer BUY when SMA50 > SMA200 (uptrend) OR RSI < 35 (oversold bounce).\n' +
+    '4. Prefer SELL when SMA50 < SMA200 (downtrend) OR RSI > 65 (overbought).\n' +
+    '5. Max 3 BUY signals per cycle. At least 1 BUY or SELL if you see any opportunity.\n' +
+    '6. If win rate < 50%, use HALF the usual quantity on every trade until win rate recovers.\n' +
+    '7. If the bot has 0 trades so far (total=0), try to make at least 1-2 trades this cycle to get started. Start with small quantities.\n\n' +
     'Recent decisions:\n' + recentStr + '\n\n' +
     'Active pending decisions (NOT YET SCORED — do NOT repeat these):\n' + pendingSummary + '\n\n' +
     'Market data:\n\n' + context +
-    '\nRespond ONLY with JSON array: [{"symbol":"...","action":"BUY|SELL|HOLD","reason":"(which strategy # + key indicator values)","quantity":N}]. BUY=enter quantity, SELL=quantity to sell (0=all), HOLD=quantity 0. Max 2 BUY signals. No markdown.';
+    '\nRespond ONLY with JSON array: [{"symbol":"...","action":"BUY|SELL|HOLD","reason":"(which strategy # + key indicator values)","quantity":N}]. BUY=enter quantity (10-50 suggested), SELL=quantity to sell (0=all), HOLD=quantity 0. Max 3 BUY signals. No markdown.';
 
   var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + OPENROUTER_API_KEY, 'Content-Type': 'application/json', 'HTTP-Referer': 'http://localhost:3000' },
-    body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 2048 }),
+    body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: prompt }], temperature: 0.5, max_tokens: 2048 }),
   });
   var body = await upstream.json();
   var content = (body.choices && body.choices[0] && body.choices[0].message && body.choices[0].message.content) || '';

@@ -1,14 +1,46 @@
 {
-  "stocks": ["AAPL", "TSLA", "BTC", "ETH", "SOL", "XRP", "ADA"],
+  "stocks": [
+    "AAPL",
+    "TSLA",
+    "BTC",
+    "ETH",
+    "SOL",
+    "XRP",
+    "ADA"
+  ],
   "running": false,
   "training": true,
-  "performance": { "total": 0, "wins": 0, "losses": 0, "winRate": "0.0", "pnl": 0 },
-  "cycleCount": 0,
+  "performance": {
+    "total": 0,
+    "wins": 0,
+    "losses": 0,
+    "winRate": "0.0",
+    "pnl": 0
+  },
+  "cycleCount": 2,
   "pendingDecisions": [],
-  "log": [],
+  "log": [
+    {
+      "cycle": 1,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹2601961"
+    },
+    {
+      "cycle": 2,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹2601961"
+    }
+  ],
   "strategyPerformance": {},
   "consecutiveLosses": {},
   "lastRegime": "",
-  "lastCycle": null,
-  "lastSummary": ""
+  "lastCycle": 1779644572021,
+  "lastSummary": "",
+  "startedAt": 1779644389812
 }
