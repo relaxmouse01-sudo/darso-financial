@@ -1,0 +1,802 @@
+[
+  {
+    "id": 1,
+    "name": "Pure Scalping",
+    "trigger": "Order book order flow imbalances",
+    "hold": "Seconds–Minutes",
+    "risk": "High",
+    "exec": "Limit order execution"
+  },
+  {
+    "id": 2,
+    "name": "1-Minute VWAP Scalper",
+    "trigger": "Price crossing VWAP on high volume",
+    "hold": "Minutes",
+    "risk": "High",
+    "exec": "Short-term momentum chasing"
+  },
+  {
+    "id": 3,
+    "name": "Order Flow Delta Scalp",
+    "trigger": "Aggressive buying/selling pressure",
+    "hold": "Minutes",
+    "risk": "High",
+    "exec": "Market orders on delta divergence"
+  },
+  {
+    "id": 4,
+    "name": "Funding Rate Scalper",
+    "trigger": "Extreme perpetual funding spikes",
+    "hold": "Hours",
+    "risk": "Medium",
+    "exec": "Shorting high premium or vice-versa"
+  },
+  {
+    "id": 5,
+    "name": "Liquidation Hunt",
+    "trigger": "Cascading leveraged liquidations",
+    "hold": "Minutes",
+    "risk": "High",
+    "exec": "Placing bids below key liquidation pools"
+  },
+  {
+    "id": 6,
+    "name": "Opening Range Breakout",
+    "trigger": "Breaking past first 30-min price bar",
+    "hold": "1–4 Hours",
+    "risk": "Medium",
+    "exec": "Stop-market buy/sell orders"
+  },
+  {
+    "id": 7,
+    "name": "Intraday Trend Following",
+    "trigger": "8/21 Exponential Moving Average",
+    "hold": "Hours",
+    "risk": "Medium",
+    "exec": "Riding daily micro-trends"
+  },
+  {
+    "id": 8,
+    "name": "RSI Extreme Scalp",
+    "trigger": "5-minute RSI crossing <20 or >80",
+    "hold": "Minutes",
+    "risk": "High",
+    "exec": "Mean-reversion contrarian buys/sells"
+  },
+  {
+    "id": 9,
+    "name": "Bollinger Band Squeeze",
+    "trigger": "Band narrowing followed by expansion",
+    "hold": "1–12 Hours",
+    "risk": "Medium",
+    "exec": "Volatility breakout entry"
+  },
+  {
+    "id": 10,
+    "name": "Pivot Point Mean Reversion",
+    "trigger": "Reaching R3/S3 daily pivot support",
+    "hold": "1–8 Hours",
+    "risk": "Medium",
+    "exec": "Counter-trend limit orders"
+  },
+  {
+    "id": 11,
+    "name": "MACD Cross Swing",
+    "trigger": "Daily MACD line crossover signal",
+    "hold": "Days–Weeks",
+    "risk": "Medium",
+    "exec": "Trend reversal accumulation"
+  },
+  {
+    "id": 12,
+    "name": "Golden Cross Trend",
+    "trigger": "50-day SMA crossing above 200-day SMA",
+    "hold": "Months",
+    "risk": "Low",
+    "exec": "Long-term macro position building"
+  },
+  {
+    "id": 13,
+    "name": "Death Cross Short",
+    "trigger": "50-day SMA crossing below 200-day SMA",
+    "hold": "Weeks–Months",
+    "risk": "High",
+    "exec": "Macro bearish hedging or short position"
+  },
+  {
+    "id": 14,
+    "name": "Ichimoku Kumo Breakout",
+    "trigger": "Price closing out of the daily cloud",
+    "hold": "Weeks",
+    "risk": "Medium",
+    "exec": "Systematic medium-term trend tracking"
+  },
+  {
+    "id": 15,
+    "name": "Donchian Channel Breakout",
+    "trigger": "Breaking 20-day high or low bounds",
+    "hold": "Weeks",
+    "risk": "Medium",
+    "exec": "Turtle-style trend following"
+  },
+  {
+    "id": 16,
+    "name": "Fixed Interval DCA",
+    "trigger": "Calendar date (e.g., every Monday)",
+    "hold": "Years",
+    "risk": "Low",
+    "exec": "Automated recurring spot buying"
+  },
+  {
+    "id": 17,
+    "name": "Value DCA (MVRV Z-Score)",
+    "trigger": "MVRV metric below 0.1 or above 4",
+    "hold": "Years",
+    "risk": "Low",
+    "exec": "Scaling size up in macro value zones"
+  },
+  {
+    "id": 18,
+    "name": "Halving Cycle Allocation",
+    "trigger": "Epoch periods (4-year blocks)",
+    "hold": "1–3 Years",
+    "risk": "Low",
+    "exec": "Heavy accumulation 1 year pre-halving"
+  },
+  {
+    "id": 19,
+    "name": "Macro Support HODL",
+    "trigger": "Historically validated multi-year floors",
+    "hold": "Years",
+    "risk": "Low",
+    "exec": "Cold storage asset accumulation"
+  },
+  {
+    "id": 20,
+    "name": "Pi Cycle Top Hedging",
+    "trigger": "111-day SMA crossing 350-day SMA \\(\\times \\) 2",
+    "hold": "Months",
+    "risk": "Medium",
+    "exec": "Taking partial profits or buying puts"
+  },
+  {
+    "id": 21,
+    "name": "Spot-Perp Cross Exchange",
+    "trigger": "Price spread between two spot markets",
+    "hold": "Minutes",
+    "risk": "Low",
+    "exec": "Buying Exchange A, selling Exchange B"
+  },
+  {
+    "id": 22,
+    "name": "Basis Trading (Cash-Carry)",
+    "trigger": "Spot discount to long-dated futures",
+    "hold": "Months",
+    "risk": "Low",
+    "exec": "Long spot, short future for yield capture"
+  },
+  {
+    "id": 23,
+    "name": "Funding Rate Arbitrage",
+    "trigger": "Spot vs. high-yield perpetual long/short",
+    "hold": "Days–Weeks",
+    "risk": "Low",
+    "exec": "Delta-neutral short perp plus long spot"
+  },
+  {
+    "id": 24,
+    "name": "Wrapped Token Arbitrage",
+    "trigger": "WBTC vs. native BTC price variance",
+    "hold": "Hours",
+    "risk": "Low",
+    "exec": "Swap pool balancing mechanics"
+  },
+  {
+    "id": 25,
+    "name": "CME Gap Continuation",
+    "trigger": "Weekend closing price variance",
+    "hold": "1–2 Days",
+    "risk": "Medium",
+    "exec": "Trading toward the unfilled market gap"
+  },
+  {
+    "id": 26,
+    "name": "Macro Trend Grid",
+    "trigger": "Equal percentage price grids (wide)",
+    "hold": "Weeks–Months",
+    "risk": "Medium",
+    "exec": "Automated multi-level spot grid buying"
+  },
+  {
+    "id": 27,
+    "name": "Intraday Range Grid",
+    "trigger": "Fixed $100 price interval bands",
+    "hold": "Hours–Days",
+    "risk": "Medium",
+    "exec": "Continuous market-making via automated bot"
+  },
+  {
+    "id": 28,
+    "name": "Infinity Grid (Upward)",
+    "trigger": "No upper price limit geometric grid",
+    "hold": "Months",
+    "risk": "Low",
+    "exec": "Dynamic trailing profit taking on rallies"
+  },
+  {
+    "id": 29,
+    "name": "Leveraged Long Grid",
+    "trigger": "Perpetual grid set within bullish ranges",
+    "hold": "Days–Weeks",
+    "risk": "High",
+    "exec": "Margin-backed upward grid harvesting"
+  },
+  {
+    "id": 30,
+    "name": "Reverse Grid (Accumulate)",
+    "trigger": "Selling down and rebuying lower",
+    "hold": "Weeks",
+    "risk": "Medium",
+    "exec": "Increasing coin count during downtrends"
+  },
+  {
+    "id": 31,
+    "name": "Fibonacci Golden Pocket",
+    "trigger": "0.618 to 0.66 retracement level touch",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Limit order placement at structural nodes"
+  },
+  {
+    "id": 32,
+    "name": "Wyckoff Accumulation",
+    "trigger": "Spring phase generation confirmation",
+    "hold": "Weeks–Months",
+    "risk": "Low",
+    "exec": "Post-panic structural long entry"
+  },
+  {
+    "id": 33,
+    "name": "Head & Shoulders Play",
+    "trigger": "Neckline breach on explicit volume",
+    "hold": "Days–Weeks",
+    "risk": "Medium",
+    "exec": "Classic chart pattern breakout short"
+  },
+  {
+    "id": 34,
+    "name": "Bull Flag Continuation",
+    "trigger": "Breaking consolidation channel ceiling",
+    "hold": "Hours–Days",
+    "risk": "Medium",
+    "exec": "Stop-market entry at structural breakout"
+  },
+  {
+    "id": 35,
+    "name": "Triple Bottom Support",
+    "trigger": "Third consecutive test of historic floor",
+    "hold": "Weeks",
+    "risk": "Medium",
+    "exec": "Strict stop-loss invalidation buy"
+  },
+  {
+    "id": 36,
+    "name": "CVD Divergence Trading",
+    "trigger": "Cumulative Volume Delta vs Price drift",
+    "hold": "Hours",
+    "risk": "High",
+    "exec": "Fading price action unbacked by volume"
+  },
+  {
+    "id": 37,
+    "name": "Open Interest Flush Play",
+    "trigger": "Drastic collapse in market leverage",
+    "hold": "1–2 Days",
+    "risk": "Medium",
+    "exec": "Buying the market bottom post-deleveraging"
+  },
+  {
+    "id": 38,
+    "name": "Exchange Flow Tracker",
+    "trigger": "Spikes in massive exchange net outflows",
+    "hold": "Weeks",
+    "risk": "Low",
+    "exec": "Spot accumulating alongside whale wallets"
+  },
+  {
+    "id": 39,
+    "name": "ASIC Miner Capitulation",
+    "trigger": "Hash rate drops followed by recovery",
+    "hold": "Months",
+    "risk": "Low",
+    "exec": "Buying when inefficient miners exit market"
+  },
+  {
+    "id": 40,
+    "name": "Whale Wallet Monitoring",
+    "trigger": "Known institutional wallet movement",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Following institutional accumulation trends"
+  },
+  {
+    "id": 41,
+    "name": "Covered Call Writing",
+    "trigger": "Out-of-the-money upside call sales",
+    "hold": "Weekly–Monthly",
+    "risk": "Low",
+    "exec": "Yield generation on stagnant holdings"
+  },
+  {
+    "id": 42,
+    "name": "Protective Put Hedging",
+    "trigger": "At-the-money downside put option buys",
+    "hold": "Monthly",
+    "risk": "Low",
+    "exec": "Insuring long spot bags against crashes"
+  },
+  {
+    "id": 43,
+    "name": "Long Volatility Straddle",
+    "trigger": "Buying both Call and Put simultaneously",
+    "hold": "Days–Weeks",
+    "risk": "High",
+    "exec": "Profiting from massive structural breakout"
+  },
+  {
+    "id": 44,
+    "name": "Bull Call Spread",
+    "trigger": "Buying near call, selling far call",
+    "hold": "Months",
+    "risk": "Medium",
+    "exec": "Defined risk capped upside leverage"
+  },
+  {
+    "id": 45,
+    "name": "Iron Condor Range Play",
+    "trigger": "Selling OTM calls/puts, buying wings",
+    "hold": "Weeks",
+    "risk": "Medium",
+    "exec": "Collecting premium on sideways price action"
+  },
+  {
+    "id": 46,
+    "name": "Fed Rate Decision Play",
+    "trigger": "FOMC interest rate deviation vs forecast",
+    "hold": "Hours",
+    "risk": "High",
+    "exec": "Volatility positioning post-announcement"
+  },
+  {
+    "id": 47,
+    "name": "Stablecoin Supply Ratio",
+    "trigger": "SSR ratio dipping below historic bounds",
+    "hold": "Weeks",
+    "risk": "Low",
+    "exec": "Spot accumulation during high liquidity"
+  },
+  {
+    "id": 48,
+    "name": "CPI Release Volatility",
+    "trigger": "US Inflation numbers beating consensus",
+    "hold": "Minutes–Hours",
+    "risk": "High",
+    "exec": "Instant momentum scalp on macro print"
+  },
+  {
+    "id": 49,
+    "name": "Options Max Pain Hedge",
+    "trigger": "Option expiry price gravitational pull",
+    "hold": "1–3 Days",
+    "risk": "Medium",
+    "exec": "Fading extreme trends near monthly expiry"
+  },
+  {
+    "id": 50,
+    "name": "Fear & Greed Index Extreme",
+    "trigger": "Index drops below 10 (Extreme Fear)",
+    "hold": "Weeks–Months",
+    "risk": "Low",
+    "exec": "Long-term value counter-cyclical buying"
+  },
+  {
+    "id": 51,
+    "name": "Fair Value Gap (FVG)",
+    "trigger": "Price returning to an unfilled 3-candle imbalance",
+    "hold": "Hours–Days",
+    "risk": "Medium",
+    "exec": "Limit orders placed at the structural gap origin"
+  },
+  {
+    "id": 52,
+    "name": "Order Block Mitigation",
+    "trigger": "Price retesting an institutional sponsor candle",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Entry on the first touch of the unmitigated zone"
+  },
+  {
+    "id": 53,
+    "name": "Liquidity Sweep (Stop Hunt)",
+    "trigger": "Price piercing previous daily high/low then reversing",
+    "hold": "Minutes–Hours",
+    "risk": "High",
+    "exec": "Market entry on the candle close back inside the range"
+  },
+  {
+    "id": 54,
+    "name": "Optimal Trade Entry (OTE)",
+    "trigger": "Fibonacci retracement between 0.705 and 0.79",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Limit orders nested inside the deep discount zone"
+  },
+  {
+    "id": 55,
+    "name": "Market Structure Shift (MSS)",
+    "trigger": "Displacements breaking the last structural swing high/low",
+    "hold": "Hours–Days",
+    "risk": "Medium",
+    "exec": "Entry on the subsequent return to the breakout point"
+  },
+  {
+    "id": 56,
+    "name": "SuperTrend Trailing Stop",
+    "trigger": "ATR-calculated mathematical trend flip",
+    "hold": "Days–Weeks",
+    "risk": "Low",
+    "exec": "Systematic execution tracking the dynamic line shift"
+  },
+  {
+    "id": 57,
+    "name": "Chande Momentum Oscillator",
+    "trigger": "Extreme CMO values crossing boundary limits (-50/+50)",
+    "hold": "Hours",
+    "risk": "Medium",
+    "exec": "Counter-trend mean reversion entries"
+  },
+  {
+    "id": 58,
+    "name": "Hull Moving Average Cross",
+    "trigger": "Fast-reacting HMA 9 crossing the HMA 25",
+    "hold": "Hours–Days",
+    "risk": "Medium",
+    "exec": "Dynamic trend following with minimized lag"
+  },
+  {
+    "id": 59,
+    "name": "Parabolic SAR Trailing",
+    "trigger": "Price crossing the acceleration dot trail",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Automated stop-and-reverse position flips"
+  },
+  {
+    "id": 60,
+    "name": "Rate of Change (ROC) Momentum",
+    "trigger": "Velocity momentum oscillator crossing the zero line",
+    "hold": "Hours",
+    "risk": "Medium",
+    "exec": "Entering in the direction of structural price velocity"
+  },
+  {
+    "id": 61,
+    "name": "Quarterly Futures Roll Spread",
+    "trigger": "Premium spread between front-month and back-month contracts",
+    "hold": "Weeks",
+    "risk": "Low",
+    "exec": "Buying cheap contracts while shorting expensive ones"
+  },
+  {
+    "id": 62,
+    "name": "Option Gamma Scalping",
+    "trigger": "Large underlying price moves changing portfolio delta",
+    "hold": "Hours",
+    "risk": "High",
+    "exec": "Continuously buying/selling spot to maintain delta-neutrality"
+  },
+  {
+    "id": 63,
+    "name": "Calendar Options Spread",
+    "trigger": "Selling short-dated options, buying long-dated options",
+    "hold": "Weeks",
+    "risk": "Low",
+    "exec": "Capitalizing on rapid near-term time decay (Theta)"
+  },
+  {
+    "id": 64,
+    "name": "Synthetic Long (Options)",
+    "trigger": "Buying an ATM Call and simultaneously selling an ATM Put",
+    "hold": "Months",
+    "risk": "High",
+    "exec": "Replicating long spot exposure with lower capital requirements"
+  },
+  {
+    "id": 65,
+    "name": "Delta-Neutral Strangle Sale",
+    "trigger": "Selling OTM Calls and Puts during historical low volatility",
+    "hold": "Weeks",
+    "risk": "High",
+    "exec": "Collecting premium expecting absolute price compression"
+  },
+  {
+    "id": 66,
+    "name": "Grayscale/ETF Premium Play",
+    "trigger": "Divergence between ETF Net Asset Value (NAV) and market price",
+    "hold": "Days–Weeks",
+    "risk": "Medium",
+    "exec": "Arbitrage execution via authorized participant redemption"
+  },
+  {
+    "id": 67,
+    "name": "Cross-Asset Correlation",
+    "trigger": "Bitcoin lagging a major breakout in Gold or the Nasdaq",
+    "hold": "Hours–Days",
+    "risk": "Medium",
+    "exec": "Front-running Bitcoin momentum based on leading macro assets"
+  },
+  {
+    "id": 68,
+    "name": "Wrapped vs Native Liquid Staking",
+    "trigger": "Yield differentials on yield-bearing Bitcoin wrappers",
+    "hold": "Days",
+    "risk": "Low",
+    "exec": "Swapping protocols to capture the highest baseline yield"
+  },
+  {
+    "id": 69,
+    "name": "Perpetual Funding Rate Carry",
+    "trigger": "Long-term funding collections across uncorrelated venues",
+    "hold": "Months",
+    "risk": "Low",
+    "exec": "Distributing capital to the lowest-cost protocol daily"
+  },
+  {
+    "id": 70,
+    "name": "Mining Pool Distribution Drift",
+    "trigger": "On-chain inventory drops across specific pool public keys",
+    "hold": "Weeks",
+    "risk": "Medium",
+    "exec": "Short-side positioning when major pools start selling"
+  },
+  {
+    "id": 71,
+    "name": "Tether (USDT) Peg Deviation",
+    "trigger": "USDT value moving away from exactly $1.0000",
+    "hold": "Minutes–Hours",
+    "risk": "Medium",
+    "exec": "Capitalizing on stablecoin flight volatility"
+  },
+  {
+    "id": 72,
+    "name": "Exchange Whale Ratio",
+    "trigger": "Top 10 inflows relative to total exchange inflows",
+    "hold": "1–3 Days",
+    "risk": "Medium",
+    "exec": "De-risking spot bags when the ratio spikes above 85%"
+  },
+  {
+    "id": 73,
+    "name": "Realized Cap HODL Waves",
+    "trigger": "Shifts in age distribution of UTXOs (Unspent Transaction Outputs)",
+    "hold": "Months",
+    "risk": "Low",
+    "exec": "Accumulating heavily when old coins stop moving"
+  },
+  {
+    "id": 74,
+    "name": "Thermo-Cap Floor Value",
+    "trigger": "Total security spend compared to transaction volume ratios",
+    "hold": "Years",
+    "risk": "Low",
+    "exec": "Macro cyclical buying at the absolute structural baseline"
+  },
+  {
+    "id": 75,
+    "name": "Spent Output Profit Ratio (SOPR)",
+    "trigger": "SOPR value dipping under 1.0 during bull market corrections",
+    "hold": "Days–Weeks",
+    "risk": "Low",
+    "exec": "Spot buying when investors are selling at a loss"
+  },
+  {
+    "id": 76,
+    "name": "DEMA (Double EMA) Scalper",
+    "trigger": "Price crossing over the 9-period DEMA filter",
+    "hold": "Minutes",
+    "risk": "High",
+    "exec": "High-speed algorithmic execution minimizing EMA lag"
+  },
+  {
+    "id": 77,
+    "name": "Keltner Channel Reversal",
+    "trigger": "Price closing completely outside the ATR Keltner band",
+    "hold": "Hours",
+    "risk": "Medium",
+    "exec": "Fading the extreme distribution curve back to the mean"
+  },
+  {
+    "id": 78,
+    "name": "Volume Profile POC Bounce",
+    "trigger": "Price hitting the Point of Control (highest volume node)",
+    "hold": "Hours–Days",
+    "risk": "Medium",
+    "exec": "Limit order placement at heavy historical liquidity zones"
+  },
+  {
+    "id": 79,
+    "name": "TDI (Traders Dynamic Index)",
+    "trigger": "RSI sentiment line crossing the market base line",
+    "hold": "Hours",
+    "risk": "Medium",
+    "exec": "Blended momentum and volatility execution"
+  },
+  {
+    "id": 80,
+    "name": "Elder Ray Bull/Bear Power",
+    "trigger": "Divergence between exponential moving average and price extremes",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Trend trading based on absolute buying/selling pressure"
+  },
+  {
+    "id": 81,
+    "name": "US Dollar Index (DXY) Inverse",
+    "trigger": "DXY hitting major resistance levels",
+    "hold": "Days–Weeks",
+    "risk": "Medium",
+    "exec": "Spot long execution on expectations of dollar weakness"
+  },
+  {
+    "id": 82,
+    "name": "Global Liquidity Index Cross",
+    "trigger": "Major central bank balance sheet expansion metrics",
+    "hold": "Months",
+    "risk": "Low",
+    "exec": "Riding multi-month trends tied to global fiat debasement"
+  },
+  {
+    "id": 83,
+    "name": "Options Volatility Smile Skew",
+    "trigger": "Pricing discrepancies between puts and calls at equal distance",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Directional positioning based on options market bias"
+  },
+  {
+    "id": 84,
+    "name": "CBOE VIX Spike Mean Reversion",
+    "trigger": "Volatility Index reaching extreme capitulation highs",
+    "hold": "1–5 Days",
+    "risk": "High",
+    "exec": "Risk-on buying of Bitcoin during global market panics"
+  },
+  {
+    "id": 85,
+    "name": "Eurodollar Futures Shift",
+    "trigger": "Shifts in forward interest rate pricing curves",
+    "hold": "Months",
+    "risk": "Low",
+    "exec": "Structural asset allocation based on shifting rate cycles"
+  },
+  {
+    "id": 86,
+    "name": "Mean Reversion Grid",
+    "trigger": "Setting tight grids exclusively within clear trading ranges",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Bot deployment to extract value from low-volatility ranges"
+  },
+  {
+    "id": 87,
+    "name": "Asymmetric Step Grid",
+    "trigger": "Placing buy orders further apart than corresponding sell orders",
+    "hold": "Weeks",
+    "risk": "Medium",
+    "exec": "Automated accumulation that minimizes risk on deeper drops"
+  },
+  {
+    "id": 88,
+    "name": "Hedged Multi-Asset Grid",
+    "trigger": "Grid systems running concurrently on BTC and stablecoins",
+    "hold": "Weeks",
+    "risk": "Low",
+    "exec": "Balancing exposure automatically across asset classes"
+  },
+  {
+    "id": 89,
+    "name": "Cross-Pair Grid (BTC/ETH)",
+    "trigger": "Grid parameters built purely on the ratio contract",
+    "hold": "Days–Weeks",
+    "risk": "Medium",
+    "exec": "Accumulating more BTC via alternative asset swings"
+  },
+  {
+    "id": 90,
+    "name": "Dynamic Variable Grid",
+    "trigger": "Grid width adjusting automatically based on real-time ATR changes",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Programmatic grid expansion during high volatility"
+  },
+  {
+    "id": 91,
+    "name": "Tom Demark (TD) Sequential",
+    "trigger": "A flawless printed \"TD 9\" or \"TD 13\" count on high volume",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Timing structural market exhaustion pivot points"
+  },
+  {
+    "id": 92,
+    "name": "Gann Fan Angle Support",
+    "trigger": "Price intersecting geometric trend lines (e.g., 1x1, 1x2 angles)",
+    "hold": "Days–Weeks",
+    "risk": "Medium",
+    "exec": "Time-and-price geometric target positioning"
+  },
+  {
+    "id": 93,
+    "name": "Andrew’s Pitchfork Median Line",
+    "trigger": "Price approaching the center line of a structural regression fork",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Fading the outer tines, targeting the median return point"
+  },
+  {
+    "id": 94,
+    "name": "Volume Weighted MACD",
+    "trigger": "MACD signals adjusted for volume confirmation",
+    "hold": "Hours",
+    "risk": "Medium",
+    "exec": "Eliminating false crossover signals during low-volume moves"
+  },
+  {
+    "id": 95,
+    "name": "Linear Regression Channel",
+    "trigger": "Price deviating 2 standard deviations from the center line",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Systematic regression trading back toward the baseline"
+  },
+  {
+    "id": 96,
+    "name": "Triple Screen System",
+    "trigger": "Checking a weekly trend, daily swing, and hourly execution window",
+    "hold": "Hours–Days",
+    "risk": "Low",
+    "exec": "High-probability entry matching all timeframes"
+  },
+  {
+    "id": 97,
+    "name": "Chaikin Money Flow Swing",
+    "trigger": "CMF scaling above +0.20 or below -0.20 structural bounds",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Entering alongside large institutional accumulation blocks"
+  },
+  {
+    "id": 98,
+    "name": "Coppock Curve Macro Pivot",
+    "trigger": "Long-term momentum indicator crossing above zero from below",
+    "hold": "Months",
+    "risk": "Low",
+    "exec": "Generational buying signals at deep macro bottoms"
+  },
+  {
+    "id": 99,
+    "name": "Volume-Price Trend (VPT)",
+    "trigger": "Cumulative volume tracking relative percentage price changes",
+    "hold": "Days",
+    "risk": "Medium",
+    "exec": "Confirmation of sustainable breakthrough momentum"
+  },
+  {
+    "id": 100,
+    "name": "Aronson Momentum Filter",
+    "trigger": "Trend indicators adjusted for statistical significance testing",
+    "hold": "Days–Weeks",
+    "risk": "Low",
+    "exec": "Eliminating random noise to trade verified trends"
+  }
+]

@@ -2,10 +2,12 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const fetch = globalThis.fetch || require('undici').fetch;
+const STRATEGIES = require('./strategies.json');
 
 // Portfolio file storage
 const PORTFOLIO_FILE = path.join(__dirname, 'portfolio.json');
 const PORTFOLIO_HISTORY_FILE = path.join(__dirname, 'portfolio-history.json');
+const PORTFOLIO_VALUE_HISTORY_FILE = path.join(__dirname, 'portfolio-value-history.json');
 const BROKER_CONFIG_FILE = path.join(__dirname, 'broker-config.json');
 const BOT_CONFIG_FILE = path.join(__dirname, 'bot-config.json');
 var BOT_INTERVAL = null;
@@ -53,6 +55,14 @@ function loadPortfolioHistory() {
 
 function savePortfolioHistory(history) {
   fs.writeFileSync(PORTFOLIO_HISTORY_FILE, JSON.stringify(history, null, 2));
+}
+function loadPortfolioValueHistory() {
+  if (!fs.existsSync(PORTFOLIO_VALUE_HISTORY_FILE)) return [];
+  try { return JSON.parse(fs.readFileSync(PORTFOLIO_VALUE_HISTORY_FILE, 'utf8')); }
+  catch { return []; }
+}
+function savePortfolioValueHistory(data) {
+  fs.writeFileSync(PORTFOLIO_VALUE_HISTORY_FILE, JSON.stringify(data, null, 2));
 }
 
 function send(res, status, body, headers = {}) {
@@ -309,14 +319,15 @@ function calcMACD(data) {
   return { macdLine, signal: fullSignal, histogram };
 }
 
-function computeIndicators(candles) {
+function computeIndicators(candles, quoteData) {
   if (!candles || candles.length < 50) return {};
-  const closes = candles.map(c => c.c);
+  const closes = typeof candles[0] === 'number' ? candles : candles.map(c => c.c);
   const sma50 = calcSMA(closes, 50);
   const sma200 = calcSMA(closes, 200);
   const rsi = calcRSI(closes, 14);
   const macd = calcMACD(closes);
-  return {
+  var lastClose = closes[closes.length - 1];
+  var result = {
     sma50: sma50[sma50.length - 1],
     sma200: sma200[sma200.length - 1],
     rsi: rsi[rsi.length - 1],
@@ -324,8 +335,37 @@ function computeIndicators(candles) {
     macdSignal: macd.signal[macd.signal.length - 1],
     macdHistogram: macd.histogram[macd.histogram.length - 1],
     sma50Above200: sma50[sma50.length - 1] !== null && sma200[sma200.length - 1] !== null
-      ? sma50[sma50.length - 1] > sma200[sma200.length - 1] : null
+      ? sma50[sma50.length - 1] > sma200[sma200.length - 1] : null,
+    lastClose: lastClose
   };
+  if (quoteData) {
+    var volumes = quoteData.volume || [];
+    var highs = quoteData.high || [];
+    var lows = quoteData.low || [];
+    var valid = [];
+    for (var i = 0; i < volumes.length; i++) {
+      if (volumes[i] != null) valid.push(volumes[i]);
+    }
+    var avgVol = valid.length ? valid.slice(-20).reduce(function(a,b){return a+b;},0) / Math.min(20, valid.length) : 0;
+    result.avgVolume = avgVol;
+    result.lastVolume = valid.length ? valid[valid.length - 1] : 0;
+    // recent high/low over 20 periods
+    var recentHighs = [];
+    var recentLows = [];
+    for (var i = Math.max(0, closes.length - 20); i < closes.length; i++) {
+      if (closes[i] != null) {
+        recentHighs.push(highs[i] != null ? highs[i] : closes[i]);
+        recentLows.push(lows[i] != null ? lows[i] : closes[i]);
+      }
+    }
+    result.high20 = recentHighs.length ? Math.max.apply(null, recentHighs) : lastClose;
+    result.low20 = recentLows.length ? Math.min.apply(null, recentLows) : lastClose;
+    result.range20 = result.high20 - result.low20;
+    result.range20Pct = lastClose ? (result.range20 / result.high20) * 100 : 0;
+    // price vs 20-day range
+    result.posInRange = lastClose && result.range20 ? ((lastClose - result.low20) / result.range20) * 100 : 50;
+  }
+  return result;
 }
 
 async function fetchFinnhubQuote(symbol) {
@@ -678,6 +718,46 @@ async function handleChat(req, res) {
   }
 
   sendJson(res, 200, { reply: data.choices?.[0]?.message?.content || '' });
+}
+
+async function handlePortfolio(req, res) {
+  var portfolio = loadPortfolio();
+  var holdings = portfolio.holdings || [];
+  var enriched = await Promise.all(holdings.map(async function(h){
+    try {
+      var r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(h.symbol) + '?interval=1d&range=5d');
+      var d = await r.json();
+      var meta = d.chart && d.chart.result && d.chart.result[0] && d.chart.result[0].meta;
+      if (!meta) return { symbol: h.symbol, quantity: h.quantity, avgCost: h.avgCost, currentPrice: null, pnl: 0, pnlPercent: 0, value: 0 };
+      var currentPrice = meta.regularMarketPrice || h.avgCost;
+      var value = currentPrice * h.quantity;
+      var cost = h.avgCost * h.quantity;
+      return {
+        symbol: h.symbol,
+        quantity: h.quantity,
+        avgCost: h.avgCost,
+        currentPrice: currentPrice,
+        value: value,
+        cost: cost,
+        pnl: value - cost,
+        pnlPercent: cost > 0 ? ((value - cost) / cost * 100) : 0,
+        purchaseDate: h.purchaseDate || null
+      };
+    } catch(e) {
+      return { symbol: h.symbol, quantity: h.quantity, avgCost: h.avgCost, currentPrice: null, pnl: 0, pnlPercent: 0, value: 0 };
+    }
+  }));
+  var totalValue = portfolio.cash + enriched.reduce(function(s, h){ return s + (h.value || 0); }, 0);
+  var totalCost = enriched.reduce(function(s, h){ return s + (h.cost || 0); }, 0);
+  var totalPnl = enriched.reduce(function(s, h){ return s + (h.pnl || 0); }, 0);
+  sendJson(res, 200, {
+    cash: portfolio.cash,
+    holdings: enriched,
+    totalValue: totalValue,
+    totalCost: totalCost,
+    totalPnl: totalPnl,
+    totalPnlPercent: totalCost > 0 ? (totalPnl / totalCost * 100) : 0
+  });
 }
 
 async function handleTrade(req, res) {
@@ -1083,6 +1163,21 @@ async function handleWalletDeposit(req, res) {
   savePortfolioHistory(history);
   sendJson(res, 200, { cash: portfolio.cash, message: '₹' + amount.toLocaleString() + ' deposited successfully' });
 }
+async function handleWalletWithdraw(req, res) {
+  var payload = await readJson(req);
+  if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var amount = parseFloat(payload.amount);
+  if (!amount || amount <= 0) { sendJson(res, 400, { error: 'Invalid amount' }); return; }
+  var portfolio = loadPortfolio();
+  var cash = portfolio.cash || 0;
+  if (amount > cash) { sendJson(res, 400, { error: 'Insufficient balance. Available: ₹' + cash.toLocaleString() }); return; }
+  portfolio.cash = cash - amount;
+  savePortfolio(portfolio);
+  var history = loadPortfolioHistory();
+  history.push({ type: 'withdraw', amount: amount, balance: portfolio.cash, time: Date.now() });
+  savePortfolioHistory(history);
+  sendJson(res, 200, { cash: portfolio.cash, message: '₹' + amount.toLocaleString() + ' withdrawn successfully' });
+}
 
 async function handleBrokerConnect(req, res) {
   var payload = await readJson(req);
@@ -1195,6 +1290,7 @@ function evaluatePastDecisions(config) {
   var perf = config.performance || { total:0, wins:0, losses:0, winRate:0, pnl:0 };
   var pending = config.pendingDecisions || [];
   if (!pending.length) { config.performance = perf; return config; }
+  var consecLosses = config.consecutiveLosses || {};
   var newPending = [];
   for (var p of pending) {
     p.age = (p.age || 0) + 1;
@@ -1202,8 +1298,10 @@ function evaluatePastDecisions(config) {
       perf.total++;
       if ((p.action === 'BUY' && p.priceChange > 0) || (p.action === 'SELL' && p.priceChange < 0)) {
         perf.wins++; perf.pnl = (perf.pnl || 0) + Math.abs(p.priceChange * (p.quantity || 1));
+        if (p.reason) { var m = p.reason.match(/#(\d+)/); if (m) consecLosses[m[1]] = 0; }
       } else {
         perf.losses++; perf.pnl = (perf.pnl || 0) - Math.abs(p.priceChange * (p.quantity || 1));
+        if (p.reason) { var m = p.reason.match(/#(\d+)/); if (m) { consecLosses[m[1]] = (consecLosses[m[1]] || 0) + 1; } }
       }
     } else {
       newPending.push(p);
@@ -1211,6 +1309,7 @@ function evaluatePastDecisions(config) {
   }
   perf.winRate = perf.total > 0 ? (perf.wins / perf.total * 100).toFixed(1) : 0;
   config.performance = perf;
+  config.consecutiveLosses = consecLosses;
   config.pendingDecisions = newPending;
   saveBotConfig(config);
   return config;
@@ -1272,7 +1371,7 @@ async function runBotCycle() {
         quotes[s] = { symbol: meta.symbol || s, regularMarketPrice: meta.regularMarketPrice };
         if (ch.timestamp && ch.indicators && ch.indicators.quote && ch.indicators.quote[0]) {
           var closes = ch.indicators.quote[0].close || [];
-          indicatorsData[s] = computeIndicators(closes.filter(function(v){return v!=null;}));
+          indicatorsData[s] = computeIndicators(closes.filter(function(v){return v!=null;}), ch.indicators.quote[0]);
         }
       }
     } catch(e) {}
@@ -1293,13 +1392,68 @@ async function runBotCycle() {
   config.stocks.forEach(function(s){
     var q = quotes[s] || {};
     var ind = indicatorsData[s] || {};
-    context += s + ': Price=$' + (q.regularMarketPrice || 'N/A') +
-      ' RSI=' + (ind.rsi || 'N/A') + ' MACD=' + (ind.macd || 'N/A') + ' SMA50=' + (ind.sma50 || 'N/A') + ' SMA200=' + (ind.sma200 || 'N/A') +
-      ' SMA50Above200=' + (ind.sma50Above200 ? 'Yes' : 'No') + '\n';
+    var price = q.regularMarketPrice || 'N/A';
+    var chg = q.regularMarketChangePercent || 0;
+    context += s + ': Price=$' + price + ' Chg=' + (typeof chg==='number'?chg.toFixed(1)+'%':'N/A') +
+      ' RSI=' + (ind.rsi || 'N/A') + ' MACD=' + (ind.macd || 'N/A') + ' MACD_Signal=' + (ind.macdSignal || 'N/A') + ' MACD_Hist=' + (ind.macdHistogram || 'N/A') +
+      ' SMA50=' + (ind.sma50 || 'N/A') + ' SMA200=' + (ind.sma200 || 'N/A') +
+      ' SMA50Above200=' + (ind.sma50Above200 ? 'Yes' : 'No') +
+      ' Vol20dAvg=' + (ind.avgVolume ? Math.round(ind.avgVolume).toLocaleString() : 'N/A') +
+      ' Range20d=' + (ind.range20 ? '$' + ind.range20.toFixed(2) + ' (' + ind.range20Pct.toFixed(1) + '%)' : 'N/A') +
+      ' PricePosIn20dRange=' + (ind.posInRange != null ? ind.posInRange.toFixed(0) + '%' : 'N/A') + '\n';
   });
-  var prompt = 'You are an expert algorithmic trading AI managing a portfolio. Given this market data:\n\n' + context +
-    '\nDecide for each stock: BUY, SELL, or HOLD. Consider RSI (overbought>70, oversold<30), MACD crossovers, SMA trends, and price momentum.\n' +
-    'Respond ONLY with JSON array: [{"symbol":"...","action":"BUY|SELL|HOLD","reason":"...","quantity":N}]. For BUY set quantity, for SELL set quantity to sell (0=all), for HOLD set quantity 0. Max 3-5 BUY signals per cycle. No markdown.';
+  // === Market Regime Detector ===
+  var uptrendCount = 0, totalWithData = 0, avgRsi = 0, rsiCount = 0;
+  config.stocks.forEach(function(s){
+    var ind = indicatorsData[s] || {};
+    if (ind.sma50Above200 !== null) { uptrendCount += ind.sma50Above200 ? 1 : 0; totalWithData++; }
+    if (ind.rsi != null) { avgRsi += ind.rsi; rsiCount++; }
+  });
+  var regime = 'Mixed';
+  var uptrendPct = totalWithData > 0 ? (uptrendCount / totalWithData * 100) : 50;
+  avgRsi = rsiCount > 0 ? (avgRsi / rsiCount) : 50;
+  if (uptrendPct > 65 && avgRsi > 50) regime = 'Bullish 📈';
+  else if (uptrendPct < 35 && avgRsi < 50) regime = 'Bearish 📉';
+  else if (avgRsi > 30 && avgRsi < 70 && uptrendPct > 35 && uptrendPct < 65) regime = 'Range-bound ↔️';
+  else if (avgRsi > 70) regime = 'Overbought ⚠️';
+  else if (avgRsi < 30) regime = 'Oversold 💥';
+  config.lastRegime = regime;
+  // === Strategy Auto-Switch: ban strategies with 3+ consecutive losses ===
+  var bannedStrats = [];
+  var stratPerf = config.strategyPerformance || {};
+  var consecLosses = config.consecutiveLosses || {};
+  for (var sid in stratPerf) {
+    if (consecLosses[sid] >= 3) bannedStrats.push(parseInt(sid));
+  }
+  var perf = config.performance || {};
+  var recentDecisions = (config.pendingDecisions || []).filter(function(p){return p.age>0;}).slice(-5);
+  var recentStr = recentDecisions.length ? recentDecisions.map(function(p){return p.symbol+' '+p.action+' age='+p.age+' priceChange='+(p.priceChange||0).toFixed(1)+'%';}).join('\n') : 'No recent decisions tracked yet.';
+  var isLosing = (perf.winRate||0) < 50;
+  var urgency = isLosing ? 'CRITICAL: Current strategy is losing money. You MUST change approach immediately.' : 'Keep maintaining profitable strategy.';
+  var allStrategies = STRATEGIES.map(function(st){
+    var note = '';
+    if (bannedStrats.indexOf(st.id) >= 0) note = ' 🚫 BANNED (3+ consecutive losses)';
+    else if ([1,2,3,5,21,24,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,81,82,83,84,85].indexOf(st.id) >= 0) note = ' ⚠️ Needs additional data';
+    else if ([4,22,23,29,69].indexOf(st.id) >= 0) note = ' ⚠️ Needs perpetual/futures data';
+    else if ([16,17,18,19,26,27,28,30,86,87,88,89,90].indexOf(st.id) >= 0) note = ' 📊 Position-sizing / grid';
+    else if ([6,7,8,9,10,11,12,13,14,15,20,25,31,32,33,34,35,51,52,53,54,55,56,57,58,59,60,76,77,78,79,80,91,92,93,94,95,96,97,98,99,100].indexOf(st.id) >= 0) note = ' ✅ Available';
+    return '#' + st.id + ' **' + st.name + '** | ' + st.risk + ' risk' + note;
+  }).join('\n  ');
+  var strategyGuidance = isLosing ?
+    'STRATEGY SWITCH REQUIRED — current approach failing. Market regime: ' + regime + '. Banned strategies (3+ losses): ' + (bannedStrats.length ? '#' + bannedStrats.join(', #') : 'none') + '.\n\nAvailable strategies:\n  ' + allStrategies + '\n\nSelect ONE strategy per stock. Write strategy number + name in reason.' :
+    'Continue current approach. Market regime: ' + regime + '.\n\nAvailable strategies:\n  ' + allStrategies;
+  var prompt = 'You are an expert algorithmic trading AI. Past performance: ' + (perf.total||0) + ' trades, win rate ' + (perf.winRate||0) + '%, P&L ₹' + (perf.pnl||0).toFixed(0) + '. ' + urgency + '\n\n' +
+    strategyGuidance + '\n\n' +
+    'RISK RULES (MANDATORY):\n' +
+    '1. NEVER buy a stock with RSI > 65 (overbought — price likely to drop)\n' +
+    '2. NEVER sell a stock with RSI < 35 (oversold — price likely to bounce)\n' +
+    '3. Only BUY when SMA50 > SMA200 (uptrend confirmed) OR RSI < 35 (oversold bounce play)\n' +
+    '4. Only SELL when SMA50 < SMA200 (downtrend) OR RSI > 65 (overbought) OR price broke below SMA50\n' +
+    '5. Max 2 BUY signals per cycle. Better to do nothing than a bad trade.\n' +
+    '6. If win rate < 50%, use HALF the usual quantity on every trade until win rate recovers.\n\n' +
+    'Recent decisions:\n' + recentStr + '\n\n' +
+    'Market data:\n\n' + context +
+    '\nRespond ONLY with JSON array: [{"symbol":"...","action":"BUY|SELL|HOLD","reason":"(which strategy used + key indicator values)","quantity":N}]. BUY=enter quantity, SELL=quantity to sell (0=all), HOLD=quantity 0. Max 2 BUY signals. No markdown.';
 
   var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -1323,11 +1477,21 @@ async function runBotCycle() {
     var q = quotes[d.symbol] || {};
     var price = q.regularMarketPrice || 0;
     if (!price) continue;
+    var snap = d.symbol + ' ₹' + price;
+    var ind = indicatorsData[d.symbol] || {};
+    if (ind.rsi) snap += ' RSI=' + ind.rsi.toFixed(1);
+    if (ind.macd) snap += ' MACD=' + ind.macd.toFixed(2);
+    if (ind.sma50) snap += ' SMA50=' + ind.sma50.toFixed(1);
+    if (ind.sma200) snap += ' SMA200=' + ind.sma200.toFixed(1);
+    if (ind.sma50Above200 !== null) snap += ' Trend=' + (ind.sma50Above200 ? 'UP' : 'DOWN');
+    if (ind.avgVolume) snap += ' Vol=' + Math.round(ind.avgVolume / 1000) + 'K';
+    if (ind.posInRange != null) snap += ' RangePos=' + ind.posInRange.toFixed(0) + '%';
+    d._snap = snap;
     if (d.action === 'BUY' && d.quantity > 0) {
       var cost = d.quantity * price;
       if (useReal) {
         var order = await angelPlaceOrder(brokerConfig, d.symbol, 'BUY', d.quantity, price);
-        log.push({ cycle: config.cycleCount, type: 'BUY', symbol: d.symbol, quantity: d.quantity, price: price, reason: d.reason || '', real: order && !order.error ? 'executed' : ('failed: ' + (order.error || 'unknown')) });
+        log.push({ cycle: config.cycleCount, type: 'BUY', symbol: d.symbol, quantity: d.quantity, price: price, reason: d.reason || '', data: d._snap, real: order && !order.error ? 'executed' : ('failed: ' + (order.error || 'unknown')) });
         if (order && order.error) continue;
       }
       if (cost <= portfolio.cash) {
@@ -1336,7 +1500,7 @@ async function runBotCycle() {
         else { portfolio.holdings.push({ symbol: d.symbol, quantity: d.quantity, avgCost: price }); }
         portfolio.cash -= cost;
         history.push({ type: 'bot_buy', symbol: d.symbol, quantity: d.quantity, price: price, amount: cost, time: Date.now() });
-        if (!useReal) log.push({ cycle: config.cycleCount, type: 'BUY', symbol: d.symbol, quantity: d.quantity, price: price, reason: d.reason || '' });
+        if (!useReal) log.push({ cycle: config.cycleCount, type: 'BUY', symbol: d.symbol, quantity: d.quantity, price: price, reason: d.reason || '', data: d._snap });
       }
     } else if (d.action === 'SELL') {
       var holding = portfolio.holdings.find(function(h){return h.symbol===d.symbol;});
@@ -1344,14 +1508,14 @@ async function runBotCycle() {
         var sellQty = d.quantity > 0 ? Math.min(d.quantity, holding.quantity) : holding.quantity;
         if (useReal) {
           var order = await angelPlaceOrder(brokerConfig, d.symbol, 'SELL', sellQty, price);
-          log.push({ cycle: config.cycleCount, type: 'SELL', symbol: d.symbol, quantity: sellQty, price: price, reason: d.reason || '', real: order && !order.error ? 'executed' : ('failed: ' + (order.error || 'unknown')) });
+          log.push({ cycle: config.cycleCount, type: 'SELL', symbol: d.symbol, quantity: sellQty, price: price, reason: d.reason || '', data: d._snap, real: order && !order.error ? 'executed' : ('failed: ' + (order.error || 'unknown')) });
           if (order && order.error) continue;
         }
         var proceeds = sellQty * price;
         portfolio.cash += proceeds;
         holding.quantity -= sellQty;
         history.push({ type: 'bot_sell', symbol: d.symbol, quantity: sellQty, price: price, amount: proceeds, time: Date.now() });
-        if (!useReal) log.push({ cycle: config.cycleCount, type: 'SELL', symbol: d.symbol, quantity: sellQty, price: price, reason: d.reason || '' });
+        if (!useReal) log.push({ cycle: config.cycleCount, type: 'SELL', symbol: d.symbol, quantity: sellQty, price: price, reason: d.reason || '', data: d._snap });
         if (holding.quantity <= 0) portfolio.holdings = portfolio.holdings.filter(function(h){return h.symbol!==d.symbol;});
       }
     }
@@ -1388,6 +1552,43 @@ async function runBotCycle() {
   BOT_STATUS = 'Idle — next cycle in ~3 min';
   savePortfolio(portfolio);
   savePortfolioHistory(history);
+  // Record portfolio value snapshot
+  var valueSnapshots = loadPortfolioValueHistory();
+  valueSnapshots.push({ time: Date.now(), value: totalValue });
+  if (valueSnapshots.length > 2000) valueSnapshots = valueSnapshots.slice(-2000);
+  savePortfolioValueHistory(valueSnapshots);
+  // Track strategy performance per strategy #
+  var stratPerf = config.strategyPerformance || {};
+  for (var d of decisions) {
+    if (d.action !== 'HOLD' && d.reason) {
+      var match = d.reason.match(/#(\d+)/);
+      if (match) {
+        var sid = match[1];
+        if (!stratPerf[sid]) stratPerf[sid] = { name: d.reason.split('|')[0].trim(), wins: 0, losses: 0, total: 0 };
+        stratPerf[sid].total++;
+      }
+    }
+  }
+  config.strategyPerformance = stratPerf;
+  // Circuit breaker
+  if (config.maxDrawdown) {
+    var initialCapital = config.initialCapital || (portfolio.cash + totalValue);
+    if (!config.initialCapital) config.initialCapital = initialCapital;
+    var drawdown = initialCapital > 0 ? ((initialCapital - totalValue) / initialCapital) * 100 : 0;
+    if (drawdown > config.maxDrawdown) {
+      config.running = false;
+      if (BOT_INTERVAL) { clearInterval(BOT_INTERVAL); BOT_INTERVAL = null; }
+      BOT_STATUS = 'STOPPED by circuit breaker — drawdown ' + drawdown.toFixed(1) + '% exceeded limit of ' + config.maxDrawdown + '%';
+      // Liquidate all positions
+      for (var h of portfolio.holdings || []) {
+        portfolio.cash = (portfolio.cash || 0) + (h.currentPrice || h.avgCost) * h.quantity;
+        history.push({ type: 'circuit_breaker_sell', symbol: h.symbol, quantity: h.quantity, price: h.currentPrice || h.avgCost, time: Date.now() });
+      }
+      portfolio.holdings = [];
+      savePortfolio(portfolio);
+      savePortfolioHistory(history);
+    }
+  }
   saveBotConfig(config);
 }
 
@@ -1436,6 +1637,65 @@ async function handleBotToggle(req, res, start) {
   }
   sendJson(res, 200, { running: config.running, stocks: config.stocks.length });
 }
+async function handleBotStopSell(req, res) {
+  var payload = await readJson(req);
+  if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var config = loadBotConfig();
+  config.running = false;
+  saveBotConfig(config);
+  if (BOT_INTERVAL) { clearInterval(BOT_INTERVAL); BOT_INTERVAL = null; }
+  BOT_STATUS = 'Stopped — all positions liquidated';
+  // Sell all holdings at current market price
+  var portfolio = loadPortfolio();
+  var holdings = portfolio.holdings || [];
+  var totalPnl = 0;
+  var history = loadPortfolioHistory();
+  for (var h of holdings) {
+    try {
+      var r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(h.symbol) + '?interval=1d&range=5d');
+      var d = await r.json();
+      var meta = d.chart && d.chart.result && d.chart.result[0] && d.chart.result[0].meta;
+      var price = meta ? (meta.regularMarketPrice || h.avgCost) : h.avgCost;
+      var proceeds = price * h.quantity;
+      var cost = h.avgCost * h.quantity;
+      var pnl = proceeds - cost;
+      totalPnl += pnl;
+      portfolio.cash = (portfolio.cash || 0) + proceeds;
+      history.push({ type: 'sell', symbol: h.symbol, quantity: h.quantity, price: price, amount: proceeds, time: Date.now() });
+    } catch(e) {}
+  }
+  portfolio.holdings = [];
+  savePortfolio(portfolio);
+  savePortfolioHistory(history);
+  sendJson(res, 200, { cash: portfolio.cash, pnl: totalPnl });
+}
+async function handleKill(req, res) {
+  var url = new URL(req.url, 'http://localhost');
+  var token = url.searchParams.get('token') || '';
+  if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var config = loadBotConfig();
+  config.running = false;
+  saveBotConfig(config);
+  if (BOT_INTERVAL) { clearInterval(BOT_INTERVAL); BOT_INTERVAL = null; }
+  BOT_STATUS = 'EMERGENCY KILL — all positions liquidated';
+  var portfolio = loadPortfolio();
+  var holdings = portfolio.holdings || [];
+  var history = loadPortfolioHistory();
+  for (var h of holdings) {
+    try {
+      var r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(h.symbol) + '?interval=1d&range=5d');
+      var d = await r.json();
+      var meta = d.chart && d.chart.result && d.chart.result[0] && d.chart.result[0].meta;
+      var price = meta ? (meta.regularMarketPrice || h.avgCost) : h.avgCost;
+      portfolio.cash = (portfolio.cash || 0) + (price * h.quantity);
+      history.push({ type: 'kill_switch', symbol: h.symbol, quantity: h.quantity, price: price, time: Date.now() });
+    } catch(e) {}
+  }
+  portfolio.holdings = [];
+  savePortfolio(portfolio);
+  savePortfolioHistory(history);
+  sendJson(res, 200, { status: 'killed', cash: portfolio.cash });
+}
 
 async function handleBotTraining(req, res) {
   var payload = await readJson(req);
@@ -1446,6 +1706,16 @@ async function handleBotTraining(req, res) {
   if (BOT_INTERVAL) { clearInterval(BOT_INTERVAL); BOT_INTERVAL = null; }
   saveBotConfig(config);
   sendJson(res, 200, { training: config.training });
+}
+async function handleBotCircuitBreaker(req, res) {
+  var payload = await readJson(req);
+  if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var config = loadBotConfig();
+  config.maxDrawdown = payload.maxDrawdown || 15;
+  config.circuitBreakerTripped = false;
+  config.initialCapital = undefined; // reset on reconfig
+  saveBotConfig(config);
+  sendJson(res, 200, { maxDrawdown: config.maxDrawdown, running: config.running });
 }
 
 async function handleAdminStats(req, res, url) {
@@ -1909,10 +2179,27 @@ const server = http.createServer((req, res) => {
     handleWatchlistAdd(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
-  if (req.method === 'GET' && req.url === '/api/portfolio') {
-    const portfolio = loadPortfolio();
-    sendJson(res, 200, portfolio);
-    return;
+  if (req.method === 'GET' && req.url.startsWith('/api/portfolio')) {
+    const url = new URL(req.url, 'http://localhost');
+    const path = url.pathname;
+    if (path === '/api/portfolio') {
+      handlePortfolio(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+      return;
+    }
+    if (path === '/api/portfolio/history') {
+      const token = url.searchParams.get('token') || '';
+      if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+      const history = loadPortfolioHistory();
+      sendJson(res, 200, { history });
+      return;
+    }
+    if (path === '/api/portfolio/value-history') {
+      const token = url.searchParams.get('token') || '';
+      if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+      const points = loadPortfolioValueHistory();
+      sendJson(res, 200, { points });
+      return;
+    }
   }
   if (req.method === 'POST' && req.url === '/api/portfolio/trade') {
     handleTrade(req, res).catch(err => sendJson(res, 500, { error: err.message }));
@@ -1935,6 +2222,10 @@ const server = http.createServer((req, res) => {
     handleWalletDeposit(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
+  if (req.method === 'POST' && req.url === '/api/wallet/withdraw') {
+    handleWalletWithdraw(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
   if (req.method === 'GET' && req.url.startsWith('/api/wallet/broker')) {
     const url = new URL(req.url, 'http://localhost');
     const token = url.searchParams.get('token') || '';
@@ -1955,12 +2246,8 @@ const server = http.createServer((req, res) => {
     handleStockAnalysis(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
-  if (req.method === 'GET' && req.url.startsWith('/api/portfolio/history')) {
-    const url = new URL(req.url, 'http://localhost');
-    const token = url.searchParams.get('token') || '';
-    if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
-    const history = loadPortfolioHistory();
-    sendJson(res, 200, { history });
+  if (req.method === 'POST' && req.url === '/api/admin/notify') {
+    handleNotify(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && req.url.startsWith('/api/admin/stats')) {
@@ -1988,12 +2275,24 @@ const server = http.createServer((req, res) => {
     handleBotToggle(req, res, false).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
+  if (req.method === 'GET' && req.url === '/api/kill') {
+    handleKill(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/bot/stop-sell') {
+    handleBotStopSell(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
   if (req.method === 'POST' && req.url === '/api/bot/backtest') {
     runBacktest(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'POST' && req.url === '/api/bot/training') {
     handleBotTraining(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/api/bot/circuit-breaker') {
+    handleBotCircuitBreaker(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && req.url.startsWith('/api/bot/status')) {

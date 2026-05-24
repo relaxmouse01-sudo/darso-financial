@@ -1,0 +1,918 @@
+[
+  {
+    "type": "bot_sell",
+    "symbol": "AAPL",
+    "quantity": 200,
+    "price": 308.82,
+    "amount": 61764,
+    "time": 1779607097512
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "TSLA",
+    "quantity": 50,
+    "price": 426.01,
+    "amount": 21300.5,
+    "time": 1779607097512
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "TSLA",
+    "quantity": 50,
+    "price": 426.01,
+    "amount": 21300.5,
+    "time": 1779618768497
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "TSLA",
+    "quantity": 50,
+    "price": 426.01,
+    "amount": 21300.5,
+    "time": 1779618950466
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "BTC",
+    "quantity": 10,
+    "price": 33.53,
+    "amount": 335.3,
+    "time": 1779619448825
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "ETH",
+    "quantity": 10,
+    "price": 19.6,
+    "amount": 196,
+    "time": 1779625606511
+  },
+  {
+    "type": "bot_sell",
+    "symbol": "ETH",
+    "quantity": 10,
+    "price": 19.6,
+    "amount": 196,
+    "time": 1779625783613
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "TSLA",
+    "quantity": 10,
+    "price": 426.01,
+    "amount": 4260.1,
+    "time": 1779625783613
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "BTC",
+    "quantity": 10,
+    "price": 33.53,
+    "amount": 335.3,
+    "time": 1779625964245
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "ETH",
+    "quantity": 10,
+    "price": 19.6,
+    "amount": 196,
+    "time": 1779626145404
+  },
+  {
+    "type": "bot_sell",
+    "symbol": "ETH",
+    "quantity": 10,
+    "price": 19.6,
+    "amount": 196,
+    "time": 1779626324405
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "BTC",
+    "quantity": 10,
+    "price": 33.53,
+    "amount": 335.3,
+    "time": 1779626504527
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "ETH",
+    "quantity": 10,
+    "price": 19.6,
+    "amount": 196,
+    "time": 1779626864449
+  },
+  {
+    "type": "bot_sell",
+    "symbol": "ETH",
+    "quantity": 10,
+    "price": 19.6,
+    "amount": 196,
+    "time": 1779627047764
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "BTC",
+    "quantity": 10,
+    "price": 33.53,
+    "amount": 335.3,
+    "time": 1779627405271
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "ETH",
+    "quantity": 10,
+    "price": 19.6,
+    "amount": 196,
+    "time": 1779627767246
+  },
+  {
+    "type": "bot_sell",
+    "symbol": "ETH",
+    "quantity": 10,
+    "price": 19.6,
+    "amount": 196,
+    "time": 1779627944243
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "BTC",
+    "quantity": 10,
+    "price": 33.53,
+    "amount": 335.3,
+    "time": 1779627944243
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "BTC",
+    "quantity": 10,
+    "price": 33.53,
+    "amount": 335.3,
+    "time": 1779635180739
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 101362.6,
+    "time": 1779635267306
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 201362.6,
+    "time": 1779635267606
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 301362.6,
+    "time": 1779635267646
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 401362.6,
+    "time": 1779635267826
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 501362.6,
+    "time": 1779635268025
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 601362.6,
+    "time": 1779635268185
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 701362.6,
+    "time": 1779635268372
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 801362.6,
+    "time": 1779635268544
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 901362.6,
+    "time": 1779635268728
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1001362.6,
+    "time": 1779635268905
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1101362.6,
+    "time": 1779635270033
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1201362.6,
+    "time": 1779635270521
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1301362.6,
+    "time": 1779635270701
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1401362.6,
+    "time": 1779635270888
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1501362.6,
+    "time": 1779635271080
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1601362.6,
+    "time": 1779635271265
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1701362.6,
+    "time": 1779635271477
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1801362.6,
+    "time": 1779635271665
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1901362.6,
+    "time": 1779635271893
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2001362.6,
+    "time": 1779635272113
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2101362.6,
+    "time": 1779635272341
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2201362.6,
+    "time": 1779635272529
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2301362.6,
+    "time": 1779635272729
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2401362.6,
+    "time": 1779635272905
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2501362.6,
+    "time": 1779635273116
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2601362.6,
+    "time": 1779635273281
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2701362.6,
+    "time": 1779635273469
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2801362.6,
+    "time": 1779635273673
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2901362.6,
+    "time": 1779635273857
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3001362.6,
+    "time": 1779635274050
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3101362.6,
+    "time": 1779635274234
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3201362.6,
+    "time": 1779635274409
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3301362.6,
+    "time": 1779635274633
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3401362.6,
+    "time": 1779635274841
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3501362.6,
+    "time": 1779635275225
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3601362.6,
+    "time": 1779635275433
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3701362.6,
+    "time": 1779635275609
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "ETH",
+    "quantity": 1,
+    "price": 19.6,
+    "amount": 19.6,
+    "time": 1779635383763
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "ETH",
+    "quantity": 1,
+    "price": 19.6,
+    "amount": 19.6,
+    "time": 1779635901680
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 3601323.4,
+    "time": 1779636887001
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 3501323.4,
+    "time": 1779636887737
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 3401323.4,
+    "time": 1779636887933
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 3301323.4,
+    "time": 1779636888092
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 3201323.4,
+    "time": 1779636888468
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 3101323.4,
+    "time": 1779636888640
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 3001323.4,
+    "time": 1779636888803
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2901323.4,
+    "time": 1779636888976
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2801323.4,
+    "time": 1779636889144
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2701323.4,
+    "time": 1779636889328
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2601323.4,
+    "time": 1779636889472
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2501323.4,
+    "time": 1779636889640
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2401323.4,
+    "time": 1779636891713
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2301323.4,
+    "time": 1779636891896
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2201323.4,
+    "time": 1779636892061
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2101323.4,
+    "time": 1779636892229
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2001323.4,
+    "time": 1779636892425
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1901323.4,
+    "time": 1779636892593
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1801323.4,
+    "time": 1779636892760
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1701323.4,
+    "time": 1779636892929
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1601323.4,
+    "time": 1779636893108
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1501323.4,
+    "time": 1779636893288
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1401323.4,
+    "time": 1779636893457
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1501323.4,
+    "time": 1779636902236
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1601323.4,
+    "time": 1779636902408
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1701323.4,
+    "time": 1779636902576
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1801323.4,
+    "time": 1779636902749
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 1901323.4,
+    "time": 1779636903513
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2001323.4,
+    "time": 1779636903673
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2101323.4,
+    "time": 1779636903865
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2201323.4,
+    "time": 1779636904040
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2301323.4,
+    "time": 1779636904213
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2401323.4,
+    "time": 1779636904401
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2501323.4,
+    "time": 1779636904556
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2601323.4,
+    "time": 1779636904712
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2701323.4,
+    "time": 1779636904881
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2801323.4,
+    "time": 1779636905048
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 2901323.4,
+    "time": 1779636905180
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3001323.4,
+    "time": 1779636905356
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3101323.4,
+    "time": 1779636905509
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3201323.4,
+    "time": 1779636905672
+  },
+  {
+    "type": "deposit",
+    "amount": 100000,
+    "balance": 3301323.4,
+    "time": 1779636905852
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "BTC",
+    "quantity": 50,
+    "price": 33.53,
+    "amount": 1676.5,
+    "time": 1779636915198
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "XRP",
+    "quantity": 50,
+    "price": 14.96,
+    "amount": 748,
+    "time": 1779636915198
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "ETH",
+    "quantity": 0.5,
+    "price": 19.6,
+    "amount": 9.8,
+    "time": 1779637196015
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "BTC",
+    "quantity": 1,
+    "price": 33.53,
+    "amount": 33.53,
+    "time": 1779637381135
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "ETH",
+    "quantity": 1,
+    "price": 19.6,
+    "amount": 19.6,
+    "time": 1779637381135
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 3198835.97,
+    "time": 1779642169681
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 3098835.97,
+    "time": 1779642169884
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2998835.97,
+    "time": 1779642170088
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2898835.97,
+    "time": 1779642170232
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2798835.97,
+    "time": 1779642170413
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2698835.97,
+    "time": 1779642170576
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2598835.97,
+    "time": 1779642170761
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2498835.97,
+    "time": 1779642170940
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2398835.97,
+    "time": 1779642171133
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2298835.97,
+    "time": 1779642171308
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2198835.97,
+    "time": 1779642171569
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 2098835.97,
+    "time": 1779642171765
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1998835.9700000002,
+    "time": 1779642171909
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1898835.9700000002,
+    "time": 1779642174100
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1798835.9700000002,
+    "time": 1779642174284
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1698835.9700000002,
+    "time": 1779642174448
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1598835.9700000002,
+    "time": 1779642174636
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1498835.9700000002,
+    "time": 1779642174820
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1398835.9700000002,
+    "time": 1779642175012
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1298835.9700000002,
+    "time": 1779642175232
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1198835.9700000002,
+    "time": 1779642175420
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 1098835.9700000002,
+    "time": 1779642175604
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 998835.9700000002,
+    "time": 1779642175816
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 898835.9700000002,
+    "time": 1779642176001
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 798835.9700000002,
+    "time": 1779642176201
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 698835.9700000002,
+    "time": 1779642178496
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 598835.9700000002,
+    "time": 1779642178737
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 498835.9700000002,
+    "time": 1779642178924
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 398835.9700000002,
+    "time": 1779642179100
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 298835.9700000002,
+    "time": 1779642179271
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 198835.9700000002,
+    "time": 1779642179452
+  },
+  {
+    "type": "withdraw",
+    "amount": 100000,
+    "balance": 98835.9700000002,
+    "time": 1779642179608
+  },
+  {
+    "type": "withdraw",
+    "amount": 50000,
+    "balance": 48835.970000000205,
+    "time": 1779642183369
+  },
+  {
+    "type": "withdraw",
+    "amount": 10000,
+    "balance": 38835.970000000205,
+    "time": 1779642185376
+  },
+  {
+    "type": "withdraw",
+    "amount": 10000,
+    "balance": 28835.970000000205,
+    "time": 1779642186180
+  },
+  {
+    "type": "withdraw",
+    "amount": 10000,
+    "balance": 18835.970000000205,
+    "time": 1779642186384
+  },
+  {
+    "type": "withdraw",
+    "amount": 10000,
+    "balance": 8835.970000000205,
+    "time": 1779642186563
+  },
+  {
+    "type": "withdraw",
+    "amount": 5000,
+    "balance": 3835.970000000205,
+    "time": 1779642187897
+  },
+  {
+    "type": "withdraw",
+    "amount": 3835,
+    "balance": 0.970000000204891,
+    "time": 1779642204340
+  }
+]

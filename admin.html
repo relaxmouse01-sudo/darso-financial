@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="expires" content="0">
 <title>DARSO · Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -124,9 +126,8 @@ select option{background:#0a0a14}
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
     <button class="tab-btn" onclick="switchTab('company',this)">Company AI</button>
-    <button class="tab-btn" onclick="switchTab('bot',this);loadBot()">Bot</button>
+    <button class="tab-btn" onclick="switchTab('bot',this);loadBot()">Bot + Crypto</button>
     <button class="tab-btn" onclick="switchTab('wallet',this);loadWallet()">Wallet</button>
-    <button class="tab-btn" onclick="switchTab('crypto',this);loadCrypto()">&#xe3a6; Crypto</button>
   </div>
 
   <!-- OVERVIEW TAB -->
@@ -197,6 +198,7 @@ select option{background:#0a0a14}
           <div style="display:flex;gap:.5rem;margin-bottom:.75rem;">
             <button onclick="startBot()" id="botStartBtn" class="btn btn-green" style="flex:1;justify-content:center;transition:all .3s;">&#9654; Start Bot</button>
             <button onclick="stopBot()" id="botStopBtn" class="btn btn-red" style="flex:1;justify-content:center;display:none;">&#9632; Stop Bot</button>
+            <button onclick="stopAndSell()" id="botSellBtn" class="btn btn-red" style="display:none;justify-content:center;background:linear-gradient(135deg,#dc2626,#991b1b);border:none;font-size:.7rem;padding:.35rem .65rem;" title="Stop bot and sell all holdings at market price">&#9632; Stop & Sell All</button>
           </div>
           <div id="botError" style="display:none;background:rgba(239,68,68,.12);border:1px solid var(--red);border-radius:8px;padding:.6rem .8rem;font-size:.78rem;color:var(--red);margin-bottom:.75rem;"></div>
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;padding:.5rem;background:rgba(255,255,255,.035);border-radius:8px;">
@@ -223,14 +225,8 @@ select option{background:#0a0a14}
               <div style="font-size:1.1rem;font-weight:700;color:var(--gold);" id="botPnl">₹0</div>
             </div>
           </div>
-          <button onclick="runBacktest()" id="backtestBtn" class="btn btn-cyan" style="width:100%;justify-content:center;margin-bottom:.75rem;">&#x1f9ea; Run Backtest (1 year)</button>
-          <div id="backtestResult" style="display:none;margin-bottom:.75rem;"></div>
-          <div id="botInfo" style="font-size:.8rem;color:var(--muted);">
-            <div style="padding:.3rem 0;">Status: <span id="botLiveStatus" style="color:var(--cyan);font-weight:600;">—</span></div>
-            <div style="padding:.3rem 0;">Last cycle: <span id="botLastCycle" style="color:#ccc;">—</span></div>
-            <div style="padding:.3rem 0;">Cycles run: <span id="botCycleCount" style="color:#ccc;">0</span></div>
-            <div style="padding:.3rem 0;">Last actions: <span id="botLastSummary" style="color:#ccc;">—</span></div>
-          </div>
+          <button onclick="runBacktest()" id="backtestBtn" class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:.5rem;font-size:.75rem;">&#x1f9ea; Strategy Backtest (1yr)</button>
+          <div id="backtestResult" style="display:none;margin-bottom:.5rem;"></div>
         </div>
         <div class="card">
           <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Monitored Stocks</h3>
@@ -241,116 +237,206 @@ select option{background:#0a0a14}
           </div>
           <div id="botStockList" style="display:flex;flex-wrap:wrap;gap:.4rem;"></div>
         </div>
-      </div>
-      <div>
-        <div class="card" style="height:100%;">
-          <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Bot Trade Log</h3>
-          <div id="botLog" style="font-size:.78rem;max-height:420px;overflow-y:auto;color:var(--muted);"></div>
+        <!-- Crypto Prices -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.65rem;">
+            <h3 style="font-family:var(--fh);font-size:1rem;">Crypto Market</h3>
+            <span style="font-size:.65rem;color:var(--muted);">Click coin to add to bot</span>
+          </div>
+          <div class="crypto-grid" id="cryptoGrid">
+            <div style="text-align:center;padding:1rem;color:var(--muted);grid-column:1/-1;font-size:.82rem;"><span class="loading-dots"></span> Loading</div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- BOT AI CHAT -->
-  <div class="card" style="margin-top:1.5rem;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
-      <h3 style="font-family:var(--fh);font-size:1rem;">&#x1f916; AI Trading Assistant</h3>
-      <span style="font-size:.7rem;color:var(--muted);">Ask me about stocks, analysis, or trading advice</span>
-    </div>
-    <div id="botChatMessages" style="height:260px;overflow-y:auto;padding:.5rem;margin-bottom:.75rem;background:rgba(0,0,0,.3);border-radius:8px;font-size:.82rem;display:flex;flex-direction:column;gap:.5rem;">
-      <div style="display:flex;gap:.5rem;align-items:flex-start;">
-        <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;">AI</div>
-        <div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:0 10px 10px 10px;padding:.5rem .75rem;max-width:85%;color:#ccc;line-height:1.5;">Hi! I'm your trading assistant. Ask me about your stocks, technical analysis, or anything trading-related.</div>
+      <div>
+        <!-- Equity Curve -->
+        <div class="card" style="margin-bottom:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.65rem;">
+            <h3 style="font-family:var(--fh);font-size:1rem;">Equity Curve</h3>
+            <span style="font-size:.65rem;color:var(--muted);" id="eqTimeframe">30d</span>
+          </div>
+          <div id="equityChart" style="width:100%;height:140px;border-radius:8px;background:rgba(0,0,0,.3);overflow:hidden;">
+            <svg id="eqSvg" width="100%" height="100%" style="display:block;"></svg>
+          </div>
+        </div>
+        <!-- Live Trades -->
+        <div class="card" style="margin-bottom:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.65rem;">
+            <h3 style="font-family:var(--fh);font-size:1rem;">Live Trades</h3>
+            <span style="font-size:.65rem;color:var(--muted);" id="ltUpdated">—</span>
+          </div>
+          <div id="botTradesTable" style="font-size:.78rem;"></div>
+        </div>
+        <!-- Circuit Breaker + Telegram -->
+        <div class="card" style="margin-bottom:1rem;">
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+            <div style="display:flex;align-items:center;gap:.4rem;">
+              <span style="font-size:.72rem;color:var(--muted);">Max Drawdown</span>
+              <input type="number" id="cbMaxDrawdown" class="input" style="width:70px;padding:.3rem;" value="15" min="1" max="100">
+              <span style="font-size:.7rem;color:var(--muted);">%</span>
+              <button class="btn btn-ghost" style="font-size:.7rem;padding:.25rem .5rem;" onclick="saveCircuitBreaker()">Set</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:.4rem;margin-left:auto;">
+              <span style="font-size:.72rem;color:var(--muted);">Telegram</span>
+              <button class="btn btn-ghost" style="font-size:.7rem;padding:.25rem .5rem;" onclick="alert('Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env')">Config</button>
+            </div>
+          </div>
+          <div id="cbStatus" style="font-size:.68rem;color:var(--muted);margin-top:.35rem;"></div>
+        </div>
+        <!-- Market Regime + Forward Projection Row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);letter-spacing:.05em;">Market Regime</div>
+            <div id="marketRegime" style="font-size:1.1rem;font-weight:700;margin-top:.2rem;color:var(--cyan);">—</div>
+          </div>
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);letter-spacing:.05em;">30d Projection</div>
+            <div id="forwardProjection" style="font-size:1.1rem;font-weight:700;margin-top:.2rem;color:var(--gold);">—</div>
+          </div>
+        </div>
+        <!-- Strategy Tournament -->
+        <div class="card" style="margin-bottom:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+            <h3 style="font-family:var(--fh);font-size:1rem;">Strategy Tournament</h3>
+            <span style="font-size:.65rem;color:var(--muted);" id="strategyCount">Top 5</span>
+          </div>
+          <div id="strategyPerformance" style="font-size:.75rem;"></div>
+        </div>
+        <!-- Weekly Strategy Report -->
+        <div class="card" style="margin-bottom:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+            <h3 style="font-family:var(--fh);font-size:1rem;">Weekly Report</h3>
+            <span style="font-size:.65rem;color:var(--muted);" id="weeklyReportDate">—</span>
+          </div>
+          <div id="weeklyReport" style="font-size:.75rem;color:var(--muted);">Collecting data — check back after a week of trading.</div>
+        </div>
+        <!-- Emergency Kill Switch -->
+        <div class="card" style="margin-bottom:1rem;border-color:rgba(239,68,68,.3);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:.72rem;color:var(--red);font-weight:600;">Emergency Kill Switch</div>
+              <div style="font-size:.65rem;color:var(--muted);margin-top:.15rem;">Bookmark this link on your phone:</div>
+              <code style="font-size:.62rem;color:var(--muted);word-break:break-all;display:block;margin-top:.2rem;">http://localhost:3001/api/kill?token=darsoadmin</code>
+            </div>
+            <button class="btn btn-red" style="font-size:.7rem;padding:.3rem .6rem;" onclick="emergencyKill()">Kill Now</button>
+          </div>
+          <div id="killResult" style="font-size:.7rem;margin-top:.35rem;display:none;"></div>
+        </div>
+        <!-- Enhanced Trade Log with Explainable AI -->
+        <div class="card" style="margin-bottom:1rem;">
+          <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.5rem;">Trade Log <span style="font-size:.6rem;color:var(--muted);font-weight:400;">— click row for AI data</span></h3>
+          <div id="botLog" style="font-size:.75rem;max-height:250px;overflow-y:auto;color:var(--muted);"></div>
+        </div>
+        <!-- AI Chat -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.65rem;">
+            <h3 style="font-family:var(--fh);font-size:1rem;">AI Assistant</h3>
+            <span style="font-size:.65rem;color:var(--muted);">Ask about your bot</span>
+          </div>
+          <div id="botChatMessages" style="height:200px;overflow-y:auto;padding:.4rem;margin-bottom:.65rem;background:rgba(0,0,0,.3);border-radius:8px;font-size:.8rem;display:flex;flex-direction:column;gap:.4rem;">
+            <div style="display:flex;gap:.5rem;align-items:flex-start;">
+              <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;">AI</div>
+              <div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:0 8px 8px 8px;padding:.4rem .6rem;max-width:85%;color:#ccc;line-height:1.4;font-size:.78rem;">I'm connected to your bot. Ask about stocks, trades, or strategy.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:.4rem;">
+            <input type="text" id="botChatInput" class="input" placeholder="Ask about your bot..." onkeydown="if(event.key==='Enter')sendBotChat()">
+            <button class="btn btn-primary" onclick="sendBotChat()" id="botChatBtn" style="white-space:nowrap;font-size:.78rem;">Send</button>
+          </div>
+        </div>
       </div>
-    </div>
-    <div style="display:flex;gap:.5rem;">
-      <input type="text" id="botChatInput" class="input" placeholder="Ask about a stock, analysis, or strategy..." onkeydown="if(event.key==='Enter')sendBotChat()">
-      <button class="btn btn-primary" onclick="sendBotChat()" id="botChatBtn">Send</button>
     </div>
   </div>
   <div class="tab-content" id="tab-wallet">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <!-- Portfolio Summary Row -->
+    <div class="stats-grid" style="margin-bottom:1rem;">
+      <div class="card">
+        <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--fm);">Total Value</div>
+        <div class="stat-val" id="pfTotalValue" style="color:var(--cyan);">₹0</div>
+      </div>
+      <div class="card">
+        <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--fm);">Cash Balance</div>
+        <div class="stat-val" id="pfCash" style="color:var(--green);">₹0</div>
+      </div>
+      <div class="card">
+        <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--fm);">Total P&L</div>
+        <div class="stat-val" id="pfTotalPnl" style="color:var(--gold);">₹0</div>
+      </div>
+      <div class="card">
+        <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--fm);">Win Rate</div>
+        <div class="stat-val" id="pfWinRate" style="color:var(--purple);">0%</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1.5rem;">
       <div>
-        <div class="card" style="margin-bottom:1.5rem;">
-          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.3rem;">Wallet Balance</div>
-          <div style="font-family:var(--fh);font-size:2.4rem;font-weight:700;color:var(--cyan);" id="walletBalance">₹0</div>
-          <p style="color:var(--muted);font-size:.78rem;margin-top:.15rem;">Available for auto-invest & trading</p>
-        </div>
-        <div class="card">
-          <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Deposit Funds</h3>
-          <div style="display:flex;gap:.5rem;margin-bottom:.5rem;">
-            <input type="number" class="input" id="depositAmount" placeholder="Amount" min="100" step="100" value="10000">
-            <button class="btn btn-green" onclick="depositFunds()" id="depositBtn">Deposit</button>
+        <!-- Holdings -->
+        <div class="card" style="margin-bottom:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+            <h3 style="font-family:var(--fh);font-size:1rem;">Holdings</h3>
+            <span style="font-size:.72rem;color:var(--muted);" id="pfLastUpdated">—</span>
           </div>
-          <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.5rem;">
-            <button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .65rem;" onclick="document.getElementById('depositAmount').value=5000;depositFunds()">₹5K</button>
-            <button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .65rem;" onclick="document.getElementById('depositAmount').value=10000;depositFunds()">₹10K</button>
-            <button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .65rem;" onclick="document.getElementById('depositAmount').value=50000;depositFunds()">₹50K</button>
-            <button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .65rem;" onclick="document.getElementById('depositAmount').value=100000;depositFunds()">₹1L</button>
-            <button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .65rem;" onclick="document.getElementById('depositAmount').value=500000;depositFunds()">₹5L</button>
+          <div id="pfHoldings"><div style="text-align:center;padding:1.5rem;color:var(--muted);"><span class="loading-dots"></span> Loading portfolio</div></div>
+        </div>
+        <!-- Deposit -->
+        <div class="card" style="margin-bottom:1rem;">
+          <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+            <input type="number" class="input" id="depositAmount" placeholder="Amount" min="100" step="100" value="10000" style="flex:1;min-width:120px;">
+            <button class="btn btn-green" onclick="depositFunds()" id="depositBtn" style="white-space:nowrap;">Deposit</button>
+            <button class="btn btn-ghost" style="font-size:.72rem;padding:.3rem .55rem;" onclick="document.getElementById('depositAmount').value=5000;depositFunds()">₹5K</button>
+            <button class="btn btn-ghost" style="font-size:.72rem;padding:.3rem .55rem;" onclick="document.getElementById('depositAmount').value=10000;depositFunds()">₹10K</button>
+            <button class="btn btn-ghost" style="font-size:.72rem;padding:.3rem .55rem;" onclick="document.getElementById('depositAmount').value=50000;depositFunds()">₹50K</button>
+            <button class="btn btn-ghost" style="font-size:.72rem;padding:.3rem .55rem;" onclick="document.getElementById('depositAmount').value=100000;depositFunds()">₹1L</button>
           </div>
           <div id="depositMsg" style="margin-top:.5rem;font-size:.8rem;color:var(--green);display:none;"></div>
         </div>
+        <!-- Withdraw -->
+        <div class="card" style="margin-bottom:1rem;">
+          <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+            <input type="number" class="input" id="withdrawAmount" placeholder="Amount" min="100" step="100" value="5000" style="flex:1;min-width:120px;">
+            <button class="btn btn-red" onclick="withdrawFunds()" id="withdrawBtn" style="white-space:nowrap;">Withdraw</button>
+            <button class="btn btn-ghost" style="font-size:.72rem;padding:.3rem .55rem;" onclick="document.getElementById('withdrawAmount').value=5000;withdrawFunds()">₹5K</button>
+            <button class="btn btn-ghost" style="font-size:.72rem;padding:.3rem .55rem;" onclick="document.getElementById('withdrawAmount').value=10000;withdrawFunds()">₹10K</button>
+            <button class="btn btn-ghost" style="font-size:.72rem;padding:.3rem .55rem;" onclick="document.getElementById('withdrawAmount').value=50000;withdrawFunds()">₹50K</button>
+            <button class="btn btn-ghost" style="font-size:.72rem;padding:.3rem .55rem;" onclick="document.getElementById('withdrawAmount').value=100000;withdrawFunds()">₹1L</button>
+          </div>
+          <div id="withdrawMsg" style="margin-top:.5rem;font-size:.8rem;color:var(--red);display:none;"></div>
+        </div>
+        <!-- Bot Trade History -->
+        <div class="card">
+          <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Bot Trade History</h3>
+          <div id="pfTradeHistory" style="font-size:.8rem;color:var(--muted);max-height:250px;overflow-y:auto;"></div>
+        </div>
       </div>
       <div>
-        <div class="card" style="margin-bottom:1.5rem;">
+        <!-- Broker Connection -->
+        <div class="card" style="margin-bottom:1rem;">
           <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Broker Connection</h3>
-          <p style="color:var(--muted);font-size:.8rem;margin-bottom:.75rem;">Connect Angel One for live auto-invest & trading.</p>
-          <div id="brokerConnected" style="display:none;background:rgba(0,255,136,.08);border:1px solid var(--green);border-radius:8px;padding:.75rem;margin-bottom:.75rem;">
-            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;">
+          <p style="color:var(--muted);font-size:.78rem;margin-bottom:.75rem;">Connect Angel One for live auto-invest & trading.</p>
+          <div id="brokerConnected" style="display:none;background:rgba(0,255,136,.08);border:1px solid var(--green);border-radius:8px;padding:.65rem;margin-bottom:.65rem;">
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.2rem;">
               <span style="color:var(--green);font-size:1rem;">&#x2713;</span>
-              <span style="font-weight:600;font-size:.85rem;">Connected</span>
+              <span style="font-weight:600;font-size:.82rem;">Connected</span>
             </div>
-            <div style="font-size:.78rem;color:var(--muted);">Broker: <span id="brBroker">—</span></div>
-            <div style="font-size:.78rem;color:var(--muted);">API Key: <span id="brApiKey">—</span></div>
-            <button class="btn btn-red" style="margin-top:.5rem;font-size:.75rem;padding:.35rem .7rem;" onclick="disconnectBroker()">Disconnect</button>
+            <div style="font-size:.76rem;color:var(--muted);">Broker: <span id="brBroker">—</span> · API: <span id="brApiKey">—</span></div>
+            <button class="btn btn-red" style="margin-top:.4rem;font-size:.72rem;padding:.3rem .65rem;" onclick="disconnectBroker()">Disconnect</button>
           </div>
           <div id="brokerForm">
-            <div style="margin-bottom:.6rem;">
-              <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.25rem;">Broker</label>
-              <select id="brSelect"><option value="angel">Angel One (SmartAPI)</option><option value="zerodha">Zerodha (Kite)</option><option value="groww">Groww</option><option value="upstox">Upstox</option></select>
-            </div>
-            <div style="margin-bottom:.6rem;">
-              <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.25rem;">API Key</label>
-              <input type="text" class="input" id="brApiKeyInput" placeholder="SmartAPI key">
-            </div>
-            <div style="margin-bottom:.6rem;">
-              <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.25rem;">Client ID</label>
-              <input type="text" class="input" id="brClientIdInput" placeholder="e.g. A123456">
-            </div>
-            <div style="margin-bottom:.6rem;">
-              <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.25rem;">Password / PIN</label>
-              <input type="password" class="input" id="brPasswordInput" placeholder="Trading password">
-            </div>
-            <div style="margin-bottom:.75rem;">
-              <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.25rem;">TOTP <span style="color:var(--muted);font-size:.7rem;">(optional)</span></label>
-              <input type="text" class="input" id="brTotpInput" placeholder="TOTP code">
-            </div>
-            <button class="btn btn-primary" onclick="connectBroker()" id="brConnectBtn" style="width:100%;justify-content:center;">Connect Broker</button>
-            <div id="brMsg" style="margin-top:.5rem;font-size:.8rem;display:none;"></div>
+            <div style="margin-bottom:.5rem;"><label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:.2rem;">Broker</label><select id="brSelect"><option value="angel">Angel One</option><option value="zerodha">Zerodha</option><option value="groww">Groww</option><option value="upstox">Upstox</option></select></div>
+            <div style="margin-bottom:.5rem;"><label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:.2rem;">API Key</label><input type="text" class="input" id="brApiKeyInput"></div>
+            <div style="margin-bottom:.5rem;"><label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:.2rem;">Client ID</label><input type="text" class="input" id="brClientIdInput" placeholder="A123456"></div>
+            <div style="margin-bottom:.5rem;"><label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:.2rem;">Password</label><input type="password" class="input" id="brPasswordInput"></div>
+            <div style="margin-bottom:.65rem;"><label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:.2rem;">TOTP <span style="color:var(--muted);font-size:.65rem;">(optional)</span></label><input type="text" class="input" id="brTotpInput"></div>
+            <button class="btn btn-primary" onclick="connectBroker()" id="brConnectBtn" style="width:100%;justify-content:center;">Connect</button>
+            <div id="brMsg" style="margin-top:.4rem;font-size:.78rem;display:none;"></div>
           </div>
         </div>
+        <!-- Transaction History -->
         <div class="card">
           <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Transaction History</h3>
-          <div id="txnHistory" style="font-size:.8rem;color:var(--muted);max-height:200px;overflow-y:auto;"></div>
+          <div id="txnHistory" style="font-size:.78rem;color:var(--muted);max-height:200px;overflow-y:auto;"></div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- CRYPTO TAB -->
-  <div class="tab-content" id="tab-crypto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
-      <h3 style="font-family:var(--fh);font-size:1.1rem;">&#xe3a6; Crypto Market</h3>
-      <span style="font-size:.78rem;color:var(--muted);">Live from Yahoo Finance</span>
-    </div>
-    <div class="crypto-grid" id="cryptoGrid">
-      <div style="text-align:center;padding:2rem;color:var(--muted);grid-column:1/-1;"><span class="loading-dots"></span> Loading crypto prices</div>
-    </div>
-    <div class="card">
-      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.5rem;">Add Crypto to Bot</div>
-      <p style="color:var(--muted);font-size:.78rem;margin-bottom:.75rem;">Click any symbol below to add it to the bot's monitored stocks.</p>
-      <div id="cryptoAddList" style="display:flex;flex-wrap:wrap;gap:.4rem;"></div>
     </div>
   </div>
 </div>
@@ -405,6 +491,7 @@ function refresh(){
     .then(function(r){if(r.ok)return r.json();})
     .then(function(d){if(d)renderDashboard(d);})
     .catch(function(){});
+  loadPortfolioData();renderBotTrades();renderEquityChart();renderStrategyPerformance();renderForwardProjection();renderWeeklyReport();
 }
 function switchTab(name,btn){
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
@@ -589,9 +676,7 @@ function closeAdaptModal(){document.getElementById('adaptModal').style.display='
 
 // === WALLET ===
 function loadWallet(){
-  fetch('/api/wallet/balance?token='+encodeURIComponent(TOKEN))
-    .then(function(r){return r.json();})
-    .then(function(d){document.getElementById('walletBalance').textContent='₹'+Number(d.cash||0).toLocaleString();});
+  loadPortfolioData();
   fetch('/api/wallet/broker?token='+encodeURIComponent(TOKEN))
     .then(function(r){return r.json();})
     .then(function(d){
@@ -604,6 +689,57 @@ function loadWallet(){
     });
   loadTxnHistory();
 }
+function loadPortfolioData(){
+  fetch('/api/portfolio?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      document.getElementById('pfTotalValue').textContent='₹'+(d.totalValue||0).toLocaleString(undefined,{minimumFractionDigits:2});
+      document.getElementById('pfCash').textContent='₹'+(d.cash||0).toLocaleString(undefined,{minimumFractionDigits:2});
+      var pnl=d.totalPnl||0;
+      document.getElementById('pfTotalPnl').textContent=(pnl>=0?'+':'')+'₹'+pnl.toLocaleString(undefined,{minimumFractionDigits:2});
+      document.getElementById('pfTotalPnl').style.color=pnl>=0?'var(--green)':'var(--red)';
+      document.getElementById('pfLastUpdated').textContent='Updated '+new Date().toLocaleTimeString();
+      fetch('/api/bot/config?token='+encodeURIComponent(TOKEN))
+        .then(function(r){return r.json();})
+        .then(function(bc){
+          var wr=(bc.performance&&bc.performance.winRate)||0;
+          document.getElementById('pfWinRate').textContent=wr+'%';
+          document.getElementById('pfWinRate').style.color=wr>=50?'var(--green)':'var(--red)';
+        }).catch(function(){});
+      var el=document.getElementById('pfHoldings');
+      var h=d.holdings||[];
+      if(!h.length){el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem;">No holdings yet. Deposit funds and start trading.</div>';return;}
+      el.innerHTML='<table class="tbl"><thead><tr><th>Symbol</th><th>Qty</th><th>Avg Cost</th><th>Price</th><th>Value</th><th>P&L</th></tr></thead><tbody>'+
+        h.map(function(hh){
+          var pnl=hh.pnl||0, pnlPct=hh.pnlPercent||0;
+          var pnlColor=pnl>=0?'var(--green)':'var(--red)';
+          return '<tr><td style="font-family:var(--fm);font-weight:600;">'+hh.symbol+'</td>'+
+            '<td>'+hh.quantity+'</td>'+
+            '<td>₹'+hh.avgCost.toFixed(2)+'</td>'+
+            '<td>'+(hh.currentPrice?'₹'+hh.currentPrice.toFixed(2):'—')+'</td>'+
+            '<td>₹'+(hh.value||0).toFixed(2)+'</td>'+
+            '<td style="color:'+pnlColor+';font-weight:600;">'+(pnl>=0?'+':'')+'₹'+pnl.toFixed(2)+' ('+(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%)</td></tr>';
+        }).join('')+'</tbody></table>';
+    }).catch(function(){document.getElementById('pfHoldings').innerHTML='<div style="text-align:center;padding:1rem;color:var(--red);">Failed to load portfolio.</div>';});
+  loadBotTradeHistory();
+}
+function loadBotTradeHistory(){
+  fetch('/api/bot/config?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var log=(d.log||[]).filter(function(l){return l.type==='BUY'||l.type==='SELL';}).slice(-30);
+      var el=document.getElementById('pfTradeHistory');
+      if(!log.length){el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);">No bot trades yet.</div>';return;}
+      el.innerHTML=log.reverse().map(function(l){
+        var c=l.type==='BUY'?'var(--green)':'var(--red)';
+        return '<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.76rem;">'+
+          '<span style="color:'+c+';font-weight:600;min-width:36px;">'+l.type+'</span>'+
+          '<span style="font-family:var(--fm);">'+l.symbol+'</span>'+
+          '<span>'+(l.quantity||'')+' @ ₹'+(l.price||0).toFixed(2)+'</span>'+
+          '<span style="color:var(--muted);font-size:.7rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;">'+(l.reason||'')+'</span></div>';
+      }).join('');
+    }).catch(function(){});
+}
 function depositFunds(){
   var amt=parseFloat(document.getElementById('depositAmount').value);
   if(!amt||amt<=0)return;
@@ -615,9 +751,26 @@ function depositFunds(){
       var msg=document.getElementById('depositMsg');msg.style.display='block';
       if(d.error){msg.style.color='var(--red)';msg.textContent=d.error;return;}
       msg.style.color='var(--green)';msg.textContent=d.message||'Deposited!';
-      document.getElementById('walletBalance').textContent='₹'+Number(d.cash||0).toLocaleString();
+      if(document.getElementById('pfCash')){document.getElementById('pfCash').textContent='₹'+Number(d.cash||0).toLocaleString(undefined,{minimumFractionDigits:2});}
+      loadPortfolioData();
       loadTxnHistory();
     }).catch(function(e){btn.textContent='Deposit';btn.disabled=false;});
+}
+function withdrawFunds(){
+  var amt=parseFloat(document.getElementById('withdrawAmount').value);
+  if(!amt||amt<=0)return;
+  var btn=document.getElementById('withdrawBtn');btn.textContent='Processing...';btn.disabled=true;
+  fetch('/api/wallet/withdraw',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:amt,token:TOKEN})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btn.textContent='Withdraw';btn.disabled=false;
+      var msg=document.getElementById('withdrawMsg');msg.style.display='block';
+      if(d.error){msg.style.color='var(--red)';msg.textContent=d.error;return;}
+      msg.style.color='var(--gold)';msg.textContent=d.message||'Withdrawn!';
+      if(document.getElementById('pfCash')){document.getElementById('pfCash').textContent='₹'+Number(d.cash||0).toLocaleString(undefined,{minimumFractionDigits:2});}
+      loadPortfolioData();
+      loadTxnHistory();
+    }).catch(function(e){btn.textContent='Withdraw';btn.disabled=false;});
 }
 function connectBroker(){
   var broker=document.getElementById('brSelect').value, apiKey=document.getElementById('brApiKeyInput').value.trim();
@@ -666,6 +819,7 @@ function loadBot(){
       document.getElementById('botStatusBadge').style.background=on?'rgba(0,255,136,.12)':'rgba(255,255,255,.06)';
       document.getElementById('botStartBtn').style.display=on?'none':'flex';
       document.getElementById('botStopBtn').style.display=on?'flex':'none';
+      document.getElementById('botSellBtn').style.display=on?'flex':'none';
       document.getElementById('botRunningBar').style.transform=on?'translateX(0)':'translateX(-100%)';
       document.getElementById('botTrainingMode').checked=d.training!==false;
       document.getElementById('botCycleCount').textContent=d.cycleCount||0;
@@ -680,6 +834,7 @@ function loadBot(){
       renderBotLog(d.log||[]);
       if(on){pollBotStatus();if(!window.botPollTimer)window.botPollTimer=setInterval(pollBotStatus,5000);}
       else{if(window.botPollTimer){clearInterval(window.botPollTimer);window.botPollTimer=null;}}
+      loadCrypto();renderBotTrades();renderEquityChart();loadCircuitBreaker();renderStrategyPerformance();renderForwardProjection();loadMarketRegime();renderWeeklyReport();
     });
 }
 function pollBotStatus(){
@@ -730,19 +885,31 @@ function stopBot(){
   fetch('/api/bot/stop',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})})
     .then(function(r){return r.json();}).then(function(){loadBot();});
 }
+function stopAndSell(){
+  if(!confirm('Stop bot and SELL ALL holdings at market price? This cannot be undone.'))return;
+  var btn=document.getElementById('botSellBtn');btn.textContent='Liquidating...';btn.disabled=true;
+  fetch('/api/bot/stop-sell',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btn.style.display='none';btn.disabled=false;
+      if(d.error){alert('Error: '+d.error);return;}
+      alert('Bot stopped and all positions sold.\nCash: ₹'+d.cash.toFixed(2)+'\nP&L: '+(d.pnl>=0?'+':'')+'₹'+d.pnl.toFixed(2));
+      loadBot();loadPortfolioData();
+    }).catch(function(){btn.textContent='Stop & Sell All';btn.disabled=false;});
+}
 function runBacktest(){
   if(!BOT_STOCKS.length)return;
   var btn=document.getElementById('backtestBtn');btn.textContent='Running...';btn.disabled=true;
   document.getElementById('backtestResult').style.display='block';
-  document.getElementById('backtestResult').innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);"><span class="loading-dots"></span> Running AI against 1 year of data</div>';
+  document.getElementById('backtestResult').innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);"><span class="loading-dots"></span> Running AI backtest...</div>';
   fetch('/api/bot/backtest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,stocks:BOT_STOCKS})})
     .then(function(r){return r.json();})
     .then(function(d){
-      btn.textContent='&#x1f9ea; Run Backtest (1 year)';btn.disabled=false;
+      btn.textContent='&#x1f9ea; Strategy Backtest (1yr)';btn.disabled=false;
       var h='<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:.6rem;margin-bottom:.5rem;display:flex;gap:1rem;justify-content:space-around;">'+
         '<div style="text-align:center;"><div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">Win Rate</div><div style="font-size:1rem;font-weight:700;'+(d.winRate>=50?'color:var(--green)':'color:var(--red)')+';">'+d.winRate+'%</div></div>'+
         '<div style="text-align:center;"><div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">Correct</div><div style="font-size:1rem;font-weight:700;">'+d.wins+'/'+d.total+'</div></div></div>';
-      h+='<div style="font-size:.76rem;max-height:180px;overflow-y:auto;">';
+      h+='<div style="font-size:.76rem;max-height:150px;overflow-y:auto;">';
       (d.results||[]).forEach(function(r){
         h+='<div style="display:flex;justify-content:space-between;padding:.25rem 0;border-bottom:1px solid rgba(255,255,255,.04);">'+
           '<span style="font-family:var(--fm);">'+r.symbol+'</span>'+
@@ -750,7 +917,7 @@ function runBacktest(){
           '<span style="color:'+(r.correct?'var(--green)':'var(--red)')+';">'+r.profitPct+'%</span></div>';
       });h+='</div>';
       document.getElementById('backtestResult').innerHTML=h;
-    }).catch(function(){btn.textContent='&#x1f9ea; Run Backtest (1 year)';btn.disabled=false;});
+    }).catch(function(){btn.textContent='&#x1f9ea; Strategy Backtest (1yr)';btn.disabled=false;});
 }
 function addBotStock(){
   var input=document.getElementById('botStockInput'), sym=input.value.trim().toUpperCase();
@@ -777,34 +944,232 @@ function renderBotLog(log){
       '<span style="color:var(--muted);font-size:.7rem;overflow:hidden;text-overflow:ellipsis;flex:1;">'+(l.reason||'')+'</span></div>';
   }).join('');
 }
+function renderBotTrades(){
+  try{
+    fetch('/api/portfolio?token='+encodeURIComponent(TOKEN))
+      .then(function(r){return r.json();})
+      .then(function(pd){
+        var el=document.getElementById('botTradesTable');
+        if(!el)return;
+        var h=pd.holdings||[];
+        if(!h.length){el.innerHTML='<div style="text-align:center;padding:1.2rem;color:var(--muted);font-size:.82rem;">No open positions.</div>';return;}
+        el.innerHTML='<table class="tbl" style="font-size:.75rem;"><thead><tr><th>Stock</th><th>Price</th><th>Qty</th><th>Avg Cost</th><th>Profit</th><th>Gain/Loss</th></tr></thead><tbody>'+
+          h.map(function(r){
+            var pnl=r.pnl||0, pnlPct=r.pnlPercent||0;
+            var c=pnl>=0?'var(--green)':'var(--red)';
+            var icon=pnl>=0?'&#9650;':'&#9660;';
+            return '<tr><td style="font-family:var(--fm);font-weight:600;">'+r.symbol+'</td>'+
+              '<td>₹'+(r.currentPrice?r.currentPrice.toFixed(2):'—')+'</td>'+
+              '<td>'+(r.quantity||0)+'</td>'+
+              '<td>₹'+(r.avgCost?r.avgCost.toFixed(2):'—')+'</td>'+
+              '<td style="color:'+c+';font-weight:600;">'+(pnl>=0?'+':'')+'₹'+Math.abs(pnl).toFixed(2)+'</td>'+
+              '<td style="color:'+c+';font-weight:600;">'+icon+' '+(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%</td></tr>';
+          }).join('')+'</tbody></table>'+
+          '<div style="display:flex;gap:1rem;margin-top:.6rem;padding-top:.6rem;border-top:1px solid rgba(255,255,255,.06);font-size:.75rem;color:var(--muted);">'+
+          '<span>Cash: <strong style="color:#ccc;">₹'+(pd.cash||0).toFixed(2)+'</strong></span>'+
+          '<span>Value: <strong style="color:var(--cyan);">₹'+(pd.totalValue||0).toFixed(2)+'</strong></span>'+
+          '<span style="color:'+((pd.totalPnl||0)>=0?'var(--green)':'var(--red)')+';">P&L: '+(pd.totalPnl>=0?'+':'')+'₹'+(pd.totalPnl||0).toFixed(2)+'</span></div>';
+      }).catch(function(){});
+  }catch(e){}
+}
 
 // === CRYPTO ===
 function loadCrypto(){
   var grid=document.getElementById('cryptoGrid');
-  grid.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);grid-column:1/-1;"><span class="loading-dots"></span> Loading crypto prices</div>';
+  grid.innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);grid-column:1/-1;font-size:.82rem;"><span class="loading-dots"></span> Loading crypto prices</div>';
   fetch('/api/crypto/prices')
     .then(function(r){return r.json();})
     .then(function(d){
-      if(!d.prices||!d.prices.length){grid.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);grid-column:1/-1;">No crypto data available.</div>';return;}
+      if(!d.prices||!d.prices.length){grid.innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);grid-column:1/-1;">No data</div>';return;}
       grid.innerHTML='';
       d.prices.forEach(function(c){
-        var chg=c.changePercent||0, up=chg>=0;
-        grid.innerHTML+='<div class="coin-card"><div class="name">'+esc(c.symbol).replace('-USD','')+' <span style="color:var(--muted);font-size:.65rem;">'+esc(c.symbol)+'</span></div>'+
+        var chg=c.changePercent||0, up=chg>=0, sym=c.symbol;
+        var inBot=BOT_STOCKS.includes(sym);
+        grid.innerHTML+='<div class="coin-card" onclick="addCryptoSymbol(\''+sym+'\')" style="cursor:'+(inBot?'default':'pointer')+';opacity:'+(inBot?'0.6':'1')+';position:relative;">'+
+          (inBot?'<div style="position:absolute;top:3px;right:3px;font-size:.5rem;background:var(--green);color:#000;padding:1px 4px;border-radius:3px;">BOT</div>':'')+
+          '<div class="name">'+esc(sym).replace('-USD','')+' <span style="color:var(--muted);font-size:.55rem;">'+esc(sym)+'</span></div>'+
           '<div class="price">$'+(c.price||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'+
           '<div class="chg '+(up?'up':'down')+'">'+(up?'+':'')+chg.toFixed(2)+'%</div></div>';
       });
-      // Add-to-bot list
-      var addEl = document.getElementById('cryptoAddList');
-      addEl.innerHTML = d.prices.map(function(c){
-        var s = c.symbol;
-        return '<button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .6rem;" onclick="addCryptoSymbol(\''+s+'\')">'+s.replace('-USD','')+' &#43;</button>';
-      }).join('');
     })
-    .catch(function(){grid.innerHTML='<div style="text-align:center;padding:2rem;color:var(--red);grid-column:1/-1;">Failed to load crypto prices.</div>';});
+    .catch(function(){grid.innerHTML='<div style="text-align:center;padding:1rem;color:var(--red);grid-column:1/-1;">Failed</div>';});
 }
 function addCryptoSymbol(sym){
   if(BOT_STOCKS.includes(sym)||BOT_STOCKS.length>=10)return;
-  BOT_STOCKS.push(sym);saveBotStocks();renderBotStockList();
+  BOT_STOCKS.push(sym);saveBotStocks();renderBotStockList();loadCrypto();
+}
+
+// === EQUITY CURVE CHART ===
+function renderEquityChart(){
+  var svg=document.getElementById('eqSvg');
+  if(!svg)return;
+  fetch('/api/portfolio/value-history?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var pts=d.points||[];
+      if(pts.length<2){svg.innerHTML='<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="var(--muted)" font-size="11" font-family="var(--fm)">Not enough data yet</text>';return;}
+      var w=svg.clientWidth||400, h=svg.clientHeight||140;
+      var pad=25, pw=w-pad*2, ph=h-pad*2;
+      var values=pts.map(function(p){return p.value;});
+      var min=Math.min.apply(null,values), max=Math.max.apply(null,values);
+      var range=max-min||1;
+      var xStep=pw/(pts.length-1)||1;
+      var path='', fillPath='';
+      var startColor='var(--cyan)', endColor='var(--purple)';
+      pts.forEach(function(p,i){
+        var x=pad+i*xStep, y=pad+ph-((p.value-min)/range*ph);
+        if(i===0){path='M'+x+','+y;fillPath='L'+x+','+y;}else{path+=' L'+x+','+y;fillPath+=' L'+x+','+y;}
+      });
+      fillPath+=' L'+(pad+(pts.length-1)*xStep)+','+(pad+ph)+' L'+pad+','+(pad+ph)+' Z';
+      var color=values[values.length-1]>=values[0]?'rgba(0,255,136,':'rgba(239,68,68,';
+      svg.innerHTML='<defs><linearGradient id="eqGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:'+color+'0.3);stop-opacity:1"/><stop offset="100%" style="stop-color:'+color+'0);stop-opacity:1"/></linearGradient></defs>'+
+        '<path d="'+fillPath+'" fill="url(#eqGrad)" opacity="0.5"/>'+
+        '<path d="'+path+'" fill="none" stroke="'+color+'0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'+
+        '<text x="'+pad+'" y="'+(pad-5)+'" fill="var(--muted)" font-size="9" font-family="var(--fm)">₹'+(min).toLocaleString()+'</text>'+
+        '<text x="'+pad+'" y="'+(pad+ph+12)+'" fill="var(--muted)" font-size="9" font-family="var(--fm)">₹'+(max).toLocaleString()+'</text>';
+      document.getElementById('eqTimeframe').textContent=pts.length+' pts';
+    }).catch(function(){});
+}
+
+// === CIRCUIT BREAKER ===
+function saveCircuitBreaker(){
+  var val=parseFloat(document.getElementById('cbMaxDrawdown').value);
+  if(!val||val<1)return;
+  fetch('/api/bot/circuit-breaker',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,maxDrawdown:val})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      document.getElementById('cbStatus').textContent='&#10003; Circuit breaker set to '+d.maxDrawdown+'%'+(d.running?' (active)':' (start bot to activate)');
+      document.getElementById('cbStatus').style.color='var(--green)';
+    }).catch(function(){});
+}
+function loadCircuitBreaker(){
+  fetch('/api/bot/config?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.maxDrawdown){document.getElementById('cbMaxDrawdown').value=d.maxDrawdown;}
+      var cbEl=document.getElementById('cbStatus');
+      if(d.circuitBreakerTripped){cbEl.innerHTML='&#9888; Circuit breaker TRIPPED at '+(d.circuitBreakerTripped||'')+'% drawdown';cbEl.style.color='var(--red)';}
+      else{cbEl.innerHTML='&#9679; Active — will auto-stop at '+d.maxDrawdown+'% drawdown';cbEl.style.color='var(--green)';}
+    }).catch(function(){});
+}
+
+// === STRATEGY TOURNAMENT ===
+function renderStrategyPerformance(){
+  fetch('/api/bot/config?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var sp=d.strategyPerformance||{};
+      var el=document.getElementById('strategyPerformance');
+      var keys=Object.keys(sp);
+      if(!keys.length){el.innerHTML='<div style="color:var(--muted);font-size:.78rem;text-align:center;padding:.5rem;">No strategy data yet. Run the bot to see performance per strategy.</div>';return;}
+      // Calculate win rate and sort
+      var list=keys.map(function(k){var s=sp[k];s.winRate=s.total?((s.wins||0)/s.total*100).toFixed(1):0;return {id:k,data:s};});
+      list.sort(function(a,b){return (b.data.winRate||0)-(a.data.winRate||0);});
+      var top=list.slice(0,5);
+      el.innerHTML='<table class="tbl" style="font-size:.7rem;"><thead><tr><th>#</th><th>Strategy</th><th>Trades</th><th>Win%</th></tr></thead><tbody>'+
+        top.map(function(item,i){
+          var wr=parseFloat(item.data.winRate);
+          var rankIcon=i===0?'&#129351;':i===1?'&#129352;':i===2?'&#129353;':(i+1);
+          return '<tr><td style="font-weight:700;font-size:.85rem;">'+rankIcon+'</td><td style="font-family:var(--fm);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(item.data.name||'')+'">#'+item.id+' '+(item.data.name||'')+'</td><td>'+(item.data.total||0)+'</td><td style="color:'+(wr>=50?'var(--green)':'var(--red)')+';font-weight:600;">'+(item.data.winRate||'0')+'%</td></tr>';
+        }).join('')+'</tbody></table>';
+    }).catch(function(){});
+}
+
+// === ENHANCED TRADE LOG ===
+function renderBotLog(log){
+  var el=document.getElementById('botLog');
+  if(!log||!log.length){el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);">No trades yet.</div>';return;}
+  el.innerHTML=log.slice().reverse().slice(0,30).map(function(l){
+    var isBuy=l.type==='BUY', isSell=l.type==='SELL', isPortfolio=l.type==='PORTFOLIO', isCycle=l.type==='CYCLE';
+    var c=isBuy?'var(--green)':isSell?'var(--red)':isPortfolio?'var(--cyan)':isCycle?'var(--gold)':'var(--muted)';
+    var icon=isBuy?'▲':isSell?'▼':isPortfolio?'💰':isCycle?'⟳':'·';
+    var bg=isBuy?'rgba(0,255,136,.06)':isSell?'rgba(239,68,68,.06)':'transparent';
+    var reason=l.reason||'';
+    // highlight strategy #
+    reason=reason.replace(/#(\d+)/g,'<span style="color:var(--cyan);font-weight:600;">#$1</span>');
+    return '<div style="display:flex;align-items:center;gap:.4rem;padding:.35rem .5rem;border-bottom:1px solid rgba(255,255,255,.04);background:'+bg+';border-radius:4px;margin-bottom:2px;">'+
+      '<span style="color:'+c+';font-weight:700;font-size:.85rem;min-width:18px;">'+icon+'</span>'+
+      '<span style="color:'+c+';font-weight:600;font-size:.7rem;min-width:36px;">'+l.type+'</span>'+
+      '<span style="font-family:var(--fm);font-weight:600;color:#ccc;font-size:.75rem;min-width:80px;">'+(l.symbol||'')+'</span>'+
+      '<span style="color:var(--muted);font-size:.7rem;min-width:100px;">'+(l.quantity?l.quantity+'×₹'+(l.price?l.price.toFixed(2):''):'')+'</span>'+
+      '<span style="color:#999;font-size:.68rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">'+reason+'</span>'+
+      (l.data?'<span style="color:var(--muted);font-size:.55rem;cursor:help;min-width:14px;" title="'+esc(l.data)+'">ⓘ</span>':'')+'</div>';
+  }).join('');
+}
+// === FORWARD PROJECTION (Monte Carlo) ===
+function renderForwardProjection(){
+  fetch('/api/portfolio/value-history?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var pts=d.points||[];
+      if(pts.length<5){document.getElementById('forwardProjection').textContent='Need 5+ data points';return;}
+      var returns=[];
+      for(var i=1;i<pts.length;i++){returns.push((pts[i].value-pts[i-1].value)/pts[i-1].value);}
+      if(!returns.length)return;
+      var avgRet=returns.reduce(function(a,b){return a+b;},0)/returns.length;
+      var std=Math.sqrt(returns.map(function(r){return Math.pow(r-avgRet,2);}).reduce(function(a,b){return a+b;},0)/returns.length);
+      var lastVal=pts[pts.length-1].value;
+      var sims=[], n=30;
+      for(var s=0;s<500;s++){var v=lastVal;for(var d=0;d<n;d++){v*=(1+avgRet+std*((Math.random()+Math.random()+Math.random()+Math.random()+Math.random()+Math.random()-3)/Math.sqrt(6)));}sims.push(v);}
+      var sorted=sims.slice().sort(function(a,b){return a-b;});
+      var p10=sorted[Math.floor(sorted.length*0.1)], p50=sorted[Math.floor(sorted.length*0.5)], p90=sorted[Math.floor(sorted.length*0.9)];
+      document.getElementById('forwardProjection').innerHTML='₹'+p50.toLocaleString(undefined,{minimumFractionDigits:0})+
+        ' <span style="font-size:.7rem;color:var(--muted);">['+((p10/lastVal-1)*100).toFixed(1)+'% / '+
+        ((p90/lastVal-1)*100).toFixed(1)+'%]</span>';
+    }).catch(function(){});
+}
+// === EMERGENCY KILL ===
+function emergencyKill(){
+  if(!confirm('EMERGENCY KILL: Stop bot + sell ALL holdings immediately?'))return;
+  var btn=event.target;btn.textContent='Killing...';btn.disabled=true;
+  fetch('/api/kill?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      document.getElementById('killResult').style.display='block';
+      document.getElementById('killResult').innerHTML='&#10003; Killed. Cash: ₹'+d.cash.toFixed(2);
+      document.getElementById('killResult').style.color='var(--red)';
+      loadBot();loadPortfolioData();
+    }).catch(function(){btn.textContent='Kill Now';btn.disabled=false;});
+}
+// === MARKET REGIME ===
+function loadMarketRegime(){
+  fetch('/api/bot/config?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var el=document.getElementById('marketRegime');
+      var r=d.lastRegime||'—';
+      var c='var(--muted)';
+      if(r.includes('Bullish'))c='var(--green)';
+      else if(r.includes('Bearish'))c='var(--red)';
+      else if(r.includes('Overbought'))c='var(--orange)';
+      else if(r.includes('Oversold'))c='var(--purple)';
+      else if(r.includes('Range'))c='var(--gold)';
+      el.textContent=r;el.style.color=c;
+    }).catch(function(){});
+}
+// === WEEKLY REPORT ===
+function renderWeeklyReport(){
+  fetch('/api/bot/config?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var sp=d.strategyPerformance||{};
+      var elapsed=d.startedAt?(Date.now()-d.startedAt):0;
+      var days=Math.floor(elapsed/86400000);
+      document.getElementById('weeklyReportDate').textContent=days+'d running';
+      var keys=Object.keys(sp);
+      if(!keys.length)return;
+      if(days<1){document.getElementById('weeklyReport').innerHTML='<span style="color:var(--muted);">Bot started less than a day ago. Check back later.</span>';return;}
+      var list=keys.map(function(k){return {id:k,data:sp[k]};});
+      list.sort(function(a,b){return (b.data.winRate||0)-(a.data.winRate||0);});
+      var best=list[0], worst=list[list.length-1];
+      var bestWr=parseFloat(best.data.winRate||0);
+      var worstWr=parseFloat(worst.data.winRate||0);
+      var html='<div style="display:flex;gap:1rem;justify-content:space-around;">'+
+        '<div style="text-align:center;flex:1;padding:.4rem;background:rgba(0,255,136,.06);border-radius:8px;"><div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);">Best</div><div style="font-size:.82rem;font-weight:700;color:var(--green);">#'+best.id+'</div><div style="font-size:.7rem;color:var(--muted);">'+bestWr+'% win</div></div>'+
+        '<div style="text-align:center;flex:1;padding:.4rem;background:rgba(239,68,68,.06);border-radius:8px;"><div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);">Worst</div><div style="font-size:.82rem;font-weight:700;color:var(--red);">#'+worst.id+'</div><div style="font-size:.7rem;color:var(--muted);">'+worstWr+'% win</div></div>'+
+        '<div style="text-align:center;flex:1;padding:.4rem;background:rgba(168,85,247,.06);border-radius:8px;"><div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);">Total</div><div style="font-size:.82rem;font-weight:700;color:var(--purple);">'+keys.length+'</div><div style="font-size:.7rem;color:var(--muted);">strategies used</div></div></div>';
+      document.getElementById('weeklyReport').innerHTML=html;
+    }).catch(function(){});
 }
 
 // === BOT AI CHAT ===
@@ -821,19 +1186,53 @@ function sendBotChat(){
   botChatHistory.push({role:'user',content:text});
   var btn = document.getElementById('botChatBtn');
   btn.textContent='...';btn.disabled=true;
-  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:'You are DARSO\'s AI trading assistant. Answer concisely about stocks, technical analysis (RSI, MACD, SMA), trading strategies, and market concepts. Be helpful and accurate.'},...botChatHistory.slice(-20)]})})
-    .then(function(r){return r.json();})
-    .then(function(d){
-      btn.textContent='Send';btn.disabled=false;
-      var reply = d.reply || (d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content) || 'No response.';
-      botChatHistory.push({role:'assistant',content:reply});
-      msgEl.innerHTML += '<div style="display:flex;gap:.5rem;align-items:flex-start;"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;">AI</div><div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:0 10px 10px 10px;padding:.5rem .75rem;max-width:85%;color:#ccc;line-height:1.5;">'+esc(reply)+'</div></div>';
-      msgEl.scrollTop = msgEl.scrollHeight;
-    })
-    .catch(function(e){
-      btn.textContent='Send';btn.disabled=false;
-      msgEl.innerHTML += '<div style="display:flex;gap:.5rem;align-items:flex-start;"><div style="width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;color:#fff;">!</div><div style="background:rgba(239,68,68,.1);border:1px solid var(--red);border-radius:0 10px 10px 10px;padding:.5rem .75rem;max-width:85%;color:var(--red);line-height:1.5;">Error: '+(e.message||'Connection failed')+'</div></div>';
-    });
+  Promise.all([
+    fetch('/api/bot/config?token='+encodeURIComponent(TOKEN)).then(function(r){return r.json();}).catch(function(){}),
+    fetch('/api/portfolio?token='+encodeURIComponent(TOKEN)).then(function(r){return r.json();}).catch(function(){})
+  ]).then(function(results){
+    var botCfg = results[0]||{}, pf = results[1]||{};
+    var stocks = (botCfg.stocks||[]).join(', ') || 'none';
+    var perf = botCfg.performance||{};
+    var log = (botCfg.log||[]).filter(function(l){return l.type==='BUY'||l.type==='SELL';}).slice(-10);
+    var trades = log.length ? log.map(function(l){return l.type+' '+l.symbol+' x'+l.quantity+' @ ₹'+l.price.toFixed(2);}).join('; ') : 'none yet';
+    var holdings = (pf.holdings||[]).length ? pf.holdings.map(function(h){return h.symbol+' x'+h.quantity+' @ avg ₹'+h.avgCost.toFixed(2);}).join('; ') : 'none';
+    var sysPrompt = 'You are DARSO\'s AI trading assistant integrated with the bot. Here is the current bot context:\n'+
+      'Monitored stocks: '+stocks+'\n'+
+      'Bot running: '+(botCfg.running?'Yes':'No')+'\n'+
+      'Training mode: '+(botCfg.training===false?'No (real trading)':'Yes (paper trade)')+'\n'+
+      'Win rate: '+(perf.winRate||0)+'% | Trades: '+(perf.total||0)+' | P&L: ₹'+(perf.pnl||0)+'\n'+
+      'Cash: ₹'+(pf.cash||0).toLocaleString()+' | Portfolio value: ₹'+(pf.totalValue||0).toLocaleString()+' | Total P&L: ₹'+(pf.totalPnl||0).toLocaleString()+'\n'+
+      'Holdings: '+holdings+'\n'+
+      'Recent bot trades: '+trades+'\n'+
+      'Answer concisely about the bot\'s activity, stocks, technical analysis, and trading strategies based on this context. Be helpful and accurate.';
+    fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:sysPrompt},...botChatHistory.slice(-20)]})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        btn.textContent='Send';btn.disabled=false;
+        var reply = d.reply || (d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content) || 'No response.';
+        botChatHistory.push({role:'assistant',content:reply});
+        msgEl.innerHTML += '<div style="display:flex;gap:.5rem;align-items:flex-start;"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;">AI</div><div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:0 10px 10px 10px;padding:.5rem .75rem;max-width:85%;color:#ccc;line-height:1.5;">'+esc(reply)+'</div></div>';
+        msgEl.scrollTop = msgEl.scrollHeight;
+      })
+      .catch(function(e){
+        btn.textContent='Send';btn.disabled=false;
+        msgEl.innerHTML += '<div style="display:flex;gap:.5rem;align-items:flex-start;"><div style="width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;color:#fff;">!</div><div style="background:rgba(239,68,68,.1);border:1px solid var(--red);border-radius:0 10px 10px 10px;padding:.5rem .75rem;max-width:85%;color:var(--red);line-height:1.5;">Error: '+(e.message||'Connection failed')+'</div></div>';
+      });
+  }).catch(function(){
+    fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:'You are DARSO\'s AI trading assistant. Answer concisely about stocks, technical analysis (RSI, MACD, SMA), trading strategies, and market concepts. Be helpful and accurate.'},...botChatHistory.slice(-20)]})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        btn.textContent='Send';btn.disabled=false;
+        var reply = d.reply || (d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content) || 'No response.';
+        botChatHistory.push({role:'assistant',content:reply});
+        msgEl.innerHTML += '<div style="display:flex;gap:.5rem;align-items:flex-start;"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;">AI</div><div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:0 10px 10px 10px;padding:.5rem .75rem;max-width:85%;color:#ccc;line-height:1.5;">'+esc(reply)+'</div></div>';
+        msgEl.scrollTop = msgEl.scrollHeight;
+      })
+      .catch(function(e){
+        btn.textContent='Send';btn.disabled=false;
+        msgEl.innerHTML += '<div style="display:flex;gap:.5rem;align-items:flex-start;"><div style="width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;color:#fff;">!</div><div style="background:rgba(239,68,68,.1);border:1px solid var(--red);border-radius:0 10px 10px 10px;padding:.5rem .75rem;max-width:85%;color:var(--red);line-height:1.5;">Error: '+(e.message||'Connection failed')+'</div></div>';
+      });
+  });
 }
 
 // === UTILITY ===
