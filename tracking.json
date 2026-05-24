@@ -1,5 +1,5 @@
 {
-  "totalRequests": 6566,
+  "totalRequests": 6758,
   "uniqueIps": [
     "::1",
     "::ffff:127.0.0.1"
@@ -7,18 +7,18 @@
   "endpointCounts": {
     "/admin": 47,
     "/api/health": 27,
-    "/api/admin/stats": 982,
-    "/api/stock": 578,
-    "/api/watchlist": 65,
+    "/api/admin/stats": 996,
+    "/api/stock": 627,
+    "/api/watchlist": 68,
     "/api/stock/info": 5,
     "/api/watchlist/add": 1,
     "/": 29,
     "/lucyyy.mp4": 26,
-    "/api/portfolio": 1371,
+    "/api/portfolio": 1406,
     "/favicon.ico": 34,
     "/api/tts": 5,
     "/api/admin/adapt": 1,
-    "/api/bot/config": 1994,
+    "/api/bot/config": 2050,
     "/admin.html": 33,
     "/anniversary.html": 2,
     "/api/crypto/prices": 39,
@@ -31,8 +31,8 @@
     "/api/wallet/broker": 5,
     "/api/wallet/deposit": 56,
     "/api/wallet/withdraw": 84,
-    "/api/wallet/balance": 49,
-    "/api/portfolio/value-history": 234,
+    "/api/wallet/balance": 56,
+    "/api/portfolio/value-history": 262,
     "/api/bot/circuit-breaker": 1
   },
   "hourlyCounts": {
@@ -51,7 +51,7 @@
     "2026-05-24T13": 30,
     "2026-05-24T15": 2038,
     "2026-05-24T16": 555,
-    "2026-05-24T17": 1797
+    "2026-05-24T17": 1989
   },
   "pageViews": {
     "/": 29,
@@ -62,601 +62,601 @@
   },
   "requestLog": [
     {
-      "time": 1779643490065,
+      "time": 1779643900108,
       "ip": "::1",
-      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
+      "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643490067,
+      "time": 1779643900111,
       "ip": "::1",
-      "url": "/api/portfolio",
+      "url": "/api/portfolio/value-history?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643490075,
+      "time": 1779643900114,
       "ip": "::1",
-      "url": "/api/watchlist",
+      "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643490090,
+      "time": 1779643900117,
       "ip": "::1",
-      "url": "/api/wallet/balance",
+      "url": "/api/portfolio/value-history?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643490424,
+      "time": 1779643900119,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643900122,
+      "ip": "::1",
+      "url": "/api/portfolio/value-history?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643900124,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643900127,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643900321,
+      "ip": "::1",
+      "url": "/api/portfolio?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643900324,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643900331,
       "ip": "::1",
       "url": "/api/stock?symbols=TSLA",
       "method": "GET"
     },
     {
-      "time": 1779643490611,
+      "time": 1779643900443,
+      "ip": "::1",
+      "url": "/api/portfolio?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643900570,
+      "ip": "::1",
+      "url": "/api/portfolio?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643900604,
       "ip": "::1",
       "url": "/api/stock?symbols=NVDA",
       "method": "GET"
     },
     {
-      "time": 1779643490854,
+      "time": 1779643900606,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643900843,
       "ip": "::1",
       "url": "/api/stock?symbols=BTC",
       "method": "GET"
     },
     {
-      "time": 1779643491053,
+      "time": 1779643901062,
       "ip": "::1",
       "url": "/api/stock?symbols=ETH",
       "method": "GET"
     },
     {
-      "time": 1779643491307,
+      "time": 1779643901281,
       "ip": "::1",
       "url": "/api/stock?symbols=XRP",
       "method": "GET"
     },
     {
-      "time": 1779643496066,
+      "time": 1779643960064,
       "ip": "::1",
       "url": "/api/admin/stats?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643496070,
+      "time": 1779643960066,
       "ip": "::1",
       "url": "/api/portfolio?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643496089,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643496105,
-      "ip": "::1",
-      "url": "/api/portfolio/value-history?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643496109,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643496112,
-      "ip": "::1",
-      "url": "/api/portfolio/value-history?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643496115,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643496326,
-      "ip": "::1",
-      "url": "/api/portfolio?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643496336,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643511126,
+      "time": 1779643960073,
       "ip": "::1",
       "url": "/api/admin/stats?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643511132,
-      "ip": "::1",
-      "url": "/api/portfolio?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643511143,
+      "time": 1779643960075,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643511153,
+      "time": 1779643960077,
       "ip": "::1",
       "url": "/api/portfolio/value-history?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643511161,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643511165,
-      "ip": "::1",
-      "url": "/api/portfolio/value-history?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643511166,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643511377,
-      "ip": "::1",
-      "url": "/api/portfolio?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643511381,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643526060,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643526062,
-      "ip": "::1",
-      "url": "/api/portfolio?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643526077,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643526083,
-      "ip": "::1",
-      "url": "/api/portfolio/value-history?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643526091,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643526093,
-      "ip": "::1",
-      "url": "/api/portfolio/value-history?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643526097,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643526679,
-      "ip": "::1",
-      "url": "/api/portfolio?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643526682,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643540084,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643540086,
-      "ip": "::1",
-      "url": "/api/portfolio?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643540092,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643540094,
-      "ip": "::1",
-      "url": "/api/portfolio/value-history?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643540102,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643540106,
-      "ip": "::1",
-      "url": "/api/portfolio/value-history?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643540110,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643540406,
-      "ip": "::1",
-      "url": "/api/portfolio?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643540409,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643600064,
-      "ip": "::1",
-      "url": "/api/admin/stats?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643600066,
-      "ip": "::1",
-      "url": "/api/portfolio?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643600074,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643600078,
-      "ip": "::1",
-      "url": "/api/portfolio/value-history?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643600080,
+      "time": 1779643960079,
       "ip": "::1",
       "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
       "method": "GET"
     },
     {
-      "time": 1779643600084,
-      "ip": "::1",
-      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
-      "method": "GET"
-    },
-    {
-      "time": 1779643600087,
+      "time": 1779643960082,
       "ip": "::1",
       "url": "/api/portfolio",
       "method": "GET"
     },
     {
-      "time": 1779643600095,
+      "time": 1779643960088,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643960090,
       "ip": "::1",
       "url": "/api/wallet/balance",
       "method": "GET"
     },
     {
-      "time": 1779643600098,
+      "time": 1779643960092,
       "ip": "::1",
-      "url": "/api/admin/stats?token=darsoadmin",
+      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
       "method": "GET"
     },
     {
-      "time": 1779643600100,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643600102,
+      "time": 1779643960095,
       "ip": "::1",
       "url": "/api/portfolio/value-history?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600104,
+      "time": 1779643960096,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600107,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643600110,
+      "time": 1779643960099,
       "ip": "::1",
       "url": "/api/portfolio/value-history?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600115,
+      "time": 1779643960100,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600118,
+      "time": 1779643960102,
       "ip": "::1",
       "url": "/api/portfolio/value-history?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600120,
+      "time": 1779643960104,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600313,
+      "time": 1779643960106,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779643960311,
       "ip": "::1",
       "url": "/api/portfolio?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600357,
+      "time": 1779643960313,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600387,
+      "time": 1779643960341,
       "ip": "::1",
       "url": "/api/stock?symbols=TSLA",
       "method": "GET"
     },
     {
-      "time": 1779643600408,
+      "time": 1779643960415,
       "ip": "::1",
       "url": "/api/portfolio?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600517,
+      "time": 1779643960479,
       "ip": "::1",
       "url": "/api/portfolio?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600521,
+      "time": 1779643960485,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643600638,
+      "time": 1779643960530,
       "ip": "::1",
       "url": "/api/stock?symbols=NVDA",
       "method": "GET"
     },
     {
-      "time": 1779643600968,
+      "time": 1779643960737,
       "ip": "::1",
       "url": "/api/stock?symbols=BTC",
       "method": "GET"
     },
     {
-      "time": 1779643601187,
+      "time": 1779643960937,
       "ip": "::1",
       "url": "/api/stock?symbols=ETH",
       "method": "GET"
     },
     {
-      "time": 1779643601371,
+      "time": 1779643961125,
       "ip": "::1",
       "url": "/api/stock?symbols=XRP",
       "method": "GET"
     },
     {
-      "time": 1779643610060,
-      "ip": "::1",
-      "url": "/api/watchlist",
-      "method": "GET"
-    },
-    {
-      "time": 1779643660098,
+      "time": 1779644020091,
       "ip": "::1",
       "url": "/api/admin/stats?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660106,
+      "time": 1779644020093,
       "ip": "::1",
       "url": "/api/portfolio?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660115,
+      "time": 1779644020109,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660130,
+      "time": 1779644020113,
+      "ip": "::1",
+      "url": "/api/portfolio/value-history?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644020126,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644020128,
       "ip": "::1",
       "url": "/api/admin/stats?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660133,
-      "ip": "::1",
-      "url": "/api/bot/config?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643660142,
+      "time": 1779644020135,
       "ip": "::1",
       "url": "/api/portfolio/value-history?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660155,
+      "time": 1779644020137,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660159,
+      "time": 1779644020143,
       "ip": "::1",
       "url": "/api/portfolio/value-history?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660165,
+      "time": 1779644020145,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660167,
+      "time": 1779644020156,
       "ip": "::1",
       "url": "/api/portfolio/value-history?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660178,
+      "time": 1779644020158,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660180,
-      "ip": "::1",
-      "url": "/api/portfolio/value-history?token=darsoadmin",
-      "method": "GET"
-    },
-    {
-      "time": 1779643660189,
+      "time": 1779644020164,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660196,
+      "time": 1779644020225,
       "ip": "::1",
       "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
       "method": "GET"
     },
     {
-      "time": 1779643660198,
+      "time": 1779644020227,
       "ip": "::1",
       "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
       "method": "GET"
     },
     {
-      "time": 1779643660204,
+      "time": 1779644020229,
       "ip": "::1",
       "url": "/api/portfolio",
       "method": "GET"
     },
     {
-      "time": 1779643660212,
+      "time": 1779644020237,
+      "ip": "::1",
+      "url": "/api/watchlist",
+      "method": "GET"
+    },
+    {
+      "time": 1779644020253,
       "ip": "::1",
       "url": "/api/wallet/balance",
       "method": "GET"
     },
     {
-      "time": 1779643660412,
+      "time": 1779644020509,
       "ip": "::1",
       "url": "/api/portfolio?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660427,
+      "time": 1779644020517,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660499,
+      "time": 1779644020530,
       "ip": "::1",
       "url": "/api/stock?symbols=TSLA",
       "method": "GET"
     },
     {
-      "time": 1779643660580,
+      "time": 1779644020622,
       "ip": "::1",
       "url": "/api/portfolio?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660703,
+      "time": 1779644020740,
       "ip": "::1",
       "url": "/api/stock?symbols=NVDA",
       "method": "GET"
     },
     {
-      "time": 1779643660752,
+      "time": 1779644020761,
       "ip": "::1",
       "url": "/api/portfolio?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660755,
+      "time": 1779644020770,
       "ip": "::1",
       "url": "/api/bot/config?token=darsoadmin",
       "method": "GET"
     },
     {
-      "time": 1779643660927,
+      "time": 1779644020964,
       "ip": "::1",
       "url": "/api/stock?symbols=BTC",
       "method": "GET"
     },
     {
-      "time": 1779643661134,
+      "time": 1779644021164,
       "ip": "::1",
       "url": "/api/stock?symbols=ETH",
       "method": "GET"
     },
     {
-      "time": 1779643661431,
+      "time": 1779644021364,
+      "ip": "::1",
+      "url": "/api/stock?symbols=XRP",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080186,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225%2C%5EGSPC%2CBTC-USD%2CETH-USD%2CGC%3DF%2CSOL-USD%2CINR%3DX",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080189,
+      "ip": "::1",
+      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080191,
+      "ip": "::1",
+      "url": "/api/portfolio",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080199,
+      "ip": "::1",
+      "url": "/api/wallet/balance",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080201,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080203,
+      "ip": "::1",
+      "url": "/api/portfolio?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080216,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080220,
+      "ip": "::1",
+      "url": "/api/admin/stats?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080222,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080226,
+      "ip": "::1",
+      "url": "/api/portfolio/value-history?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080230,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080234,
+      "ip": "::1",
+      "url": "/api/portfolio/value-history?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080236,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080238,
+      "ip": "::1",
+      "url": "/api/portfolio/value-history?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080239,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080246,
+      "ip": "::1",
+      "url": "/api/portfolio/value-history?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080252,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080424,
+      "ip": "::1",
+      "url": "/api/stock?symbols=TSLA",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080435,
+      "ip": "::1",
+      "url": "/api/portfolio?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080438,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080602,
+      "ip": "::1",
+      "url": "/api/portfolio?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080606,
+      "ip": "::1",
+      "url": "/api/bot/config?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080615,
+      "ip": "::1",
+      "url": "/api/stock?symbols=NVDA",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080757,
+      "ip": "::1",
+      "url": "/api/portfolio?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779644080908,
+      "ip": "::1",
+      "url": "/api/stock?symbols=BTC",
+      "method": "GET"
+    },
+    {
+      "time": 1779644081093,
+      "ip": "::1",
+      "url": "/api/stock?symbols=ETH",
+      "method": "GET"
+    },
+    {
+      "time": 1779644081289,
       "ip": "::1",
       "url": "/api/stock?symbols=XRP",
       "method": "GET"
