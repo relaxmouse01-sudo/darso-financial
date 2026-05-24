@@ -725,11 +725,14 @@ async function handlePortfolio(req, res) {
   var holdings = portfolio.holdings || [];
   var enriched = await Promise.all(holdings.map(async function(h){
     try {
-      var r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(h.symbol) + '?interval=1d&range=5d');
+      var r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(h.symbol) + '?interval=1m&range=2d');
       var d = await r.json();
-      var meta = d.chart && d.chart.result && d.chart.result[0] && d.chart.result[0].meta;
-      if (!meta) return { symbol: h.symbol, quantity: h.quantity, avgCost: h.avgCost, currentPrice: null, pnl: 0, pnlPercent: 0, value: 0 };
-      var currentPrice = meta.regularMarketPrice || h.avgCost;
+      var ch = d.chart && d.chart.result && d.chart.result[0];
+      if (!ch) return { symbol: h.symbol, quantity: h.quantity, avgCost: h.avgCost, currentPrice: null, pnl: 0, pnlPercent: 0, value: 0 };
+      var closes = ch.indicators && ch.indicators.quote && ch.indicators.quote[0] ? (ch.indicators.quote[0].close || []) : [];
+      var validCloses = closes.filter(function(v){return v!=null;});
+      var meta = ch.meta || {};
+      var currentPrice = validCloses.length ? validCloses[validCloses.length-1] : (meta.regularMarketPrice || h.avgCost);
       var value = currentPrice * h.quantity;
       var cost = h.avgCost * h.quantity;
       return {
@@ -1378,12 +1381,11 @@ async function runBotCycle() {
   // Fetch quotes + indicators for each stock
   for (var s of config.stocks) {
     try {
-      // Use 1d range with 1m interval for intraday, fall back to 5d/5m
-      var cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1m&range=2d');
-      if (!cRes.ok) cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=5m&range=5d');
-      if (!cRes.ok) cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1d&range=6mo');
-      var cData = await cRes.json();
-      var ch = cData.chart && cData.chart.result && cData.chart.result[0];
+      var cRes, cData, ch;
+      // Try intraday 1m first, fall back to 5m, then daily
+      try { cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1m&range=2d'); if (cRes.ok) { cData = await cRes.json(); ch = cData.chart && cData.chart.result && cData.chart.result[0]; } } catch(e){}
+      if (!ch) { try { cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=5m&range=5d'); if (cRes.ok) { cData = await cRes.json(); ch = cData.chart && cData.chart.result && cData.chart.result[0]; } } catch(e){} }
+      if (!ch) { try { cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1d&range=6mo'); if (cRes.ok) { cData = await cRes.json(); ch = cData.chart && cData.chart.result && cData.chart.result[0]; } } catch(e){} }
       if (ch) {
         var meta = ch.meta || {};
         var closes = ch.indicators && ch.indicators.quote && ch.indicators.quote[0] ? (ch.indicators.quote[0].close || []) : [];
@@ -1461,7 +1463,8 @@ async function runBotCycle() {
     return '#' + st.id + ' **' + st.name + '** | ' + st.risk + ' risk' + note;
   }).join('\n  ');
     // Add pending decisions to AI context so it knows what's active
-    var pendingSummary = pending.length ? pending.map(function(p){return p.symbol+' '+p.action+' entry=₹'+p.price.toFixed(2)+' age='+p.age;}).join(', ') : 'No active pending decisions';
+    var currentPending = config.pendingDecisions || [];
+    var pendingSummary = currentPending.length ? currentPending.map(function(p){return p.symbol+' '+p.action+' entry=₹'+p.price.toFixed(2)+' age='+p.age;}).join(', ') : 'No active pending decisions';
     var strategyGuidance = isLosing ?
     'STRATEGY SWITCH REQUIRED — current approach failing. Market regime: ' + regime + '. Banned strategies (3+ losses): ' + (bannedStrats.length ? '#' + bannedStrats.join(', #') : 'none') + '.\n\nAvailable strategies:\n  ' + allStrategies + '\n\nSelect ONE strategy per stock. Write strategy number + name in reason.' :
     'Continue current approach. Market regime: ' + regime + '.\n\nAvailable strategies:\n  ' + allStrategies;
