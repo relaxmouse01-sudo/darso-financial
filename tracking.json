@@ -1,10 +1,10 @@
 {
-  "totalRequests": 531,
+  "totalRequests": 537,
   "uniqueIps": [
     "::1"
   ],
   "endpointCounts": {
-    "/admin": 6,
+    "/admin": 9,
     "/api/health": 8,
     "/api/admin/stats": 159,
     "/api/stock": 257,
@@ -19,7 +19,8 @@
     "/api/admin/adapt": 1,
     "/api/bot/config": 1,
     "/admin.html": 2,
-    "/anniversary.html": 2
+    "/anniversary.html": 2,
+    "/api/crypto/prices": 3
   },
   "hourlyCounts": {
     "2026-05-20T15": 3,
@@ -28,7 +29,8 @@
     "2026-05-21T03": 8,
     "2026-05-21T14": 345,
     "2026-05-21T15": 151,
-    "2026-05-23T15": 13
+    "2026-05-23T15": 13,
+    "2026-05-24T04": 6
   },
   "pageViews": {
     "/": 3,
@@ -38,42 +40,6 @@
     "/anniversary.html": 2
   },
   "requestLog": [
-    {
-      "time": 1779375965287,
-      "ip": "::1",
-      "url": "/api/stock?symbols=N225,%5EGSPC,BTC-USD,ETH-USD,GC=F,SOL-USD",
-      "method": "GET"
-    },
-    {
-      "time": 1779375965290,
-      "ip": "::1",
-      "url": "/api/portfolio",
-      "method": "GET"
-    },
-    {
-      "time": 1779375965293,
-      "ip": "::1",
-      "url": "/api/watchlist",
-      "method": "GET"
-    },
-    {
-      "time": 1779375965300,
-      "ip": "::1",
-      "url": "/api/stock?symbols=AAPL",
-      "method": "GET"
-    },
-    {
-      "time": 1779375965774,
-      "ip": "::1",
-      "url": "/api/stock?symbols=TSLA",
-      "method": "GET"
-    },
-    {
-      "time": 1779375965976,
-      "ip": "::1",
-      "url": "/api/stock?symbols=NVDA",
-      "method": "GET"
-    },
     {
       "time": 1779375973277,
       "ip": "::1",
@@ -636,6 +602,42 @@
       "time": 1779550891135,
       "ip": "::1",
       "url": "/api/admin/stats?token=darsoadmin",
+      "method": "GET"
+    },
+    {
+      "time": 1779597732067,
+      "ip": "::1",
+      "url": "/admin",
+      "method": "GET"
+    },
+    {
+      "time": 1779597760062,
+      "ip": "::1",
+      "url": "/admin",
+      "method": "GET"
+    },
+    {
+      "time": 1779598276191,
+      "ip": "::1",
+      "url": "/api/crypto/prices",
+      "method": "GET"
+    },
+    {
+      "time": 1779598284506,
+      "ip": "::1",
+      "url": "/api/crypto/prices",
+      "method": "GET"
+    },
+    {
+      "time": 1779598386669,
+      "ip": "::1",
+      "url": "/api/crypto/prices",
+      "method": "GET"
+    },
+    {
+      "time": 1779598393721,
+      "ip": "::1",
+      "url": "/admin",
       "method": "GET"
     }
   ]

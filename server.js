@@ -1385,7 +1385,7 @@ async function handleBotToggle(req, res, start) {
     saveBotConfig(config);
     if (BOT_INTERVAL) clearInterval(BOT_INTERVAL);
     runBotCycle();
-    BOT_INTERVAL = setInterval(runBotCycle, 300000);
+    BOT_INTERVAL = setInterval(runBotCycle, 180000);
   } else {
     config.running = false;
     saveBotConfig(config);
