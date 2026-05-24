@@ -1291,24 +1291,36 @@ function evaluatePastDecisions(config) {
   var pending = config.pendingDecisions || [];
   if (!pending.length) { config.performance = perf; return config; }
   var consecLosses = config.consecutiveLosses || {};
+  var stratPerf = config.strategyPerformance || {};
   var newPending = [];
   for (var p of pending) {
     p.age = (p.age || 0) + 1;
-    if (p.age >= 3) {
+    if (p.age >= 2) {
+      var priceChangePct = p.priceChange || 0;
+      // Skip evaluation if no price change data (Yahoo fetch failed)
+      if (priceChangePct === 0 && !p._force) { newPending.push(p); continue; }
       perf.total++;
-      if ((p.action === 'BUY' && p.priceChange > 0) || (p.action === 'SELL' && p.priceChange < 0)) {
-        perf.wins++; perf.pnl = (perf.pnl || 0) + Math.abs(p.priceChange * (p.quantity || 1));
-        if (p.reason) { var m = p.reason.match(/#(\d+)/); if (m) consecLosses[m[1]] = 0; }
+      var rupeePnl = priceChangePct / 100 * (p.price || 0) * (p.quantity || 0);
+      var isWin = (p.action === 'BUY' && priceChangePct > 0) || (p.action === 'SELL' && priceChangePct < 0);
+      if (isWin) {
+        perf.wins++; perf.pnl = (perf.pnl || 0) + Math.abs(rupeePnl);
+        if (p.reason) { var m = p.reason.match(/#(\d+)/); if (m) { consecLosses[m[1]] = 0; if (stratPerf[m[1]]) { stratPerf[m[1]].wins = (stratPerf[m[1]].wins||0) + 1; } } }
       } else {
-        perf.losses++; perf.pnl = (perf.pnl || 0) - Math.abs(p.priceChange * (p.quantity || 1));
-        if (p.reason) { var m = p.reason.match(/#(\d+)/); if (m) { consecLosses[m[1]] = (consecLosses[m[1]] || 0) + 1; } }
+        perf.losses++; perf.pnl = (perf.pnl || 0) - Math.abs(rupeePnl);
+        if (p.reason) { var m = p.reason.match(/#(\d+)/); if (m) { consecLosses[m[1]] = (consecLosses[m[1]] || 0) + 1; if (stratPerf[m[1]]) { stratPerf[m[1]].losses = (stratPerf[m[1]].losses||0) + 1; } } }
       }
     } else {
       newPending.push(p);
     }
   }
   perf.winRate = perf.total > 0 ? (perf.wins / perf.total * 100).toFixed(1) : 0;
+  for (var sid in stratPerf) {
+    var s = stratPerf[sid];
+    s.total = (s.wins||0) + (s.losses||0);
+    s.winRate = s.total > 0 ? (s.wins / s.total * 100).toFixed(1) : '0.0';
+  }
   config.performance = perf;
+  config.strategyPerformance = stratPerf;
   config.consecutiveLosses = consecLosses;
   config.pendingDecisions = newPending;
   saveBotConfig(config);
@@ -1632,10 +1644,20 @@ async function handleBotToggle(req, res, start) {
     BOT_INTERVAL = setInterval(runBotCycle, 180000);
   } else {
     config.running = false;
+    // Force-evaluate all pending decisions immediately
+    config = evaluatePastDecisions(config);
+    // Score any remaining pending with forced age
+    var pending = config.pendingDecisions || [];
+    for (var p of pending) { p.age = 999; p._force = true; }
+    config.pendingDecisions = pending;
+    config = evaluatePastDecisions(config);
+    config.running = false;
     saveBotConfig(config);
     if (BOT_INTERVAL) { clearInterval(BOT_INTERVAL); BOT_INTERVAL = null; }
+    BOT_LAST_RUN = Date.now();
+    BOT_STATUS = 'Stopped. Final performance: ' + (config.performance ? config.performance.total + ' trades, ' + config.performance.winRate + '% win rate, ₹' + (config.performance.pnl||0).toFixed(0) + ' P&L' : 'no trades');
   }
-  sendJson(res, 200, { running: config.running, stocks: config.stocks.length });
+  sendJson(res, 200, { running: config.running, stocks: config.stocks.length, performance: config.performance, strategyPerformance: config.strategyPerformance });
 }
 async function handleBotStopSell(req, res) {
   var payload = await readJson(req);

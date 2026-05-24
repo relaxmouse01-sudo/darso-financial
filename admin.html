@@ -832,7 +832,7 @@ function loadBot(){
       document.getElementById('botPnl').textContent='₹'+(perf.pnl||0).toLocaleString();
       document.getElementById('botPnl').style.color=(perf.pnl||0)>=0?'var(--green)':'var(--red)';
       renderBotLog(d.log||[]);
-      if(on){pollBotStatus();if(!window.botPollTimer)window.botPollTimer=setInterval(pollBotStatus,5000);}
+      if(on){if(!window.botPollTimer)window.botPollTimer=setInterval(function(){loadBot();},10000);}
       else{if(window.botPollTimer){clearInterval(window.botPollTimer);window.botPollTimer=null;}}
       loadCrypto();renderBotTrades();renderEquityChart();loadCircuitBreaker();renderStrategyPerformance();renderForwardProjection();loadMarketRegime();renderWeeklyReport();
     });
@@ -881,9 +881,18 @@ function startBot(){
     });
 }
 function stopBot(){
-  document.getElementById('botStopBtn').textContent='&#9632; Stopping...';
   fetch('/api/bot/stop',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})})
-    .then(function(r){return r.json();}).then(function(){loadBot();});
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.performance){
+        var p=d.performance;
+        document.getElementById('botStatusBadge').textContent='Stopped';
+        document.getElementById('botStatusBadge').style.color='var(--muted)';
+        document.getElementById('botStatusBadge').style.background='rgba(255,255,255,.06)';
+        document.getElementById('botStopBtn').textContent='&#9632; Stop';
+        alert('Bot stopped.\nTrades: '+p.total+'\nWin Rate: '+p.winRate+'%\nP&L: ₹'+(p.pnl||0).toFixed(0));
+      }
+      loadBot();
+    });
 }
 function stopAndSell(){
   if(!confirm('Stop bot and SELL ALL holdings at market price? This cannot be undone.'))return;

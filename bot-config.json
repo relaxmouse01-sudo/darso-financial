@@ -18,9 +18,9 @@
     "winRate": "0.0",
     "pnl": 0
   },
-  "startedAt": 1779641351337,
+  "startedAt": 1779642226164,
   "pendingDecisions": [],
-  "cycleCount": 34,
+  "cycleCount": 35,
   "log": [
     {
       "cycle": 1,
@@ -501,8 +501,20 @@
       "quantity": 0,
       "price": 0,
       "reason": "No trade signals (HOLD all) · Portfolio: ₹3400796"
+    },
+    {
+      "cycle": 35,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹101961"
     }
   ],
-  "lastCycle": 1779641713166,
-  "lastSummary": ""
+  "lastCycle": 1779642227651,
+  "lastSummary": "",
+  "maxDrawdown": 23,
+  "circuitBreakerTripped": false,
+  "strategyPerformance": {},
+  "initialCapital": 101962.07000000041
 }
