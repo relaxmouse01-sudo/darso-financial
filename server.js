@@ -1356,6 +1356,19 @@ async function runBotCycle() {
       }
     }
   }
+  // Always log a cycle summary entry so user sees bot is alive
+  var tradeActions = decisions.filter(function(d){return d.action==='BUY'||d.action==='SELL';});
+  var holdingsValue = 0;
+  portfolio.holdings.forEach(function(h){
+    var q = quotes[h.symbol] || {};
+    holdingsValue += (q.regularMarketPrice || h.avgCost) * h.quantity;
+  });
+  var totalValue = portfolio.cash + holdingsValue;
+  if (!tradeActions.length) {
+    log.push({ cycle: config.cycleCount, type: 'CYCLE', symbol: '—', quantity: 0, price: 0, reason: 'No trade signals (HOLD all) · Portfolio: ₹' + totalValue.toFixed(0) });
+  } else {
+    log.push({ cycle: config.cycleCount, type: 'PORTFOLIO', symbol: '—', quantity: 0, price: 0, reason: 'Portfolio: ₹' + totalValue.toFixed(0) + ' (Cash: ₹' + portfolio.cash.toFixed(0) + ' · Holdings: ₹' + holdingsValue.toFixed(0) + ')' });
+  }
   config.log = log.slice(-100);
   config.lastCycle = Date.now();
   config.lastSummary = decisions.map(function(d){return d.symbol+':'+d.action;}).join(', ');

@@ -768,12 +768,13 @@ function renderBotLog(log){
   var el=document.getElementById('botLog');
   if(!log||!log.length){el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);">No trades yet.</div>';return;}
   el.innerHTML=log.slice().reverse().slice(0,50).map(function(l){
-    var c=l.type==='BUY'?'var(--green)':'var(--red)';
+    var c=l.type==='BUY'?'var(--green)':l.type==='SELL'?'var(--red)':l.type==='PORTFOLIO'?'var(--cyan)':'var(--muted)';
+    var sym=l.type==='CYCLE'?'⟳':l.type==='PORTFOLIO'?'💰':l.symbol;
     return '<div style="display:flex;gap:.5rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--fm);font-size:.75rem;">'+
-      '<span style="color:'+c+';font-weight:600;min-width:36px;">'+l.type+'</span>'+
-      '<span style="min-width:72px;">'+l.symbol+'</span>'+
-      '<span style="color:#ccc;">'+(l.quantity||'')+' @ ₹'+(l.price||0).toFixed(2)+'</span>'+
-      '<span style="color:var(--muted);font-size:.7rem;overflow:hidden;text-overflow:ellipsis;">'+(l.reason||'')+'</span></div>';
+      '<span style="color:'+c+';font-weight:600;min-width:44px;">'+l.type+'</span>'+
+      '<span style="min-width:72px;'+(l.type==='CYCLE'?'color:var(--muted);':'')+'">'+sym+'</span>'+
+      '<span style="color:#ccc;">'+(l.quantity||'')+(l.price?' @ ₹'+(l.price).toFixed(2):'')+'</span>'+
+      '<span style="color:var(--muted);font-size:.7rem;overflow:hidden;text-overflow:ellipsis;flex:1;">'+(l.reason||'')+'</span></div>';
   }).join('');
 }
 
