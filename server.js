@@ -1277,6 +1277,18 @@ async function runBotCycle() {
       }
     } catch(e) {}
   }
+  // Update price change for pending decisions
+  var pending = config.pendingDecisions || [];
+  for (var p of pending) {
+    var q = quotes[p.symbol] || {};
+    var currentPrice = q.regularMarketPrice || 0;
+    if (currentPrice && p.price) {
+      p.priceChange = ((currentPrice - p.price) / p.price) * 100;
+    }
+  }
+  config.pendingDecisions = pending;
+  config = evaluatePastDecisions(config);
+  BOT_STATUS = 'Calling AI for trading decisions...';
   var context = 'Current market data and technical indicators for monitored stocks:\n\n';
   config.stocks.forEach(function(s){
     var q = quotes[s] || {};
@@ -1300,6 +1312,7 @@ async function runBotCycle() {
   var decisions;
   try { decisions = JSON.parse(content); } catch(e) { decisions = []; }
   if (!Array.isArray(decisions)) decisions = [];
+  BOT_STATUS = 'Processing ' + decisions.length + ' AI decisions...';
   var portfolio = loadPortfolio();
   var history = loadPortfolioHistory();
   var log = config.log || [];
@@ -1358,6 +1371,8 @@ async function runBotCycle() {
     }
   }
   config.pendingDecisions = pending;
+  BOT_LAST_RUN = Date.now();
+  BOT_STATUS = 'Idle — next cycle in ~3 min';
   savePortfolio(portfolio);
   savePortfolioHistory(history);
   saveBotConfig(config);
@@ -1367,9 +1382,24 @@ async function handleBotConfigSave(req, res) {
   var payload = await readJson(req);
   if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
   var config = loadBotConfig();
-  if (payload.stocks) config.stocks = payload.stocks;
+  config.stocks = Array.isArray(payload.stocks) ? payload.stocks.slice(0, 10) : config.stocks;
   saveBotConfig(config);
-  sendJson(res, 200, config);
+  sendJson(res, 200, { stocks: config.stocks.length });
+}
+
+async function handleBotStatus(req, res, url) {
+  var token = url.searchParams.get('token') || '';
+  if (token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
+  var config = loadBotConfig();
+  sendJson(res, 200, {
+    running: config.running || false,
+    status: BOT_STATUS || 'Idle',
+    cycleCount: config.cycleCount || 0,
+    lastCycle: config.lastCycle || null,
+    lastRun: BOT_LAST_RUN,
+    lastSummary: config.lastSummary || null,
+    age: BOT_LAST_RUN ? Math.floor((Date.now() - BOT_LAST_RUN) / 1000) : null
+  });
 }
 
 async function handleBotToggle(req, res, start) {
@@ -1951,6 +1981,11 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'POST' && req.url === '/api/bot/training') {
     handleBotTraining(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'GET' && req.url.startsWith('/api/bot/status')) {
+    const url = new URL(req.url, 'http://localhost');
+    handleBotStatus(req, res, url).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && req.url.startsWith('/api/admin/adapt')) {

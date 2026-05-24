@@ -36,6 +36,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 select{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;padding:.65rem 1rem;width:100%;cursor:pointer}
 select option{background:#0a0a14}
 
+/* Trade signal animation */
+@keyframes pulse-green{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,.4)}50%{box-shadow:0 0 0 8px rgba(0,255,136,0)}}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+@keyframes pulse-idle{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.1)}50%{box-shadow:0 0 0 6px rgba(255,255,255,0)}}
+.trade-buy{background:rgba(0,255,136,.12)!important;border-color:var(--green)!important;animation:pulse-green 1.5s ease infinite!important}
+.trade-sell{background:rgba(239,68,68,.12)!important;border-color:var(--red)!important;animation:pulse-red 1.5s ease infinite!important}
+.trade-idle{animation:pulse-idle 2s ease infinite!important}
+
 /* Login */
 .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;position:relative;z-index:1}
 .login-box{background:rgba(255,255,255,.035);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:380px;animation:fadeUp .6s ease}
@@ -195,7 +203,11 @@ select option{background:#0a0a14}
               <span><strong style="color:var(--cyan);">Training Mode</strong> — paper trade only</span>
             </label>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:1rem;">
+          <div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr;gap:.5rem;margin-bottom:1rem;align-items:stretch;">
+            <div id="tradeSignalBox" style="background:rgba(255,255,255,.035);border-radius:8px;padding:.5rem;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--border);transition:all .5s;">
+              <div id="tradeSignalIcon" style="font-size:1.2rem;font-weight:700;color:var(--muted);line-height:1;">—</div>
+              <div id="tradeSignalLabel" style="font-size:.55rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);margin-top:.15rem;letter-spacing:.05em;">Trade</div>
+            </div>
             <div style="background:rgba(255,255,255,.035);border-radius:8px;padding:.5rem;text-align:center;">
               <div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">Win Rate</div>
               <div style="font-size:1.1rem;font-weight:700;color:var(--green);" id="botWinRate">0%</div>
@@ -212,6 +224,7 @@ select option{background:#0a0a14}
           <button onclick="runBacktest()" id="backtestBtn" class="btn btn-cyan" style="width:100%;justify-content:center;margin-bottom:.75rem;">&#x1f9ea; Run Backtest (1 year)</button>
           <div id="backtestResult" style="display:none;margin-bottom:.75rem;"></div>
           <div id="botInfo" style="font-size:.8rem;color:var(--muted);">
+            <div style="padding:.3rem 0;">Status: <span id="botLiveStatus" style="color:var(--cyan);font-weight:600;">—</span></div>
             <div style="padding:.3rem 0;">Last cycle: <span id="botLastCycle" style="color:#ccc;">—</span></div>
             <div style="padding:.3rem 0;">Cycles run: <span id="botCycleCount" style="color:#ccc;">0</span></div>
             <div style="padding:.3rem 0;">Last actions: <span id="botLastSummary" style="color:#ccc;">—</span></div>
@@ -661,7 +674,35 @@ function loadBot(){
       document.getElementById('botPnl').textContent='₹'+(perf.pnl||0).toLocaleString();
       document.getElementById('botPnl').style.color=(perf.pnl||0)>=0?'var(--green)':'var(--red)';
       renderBotLog(d.log||[]);
+      if(on){pollBotStatus();if(!window.botPollTimer)window.botPollTimer=setInterval(pollBotStatus,5000);}
+      else{if(window.botPollTimer){clearInterval(window.botPollTimer);window.botPollTimer=null;}}
     });
+}
+function pollBotStatus(){
+  fetch('/api/bot/status?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var el=document.getElementById('botLiveStatus');
+      if(d.running){
+        el.textContent=d.status||'Running...';
+        el.style.color='var(--cyan)';
+      } else {
+        el.textContent='Stopped';
+        el.style.color='var(--muted)';
+      }
+      if(d.lastSummary)document.getElementById('botLastSummary').textContent=d.lastSummary;
+      updateTradeSignal(d.lastSummary);
+    }).catch(function(){});
+}
+function updateTradeSignal(summary){
+  var box=document.getElementById('tradeSignalBox'), icon=document.getElementById('tradeSignalIcon'), label=document.getElementById('tradeSignalLabel');
+  box.className='';box.style.background='rgba(255,255,255,.035)';box.style.borderColor='var(--border)';
+  if(!summary||summary==='—'){icon.textContent='—';icon.style.color='var(--muted)';label.textContent='Idle';label.style.color='var(--muted)';box.classList.add('trade-idle');return;}
+  var hasBuy=summary.includes('BUY'), hasSell=summary.includes('SELL');
+  if(hasBuy&&hasSell){icon.textContent='⇅';icon.style.color='var(--gold)';label.textContent='Mixed';label.style.color='var(--gold)';box.style.borderColor='var(--gold)';box.style.background='rgba(245,158,11,.1)';return;}
+  if(hasBuy){icon.textContent='▲';icon.style.color='var(--green)';label.textContent='BUY';label.style.color='var(--green)';box.style.borderColor='var(--green)';box.style.background='rgba(0,255,136,.12)';box.classList.add('trade-buy');return;}
+  if(hasSell){icon.textContent='▼';icon.style.color='var(--red)';label.textContent='SELL';label.style.color='var(--red)';box.style.borderColor='var(--red)';box.style.background='rgba(239,68,68,.12)';box.classList.add('trade-sell');return;}
+  icon.textContent='–';icon.style.color='var(--muted)';label.textContent='HOLD';label.style.color='var(--muted)';box.classList.add('trade-idle');
 }
 function toggleTraining(){
   var tr=document.getElementById('botTrainingMode').checked;
