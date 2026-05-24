@@ -236,7 +236,23 @@ select option{background:#0a0a14}
     </div>
   </div>
 
-  <!-- WALLET TAB -->
+  <!-- BOT AI CHAT -->
+  <div class="card" style="margin-top:1.5rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+      <h3 style="font-family:var(--fh);font-size:1rem;">&#x1f916; AI Trading Assistant</h3>
+      <span style="font-size:.7rem;color:var(--muted);">Ask me about stocks, analysis, or trading advice</span>
+    </div>
+    <div id="botChatMessages" style="height:260px;overflow-y:auto;padding:.5rem;margin-bottom:.75rem;background:rgba(0,0,0,.3);border-radius:8px;font-size:.82rem;display:flex;flex-direction:column;gap:.5rem;">
+      <div style="display:flex;gap:.5rem;align-items:flex-start;">
+        <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;">AI</div>
+        <div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:0 10px 10px 10px;padding:.5rem .75rem;max-width:85%;color:#ccc;line-height:1.5;">Hi! I'm your trading assistant. Ask me about your stocks, technical analysis, or anything trading-related.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:.5rem;">
+      <input type="text" id="botChatInput" class="input" placeholder="Ask about a stock, analysis, or strategy..." onkeydown="if(event.key==='Enter')sendBotChat()">
+      <button class="btn btn-primary" onclick="sendBotChat()" id="botChatBtn">Send</button>
+    </div>
+  </div>
   <div class="tab-content" id="tab-wallet">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
       <div>
@@ -742,6 +758,35 @@ function loadCrypto(){
 function addCryptoSymbol(sym){
   if(BOT_STOCKS.includes(sym)||BOT_STOCKS.length>=10)return;
   BOT_STOCKS.push(sym);saveBotStocks();renderBotStockList();
+}
+
+// === BOT AI CHAT ===
+var botChatHistory = [];
+
+function sendBotChat(){
+  var input = document.getElementById('botChatInput');
+  var text = input.value.trim();
+  if(!text)return;
+  input.value='';
+  var msgEl = document.getElementById('botChatMessages');
+  msgEl.innerHTML += '<div style="display:flex;gap:.5rem;align-items:flex-start;justify-content:flex-end;"><div style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.2);border-radius:10px 0 10px 10px;padding:.5rem .75rem;max-width:85%;color:#ccc;line-height:1.5;">'+esc(text)+'</div><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),#06b6d4);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;color:#000;font-weight:700;">U</div></div>';
+  msgEl.scrollTop = msgEl.scrollHeight;
+  botChatHistory.push({role:'user',content:text});
+  var btn = document.getElementById('botChatBtn');
+  btn.textContent='...';btn.disabled=true;
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:'You are DARSO\'s AI trading assistant. Answer concisely about stocks, technical analysis (RSI, MACD, SMA), trading strategies, and market concepts. Be helpful and accurate.'},...botChatHistory.slice(-20)]})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btn.textContent='Send';btn.disabled=false;
+      var reply = d.reply || (d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content) || 'No response.';
+      botChatHistory.push({role:'assistant',content:reply});
+      msgEl.innerHTML += '<div style="display:flex;gap:.5rem;align-items:flex-start;"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;">AI</div><div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:0 10px 10px 10px;padding:.5rem .75rem;max-width:85%;color:#ccc;line-height:1.5;">'+esc(reply)+'</div></div>';
+      msgEl.scrollTop = msgEl.scrollHeight;
+    })
+    .catch(function(e){
+      btn.textContent='Send';btn.disabled=false;
+      msgEl.innerHTML += '<div style="display:flex;gap:.5rem;align-items:flex-start;"><div style="width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;color:#fff;">!</div><div style="background:rgba(239,68,68,.1);border:1px solid var(--red);border-radius:0 10px 10px 10px;padding:.5rem .75rem;max-width:85%;color:var(--red);line-height:1.5;">Error: '+(e.message||'Connection failed')+'</div></div>';
+    });
 }
 
 // === UTILITY ===
