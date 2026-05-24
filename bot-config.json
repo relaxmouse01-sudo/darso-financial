@@ -18,9 +18,9 @@
     "winRate": "0.0",
     "pnl": 0
   },
-  "startedAt": 1779642226164,
+  "startedAt": 1779643231484,
   "pendingDecisions": [],
-  "cycleCount": 35,
+  "cycleCount": 39,
   "log": [
     {
       "cycle": 1,
@@ -509,9 +509,41 @@
       "quantity": 0,
       "price": 0,
       "reason": "No trade signals (HOLD all) · Portfolio: ₹101961"
+    },
+    {
+      "cycle": 36,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹101961"
+    },
+    {
+      "cycle": 37,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹101961"
+    },
+    {
+      "cycle": 38,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹101961"
+    },
+    {
+      "cycle": 39,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹101961"
     }
   ],
-  "lastCycle": 1779642227651,
+  "lastCycle": 1779643232927,
   "lastSummary": "",
   "maxDrawdown": 23,
   "circuitBreakerTripped": false,

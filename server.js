@@ -1297,12 +1297,15 @@ function evaluatePastDecisions(config) {
     p.age = (p.age || 0) + 1;
     if (p.age >= 2) {
       var priceChangePct = p.priceChange || 0;
-      // Skip evaluation if no price change data (Yahoo fetch failed)
-      if (priceChangePct === 0 && !p._force) { newPending.push(p); continue; }
+      // If price hasn't changed (same trading day), keep pending up to 5 cycles then force-score as neutral
+      if (priceChangePct === 0 && !p._force && p.age < 6) { newPending.push(p); continue; }
       perf.total++;
       var rupeePnl = priceChangePct / 100 * (p.price || 0) * (p.quantity || 0);
       var isWin = (p.action === 'BUY' && priceChangePct > 0) || (p.action === 'SELL' && priceChangePct < 0);
-      if (isWin) {
+      if (priceChangePct === 0) {
+        // Neutral — no data yet, count as neither win nor loss (just skip PnL impact)
+        perf.total--;
+      } else if (isWin) {
         perf.wins++; perf.pnl = (perf.pnl || 0) + Math.abs(rupeePnl);
         if (p.reason) { var m = p.reason.match(/#(\d+)/); if (m) { consecLosses[m[1]] = 0; if (stratPerf[m[1]]) { stratPerf[m[1]].wins = (stratPerf[m[1]].wins||0) + 1; } } }
       } else {
@@ -1372,18 +1375,24 @@ async function runBotCycle() {
   if (!OPENROUTER_API_KEY) return;
   var quotes = {};
   var indicatorsData = {};
-  // Fetch quotes + indicators for each stock via v8 chart API
+  // Fetch quotes + indicators for each stock
   for (var s of config.stocks) {
     try {
-      var cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1d&range=6mo');
+      // Use 1d range with 1m interval for intraday, fall back to 5d/5m
+      var cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1m&range=2d');
+      if (!cRes.ok) cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=5m&range=5d');
+      if (!cRes.ok) cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1d&range=6mo');
       var cData = await cRes.json();
       var ch = cData.chart && cData.chart.result && cData.chart.result[0];
       if (ch) {
         var meta = ch.meta || {};
-        quotes[s] = { symbol: meta.symbol || s, regularMarketPrice: meta.regularMarketPrice };
-        if (ch.timestamp && ch.indicators && ch.indicators.quote && ch.indicators.quote[0]) {
-          var closes = ch.indicators.quote[0].close || [];
-          indicatorsData[s] = computeIndicators(closes.filter(function(v){return v!=null;}), ch.indicators.quote[0]);
+        var closes = ch.indicators && ch.indicators.quote && ch.indicators.quote[0] ? (ch.indicators.quote[0].close || []) : [];
+        var validCloses = closes.filter(function(v){return v!=null;});
+        // Use the last close from the data as current price (more recent than meta)
+        var currentPrice = validCloses.length ? validCloses[validCloses.length-1] : meta.regularMarketPrice;
+        quotes[s] = { symbol: meta.symbol || s, regularMarketPrice: currentPrice, metaPrice: meta.regularMarketPrice };
+        if (validCloses.length) {
+          indicatorsData[s] = computeIndicators(validCloses, ch.indicators.quote[0]);
         }
       }
     } catch(e) {}
@@ -1451,7 +1460,9 @@ async function runBotCycle() {
     else if ([6,7,8,9,10,11,12,13,14,15,20,25,31,32,33,34,35,51,52,53,54,55,56,57,58,59,60,76,77,78,79,80,91,92,93,94,95,96,97,98,99,100].indexOf(st.id) >= 0) note = ' ✅ Available';
     return '#' + st.id + ' **' + st.name + '** | ' + st.risk + ' risk' + note;
   }).join('\n  ');
-  var strategyGuidance = isLosing ?
+    // Add pending decisions to AI context so it knows what's active
+    var pendingSummary = pending.length ? pending.map(function(p){return p.symbol+' '+p.action+' entry=₹'+p.price.toFixed(2)+' age='+p.age;}).join(', ') : 'No active pending decisions';
+    var strategyGuidance = isLosing ?
     'STRATEGY SWITCH REQUIRED — current approach failing. Market regime: ' + regime + '. Banned strategies (3+ losses): ' + (bannedStrats.length ? '#' + bannedStrats.join(', #') : 'none') + '.\n\nAvailable strategies:\n  ' + allStrategies + '\n\nSelect ONE strategy per stock. Write strategy number + name in reason.' :
     'Continue current approach. Market regime: ' + regime + '.\n\nAvailable strategies:\n  ' + allStrategies;
   var prompt = 'You are an expert algorithmic trading AI. Past performance: ' + (perf.total||0) + ' trades, win rate ' + (perf.winRate||0) + '%, P&L ₹' + (perf.pnl||0).toFixed(0) + '. ' + urgency + '\n\n' +
@@ -1464,8 +1475,9 @@ async function runBotCycle() {
     '5. Max 2 BUY signals per cycle. Better to do nothing than a bad trade.\n' +
     '6. If win rate < 50%, use HALF the usual quantity on every trade until win rate recovers.\n\n' +
     'Recent decisions:\n' + recentStr + '\n\n' +
+    'Active pending decisions (NOT YET SCORED — do NOT repeat these):\n' + pendingSummary + '\n\n' +
     'Market data:\n\n' + context +
-    '\nRespond ONLY with JSON array: [{"symbol":"...","action":"BUY|SELL|HOLD","reason":"(which strategy used + key indicator values)","quantity":N}]. BUY=enter quantity, SELL=quantity to sell (0=all), HOLD=quantity 0. Max 2 BUY signals. No markdown.';
+    '\nRespond ONLY with JSON array: [{"symbol":"...","action":"BUY|SELL|HOLD","reason":"(which strategy # + key indicator values)","quantity":N}]. BUY=enter quantity, SELL=quantity to sell (0=all), HOLD=quantity 0. Max 2 BUY signals. No markdown.';
 
   var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -1638,6 +1650,13 @@ async function handleBotToggle(req, res, start) {
   config.running = start;
   if (start) {
     config.startedAt = Date.now();
+    // Clear stale pending decisions from previous sessions (no price data)
+    if (config.pendingDecisions) {
+      var stale = config.pendingDecisions.filter(function(p){ return p.age > 0 && (!p.priceChange || p.priceChange === 0); });
+      if (stale.length) {
+        config.pendingDecisions = config.pendingDecisions.filter(function(p){ return p.age === 0; });
+      }
+    }
     saveBotConfig(config);
     if (BOT_INTERVAL) clearInterval(BOT_INTERVAL);
     runBotCycle();
@@ -2355,7 +2374,7 @@ const server = http.createServer((req, res) => {
     const adminPath = path.join(__dirname, 'admin.html');
     fs.readFile(adminPath, (err, data) => {
       if (err) { send(res, 404, 'Admin page not found'); return; }
-      send(res, 200, data, { 'Content-Type': 'text/html; charset=utf-8' });
+      send(res, 200, data, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
     });
     return;
   }
