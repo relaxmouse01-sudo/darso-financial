@@ -2,331 +2,337 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DARSO Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DARSO · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0f;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);--purple:#a855f7;--cyan:#22d3ee;--green:#00ff88;--gold:#f59e0b;--red:#ef4444;--white:#f0eeff;--muted:rgba(200,185,255,.4);--fh:'Space Grotesk',sans-serif;--fb:'Inter',sans-serif;--fm:'JetBrains Mono',monospace;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:100vh;}
-::selection{background:var(--purple);color:#fff;}
-.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
-.login-box{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:2.5rem;width:100%;max-width:380px;backdrop-filter:blur(12px);}
-.login-box h1{font-family:var(--fh);font-size:1.5rem;margin-bottom:.4rem;}
-.login-box p{color:var(--muted);font-size:.85rem;margin-bottom:1.5rem;}
-.login-box input{width:100%;padding:.75rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;transition:border .2s;margin-bottom:1rem;}
-.login-box input:focus{border-color:var(--purple);}
-.login-box button{width:100%;padding:.75rem;background:var(--purple);color:#fff;border:none;border-radius:.5rem;font-family:var(--fb);font-size:.9rem;cursor:pointer;transition:opacity .2s;}
-.login-box button:hover{opacity:.85;}
-.login-error{color:var(--red);font-size:.82rem;margin-top:.75rem;display:none;}
-.dashboard{display:none;padding:1.5rem 2rem;max-width:1400px;margin:0 auto;}
-.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
-.dash-header h1{font-family:var(--fh);font-size:1.6rem;}
-.dash-header span{color:var(--muted);font-size:.85rem;}
-.dash-header button{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--white);padding:.5rem 1rem;border-radius:.4rem;cursor:pointer;font-family:var(--fb);font-size:.8rem;transition:background .2s;}
-.dash-header button:hover{background:rgba(255,255,255,.12);}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.25rem;}
-.stat-card .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.35rem;}
-.stat-card .value{font-family:var(--fh);font-size:1.6rem;font-weight:600;}
-.stat-card .sub{font-size:.78rem;color:var(--muted);margin-top:.25rem;}
-.tab-bar{display:flex;gap:.25rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0;}
-.tab-btn{background:none;border:none;color:var(--muted);padding:.6rem 1.2rem;font-family:var(--fb);font-size:.85rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
-.tab-btn:hover{color:var(--white);}
-.tab-btn.active{color:var(--purple);border-bottom-color:var(--purple);}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
-.endpoint-table,.page-table{width:100%;border-collapse:collapse;font-size:.85rem;}
-.endpoint-table th,.page-table th{text-align:left;padding:.6rem .8rem;color:var(--muted);font-family:var(--fm);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--border);}
-.endpoint-table td,.page-table td{padding:.55rem .8rem;border-bottom:1px solid rgba(255,255,255,.04);color:#d0d0e0;}
-.endpoint-table tr:hover td,.page-table tr:hover td{background:rgba(255,255,255,.03);}
-.bar-cell{display:flex;align-items:center;gap:.6rem;}
-.bar{height:6px;border-radius:3px;background:var(--purple);min-width:2px;transition:width .3s;}
-.bar.green{background:var(--green);}
-.bar.gold{background:var(--gold);}
-.bar.cyan{background:var(--cyan);}
-.company-section{background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;}
-.company-section h3{font-family:var(--fh);font-size:1.1rem;margin-bottom:1rem;}
-.company-input-group{display:flex;gap:.5rem;margin-bottom:1rem;}
-.company-input-group input{flex:1;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;}
-.company-input-group input:focus{border-color:var(--purple);}
-.company-input-group button{padding:.65rem 1.25rem;background:var(--purple);color:#fff;border:none;border-radius:.5rem;cursor:pointer;font-family:var(--fb);font-size:.85rem;white-space:nowrap;}
-.company-input-group button:hover{opacity:.85;}
-.company-input-group button.cyan{background:var(--cyan);color:#000;}
-.company-result{display:none;margin-top:1rem;}
-.company-result .cr-section{margin-bottom:1.25rem;}
-.company-result .cr-section h4{font-family:var(--fm);font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.5rem;}
-.company-result .cr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.5rem;}
-.company-result .cr-field{padding:.5rem .7rem;background:rgba(255,255,255,.04);border-radius:.4rem;}
-.company-result .cr-field .cr-label{font-size:.68rem;color:var(--muted);font-family:var(--fm);}
-.company-result .cr-field .cr-val{font-size:.95rem;color:var(--white);margin-top:.15rem;}
-.chat-area{background:var(--card);border:1px solid var(--border);border-radius:.75rem;overflow:hidden;margin-top:1rem;}
-.chat-msgs{height:240px;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem;}
-.chat-msgs::-webkit-scrollbar{width:3px;}
-.chat-msgs::-webkit-scrollbar-thumb{background:rgba(168,85,247,.3);border-radius:2px;}
-.cm{background:rgba(255,255,255,.04);border-radius:.5rem;padding:.6rem .85rem;font-size:.85rem;line-height:1.5;color:#d0d0e0;max-width:85%;}
-.cm.user{background:rgba(168,85,247,.12);align-self:flex-end;color:var(--white);}
-.cm.ai{border-left:2px solid var(--purple);}
-.chat-input{display:flex;gap:.5rem;padding:.6rem .85rem;border-top:1px solid var(--border);}
-.chat-input input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.4rem;padding:.5rem .75rem;color:var(--white);font-family:var(--fb);font-size:.85rem;outline:none;}
-.chat-input input:focus{border-color:var(--purple);}
-.chat-input button{padding:.5rem 1rem;background:var(--purple);color:#fff;border:none;border-radius:.4rem;cursor:pointer;}
-.chat-input button:hover{opacity:.85;}
-.loading-dots::after{content:'';animation:dots 1.2s steps(4) infinite;}
-@keyframes dots{0%{content:'';}25%{content:'.';}50%{content:'..';}75%{content:'...';}}
-@media(max-width:600px){
-  .dashboard{padding:1rem;}
-  .stats-grid{grid-template-columns:repeat(2,1fr);}
-  .dash-header{flex-direction:column;align-items:flex-start;}
+:root{
+  --bg:#07070d;--surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.07);
+  --purple:#a855f7;--cyan:#22d3ee;--green:#00ff88;--gold:#f59e0b;--red:#ef4444;
+  --white:#ede9fe;--muted:rgba(180,170,220,.45);--fh:'Space Grotesk',sans-serif;
+  --fb:'Inter',sans-serif;--fm:'JetBrains Mono',monospace;
 }
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 20% 20%,rgba(168,85,247,.08),transparent),radial-gradient(ellipse 50% 30% at 80% 80%,rgba(34,211,238,.06),transparent);pointer-events:none;z-index:0}
+::selection{background:var(--purple);color:#fff}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.glass{background:rgba(255,255,255,.035);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border)}
+.glass:hover{border-color:rgba(255,255,255,.13)}
+.card{background:rgba(255,255,255,.035);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:1.35rem;transition:all .3s}
+.card:hover{border-color:rgba(255,255,255,.13);transform:translateY(-2px);box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border:none;border-radius:8px;font-family:var(--fb);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.btn-primary{background:linear-gradient(135deg,var(--purple),#9333ea);color:#fff}
+.btn-cyan{background:linear-gradient(135deg,var(--cyan),#06b6d4);color:#000}
+.btn-green{background:linear-gradient(135deg,var(--green),#00cc6a);color:#000}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--white);border:1px solid var(--border)}
+.btn-ghost:hover{background:rgba(255,255,255,.12)}
+.btn-red{background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red)}
+.input{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;transition:border .2s;width:100%;padding:.65rem 1rem}
+.input:focus,select:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(168,85,247,.15)}
+select{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;padding:.65rem 1rem;width:100%;cursor:pointer}
+select option{background:#0a0a14}
+
+/* Login */
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;position:relative;z-index:1}
+.login-box{background:rgba(255,255,255,.035);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:380px;animation:fadeUp .6s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}}
+.login-box .logo{font-family:var(--fh);font-size:1.8rem;font-weight:700;margin-bottom:.3rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-box p{color:var(--muted);font-size:.85rem;margin-bottom:1.5rem}
+.login-error{color:var(--red);font-size:.82rem;margin-top:.6rem;display:none;animation:shake .4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* Dashboard */
+.dashboard{display:none;padding:1.5rem 2rem;max-width:1400px;margin:0 auto;position:relative;z-index:1;animation:fadeUp .5s ease}
+.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem}
+.dash-header .logo{font-family:var(--fh);font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.dash-header .right{display:flex;align-items:center;gap:.75rem}
+.dash-header .right span{color:var(--muted);font-size:.8rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-val{font-family:var(--fh);font-size:1.8rem;font-weight:700}
+.stat-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.15rem}
+.stat-sub{font-size:.72rem;color:var(--muted);margin-top:.15rem}
+
+/* Tabs */
+.tab-bar{display:flex;gap:.25rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);overflow-x:auto}
+.tab-btn{background:none;border:none;color:var(--muted);padding:.65rem 1.2rem;font-family:var(--fb);font-size:.82rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab-btn:hover{color:var(--white)}
+.tab-btn.active{color:var(--purple);border-bottom-color:var(--purple)}
+.tab-content{display:none;animation:fadeUp .35s ease}
+.tab-content.active{display:block}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;font-size:.82rem}
+.tbl th{text-align:left;padding:.55rem .7rem;color:var(--muted);font-family:var(--fm);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--border)}
+.tbl td{padding:.5rem .7rem;border-bottom:1px solid rgba(255,255,255,.04);color:#ccc}
+.tbl tr:hover td{background:rgba(255,255,255,.03)}
+.tbl .bar-cell{display:flex;align-items:center;gap:.5rem}
+.tbl .bar{height:5px;border-radius:3px;min-width:2px;transition:width .3s}
+
+/* Crypto */
+.crypto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.75rem;margin-bottom:1.5rem}
+.coin-card{background:rgba(255,255,255,.035);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:12px;padding:1rem;transition:all .3s;cursor:default}
+.coin-card:hover{border-color:rgba(255,255,255,.15);transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.coin-card .name{font-size:.82rem;color:var(--muted);margin-bottom:.2rem}
+.coin-card .price{font-family:var(--fh);font-size:1.3rem;font-weight:700}
+.coin-card .chg{font-size:.78rem;font-weight:600;margin-top:.15rem}
+.coin-card .chg.up{color:var(--green)}
+.coin-card .chg.down{color:var(--red)}
+
+/* Loading dots */
+.loading-dots::after{content:'';animation:dots 1.2s steps(4,end) infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
-    <h1>DARSO Admin</h1>
-    <p>Enter the admin password to access the dashboard.</p>
-    <input type="password" id="adminPass" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
-    <button onclick="login()">Sign In</button>
+    <div class="logo">DARSO</div>
+    <p>Enter the admin password to continue.</p>
+    <input type="password" class="input" id="adminPass" placeholder="Password" onkeydown="if(event.key==='Enter')login()" autofocus>
+    <button class="btn btn-primary" onclick="login()" style="width:100%;justify-content:center;margin-top:.25rem;">Unlock Dashboard</button>
     <div class="login-error" id="loginError">Incorrect password</div>
   </div>
 </div>
 
+<!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
   <div class="dash-header">
-    <div>
-      <h1>DARSO Admin Dashboard</h1>
-      <span id="lastUpdated">Loading...</span>
-    </div>
-    <div style="display:flex;gap:.5rem;">
-      <button onclick="adaptNow()" id="adaptHeaderBtn" style="background:var(--cyan);color:#000;font-weight:600;padding:.5rem 1.2rem;border:none;border-radius:.4rem;cursor:pointer;font-family:var(--fb);font-size:.8rem;">Adapt</button>
-      <button onclick="logout()">Sign Out</button>
+    <div class="logo">DARSO</div>
+    <div class="right">
+      <span id="lastUpdated">—</span>
+      <button class="btn btn-ghost" onclick="refresh()">&#x21bb; Refresh</button>
+      <button class="btn btn-ghost" onclick="logout()">Logout</button>
     </div>
   </div>
 
-  <div class="stats-grid" id="statsGrid">
-    <div class="stat-card"><div class="label">Total Requests</div><div class="value" id="statTotal">-</div></div>
-    <div class="stat-card"><div class="label">Unique Visitors</div><div class="value" id="statVisitors">-</div></div>
-    <div class="stat-card"><div class="label">API Endpoints</div><div class="value" id="statEndpoints">-</div></div>
-    <div class="stat-card"><div class="label">Page Views</div><div class="value" id="statPages">-</div></div>
-  </div>
-
+  <!-- TAB BAR -->
   <div class="tab-bar">
-    <button class="tab-btn active" data-tab="analytics" onclick="switchTab('analytics',this)">Analytics</button>
-    <button class="tab-btn" data-tab="endpoints" onclick="switchTab('endpoints',this)">Endpoints</button>
-    <button class="tab-btn" data-tab="company" onclick="switchTab('company',this)">Company AI</button>
-    <button class="tab-btn" data-tab="adaptive" onclick="switchTab('adaptive',this);loadAdaptive()">Adaptive</button>
-    <button class="tab-btn" data-tab="bot" onclick="switchTab('bot',this);loadBot()">Bot</button>
-    <button class="tab-btn" data-tab="wallet" onclick="switchTab('wallet',this);loadWallet()">Wallet</button>
+    <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
+    <button class="tab-btn" onclick="switchTab('company',this)">Company AI</button>
+    <button class="tab-btn" onclick="switchTab('bot',this);loadBot()">Bot</button>
+    <button class="tab-btn" onclick="switchTab('wallet',this);loadWallet()">Wallet</button>
+    <button class="tab-btn" onclick="switchTab('crypto',this);loadCrypto()">&#xe3a6; Crypto</button>
   </div>
 
-  <div class="tab-content active" id="tab-analytics">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
-      <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1rem;">Requests Over Time (hourly)</h3>
-      <div id="hourlyChart" style="display:flex;align-items:flex-end;gap:2px;min-height:120px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:.5rem;"></div>
+  <!-- OVERVIEW TAB -->
+  <div class="tab-content active" id="tab-overview">
+    <div class="stats-grid">
+      <div class="card"><div class="stat-label">Requests</div><div class="stat-val" id="statTotal" style="color:var(--purple)">0</div><div class="stat-sub">all time</div></div>
+      <div class="card"><div class="stat-label">Visitors</div><div class="stat-val" id="statVisitors" style="color:var(--cyan)">0</div><div class="stat-sub">unique IPs</div></div>
+      <div class="card"><div class="stat-label">Endpoints</div><div class="stat-val" id="statEndpoints" style="color:var(--green)">0</div><div class="stat-sub">active</div></div>
+      <div class="card"><div class="stat-label">Pages</div><div class="stat-val" id="statPages" style="color:var(--gold)">0</div><div class="stat-sub">tracked</div></div>
     </div>
-    <div style="margin-top:1rem;background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
-      <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1rem;">Page Views</h3>
-      <table class="page-table" id="pageTable"><thead><tr><th>Page</th><th>Views</th><th>%</th></tr></thead><tbody></tbody></table>
-    </div>
-    <div style="margin-top:1rem;background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
-      <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1rem;">Recent Requests</h3>
-      <div id="recentRequests" style="font-size:.8rem;color:var(--muted);max-height:200px;overflow-y:auto;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div>
+        <div class="card" style="margin-bottom:1.5rem;">
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.75rem;">Hourly Traffic</div>
+          <div id="hourlyChart" style="display:flex;align-items:flex-end;gap:2px;min-height:80px;"></div>
+        </div>
+        <div class="card">
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.75rem;">Page Views</div>
+          <table class="tbl" id="pageTable">
+            <thead><tr><th>Page</th><th>Views</th><th>%</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:1.5rem;">
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.75rem;">Endpoints</div>
+          <table class="tbl" id="endpointTable">
+            <thead><tr><th>Endpoint</th><th>Calls</th><th>%</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.75rem;">Recent Requests</div>
+          <div id="recentRequests" style="font-size:.82rem;"></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="tab-content" id="tab-endpoints">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
-      <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:1rem;">API Endpoint Usage</h3>
-      <table class="endpoint-table" id="endpointTable"><thead><tr><th>Endpoint</th><th>Requests</th><th>% of Total</th></tr></thead><tbody></tbody></table>
-    </div>
-  </div>
-
+  <!-- COMPANY TAB -->
   <div class="tab-content" id="tab-company">
-    <div class="company-section">
-      <h3>Company Intelligence</h3>
-      <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;">Enter a company name or ticker. Darso will generate a comprehensive profile and 5-year financials.</p>
-      <div class="company-input-group">
-        <input type="text" id="companyInput" placeholder="e.g. Adani, Reliance, Apple, TSLA" onkeydown="if(event.key==='Enter')runCompanyDeepDive()">
-        <button onclick="runCompanyDeepDive()">Deep Dive</button>
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.5rem;">Company Deep-Dive</div>
+      <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem;">Enter any company name — AI pulls profile, financials, ratios, and 5-year trends.</p>
+      <div style="display:flex;gap:.5rem;">
+        <input type="text" class="input" id="companyInput" placeholder="e.g. Reliance, Tesla, Adani" onkeydown="if(event.key==='Enter')runCompanyDeepDive()">
+        <button class="btn btn-primary" onclick="runCompanyDeepDive()">Analyze</button>
+        <button class="btn btn-cyan" onclick="adaptNow()">AI Agent</button>
       </div>
-      <div id="companyLoading" style="display:none;text-align:center;padding:2rem;color:var(--muted);font-size:.9rem;">
-        <span class="loading-dots"></span> Loading company data...
-      </div>
+      <div id="companyLoading" style="display:none;text-align:center;padding:1.5rem;color:var(--muted);font-size:.9rem;"><span class="loading-dots"></span> AI is analyzing</div>
       <div class="company-result" id="companyResult"></div>
       <div id="companyFinancialsResult"></div>
     </div>
   </div>
 
-  <div class="tab-content" id="tab-adaptive">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
-      <div>
-        <h3 style="font-family:var(--fh);font-size:1.1rem;">Adaptive Intelligence</h3>
-        <p style="color:var(--muted);font-size:.82rem;">AI-generated suggestions based on real-time usage analytics</p>
-      </div>
-      <button onclick="runAdaptive()" id="adaptBtn" style="padding:.65rem 1.25rem;background:var(--cyan);color:#000;border:none;border-radius:.5rem;font-family:var(--fb);font-size:.85rem;cursor:pointer;">Analyze & Suggest</button>
-    </div>
-    <div id="adaptiveSuggestions" style="display:grid;gap:1rem;">
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:2rem;text-align:center;color:var(--muted);font-size:.9rem;">
-        Click <strong style="color:var(--cyan);">Analyze & Suggest</strong> to generate AI-powered improvements based on current site usage data.
-      </div>
-    </div>
-  </div>
-
+  <!-- BOT TAB -->
   <div class="tab-content" id="tab-bot">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:1.5rem;">
       <div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <div class="card" style="margin-bottom:1.5rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
             <h3 style="font-family:var(--fh);font-size:1.1rem;">Trading Bot</h3>
-            <span id="botStatusBadge" style="font-size:.72rem;text-transform:uppercase;padding:.25rem .7rem;border-radius:.3rem;background:rgba(255,255,255,.06);color:var(--muted);">Offline</span>
+            <span id="botStatusBadge" style="font-size:.7rem;text-transform:uppercase;padding:.25rem .65rem;border-radius:6px;background:rgba(255,255,255,.06);color:var(--muted);font-weight:600;">Offline</span>
           </div>
-          <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem;">AI monitors your stocks every 5 min, analyzes RSI/MACD/SMA, and trades automatically.</p>
-          <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
-            <button onclick="startBot()" id="botStartBtn" style="flex:1;padding:.7rem;background:var(--green);color:#000;border:none;border-radius:.5rem;font-weight:700;font-family:var(--fb);font-size:.9rem;cursor:pointer;">▶ Start Bot</button>
-            <button onclick="stopBot()" id="botStopBtn" style="flex:1;padding:.7rem;background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red);border-radius:.5rem;font-weight:600;font-family:var(--fb);font-size:.9rem;cursor:pointer;">■ Stop</button>
+          <p style="color:var(--muted);font-size:.78rem;margin-bottom:1rem;">AI monitors stocks every 5 min, analyzes RSI/MACD/SMA, trades automatically.</p>
+          <div style="display:flex;gap:.5rem;margin-bottom:.75rem;">
+            <button onclick="startBot()" id="botStartBtn" class="btn btn-green" style="flex:1;justify-content:center;">&#9654; Start Bot</button>
+            <button onclick="stopBot()" id="botStopBtn" class="btn btn-red" style="flex:1;justify-content:center;">&#9632; Stop</button>
           </div>
-          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;padding:.5rem;background:rgba(255,255,255,.03);border-radius:.4rem;">
-            <label style="font-size:.82rem;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:.5rem;flex:1;">
-              <input type="checkbox" id="botTrainingMode" checked onchange="toggleTraining()" style="accent-color:var(--cyan);width:16px;height:16px;">
-              <span><strong style="color:var(--cyan);">Training Mode</strong> — paper trade only, no real orders</span>
+          <div id="botError" style="display:none;background:rgba(239,68,68,.12);border:1px solid var(--red);border-radius:8px;padding:.6rem .8rem;font-size:.78rem;color:var(--red);margin-bottom:.75rem;"></div>
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;padding:.5rem;background:rgba(255,255,255,.035);border-radius:8px;">
+            <label style="font-size:.8rem;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:.5rem;flex:1;">
+              <input type="checkbox" id="botTrainingMode" checked onchange="toggleTraining()" style="accent-color:var(--cyan);width:15px;height:15px;">
+              <span><strong style="color:var(--cyan);">Training Mode</strong> — paper trade only</span>
             </label>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:1rem;">
-            <div style="background:rgba(255,255,255,.03);border-radius:.4rem;padding:.5rem;text-align:center;">
-              <div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);">Win Rate</div>
-              <div style="font-size:1.2rem;font-weight:700;color:var(--green);" id="botWinRate">0%</div>
+            <div style="background:rgba(255,255,255,.035);border-radius:8px;padding:.5rem;text-align:center;">
+              <div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">Win Rate</div>
+              <div style="font-size:1.1rem;font-weight:700;color:var(--green);" id="botWinRate">0%</div>
             </div>
-            <div style="background:rgba(255,255,255,.03);border-radius:.4rem;padding:.5rem;text-align:center;">
-              <div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);">Trades</div>
-              <div style="font-size:1.2rem;font-weight:700;color:var(--white);" id="botTotalTrades">0</div>
+            <div style="background:rgba(255,255,255,.035);border-radius:8px;padding:.5rem;text-align:center;">
+              <div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">Trades</div>
+              <div style="font-size:1.1rem;font-weight:700;" id="botTotalTrades">0</div>
             </div>
-            <div style="background:rgba(255,255,255,.03);border-radius:.4rem;padding:.5rem;text-align:center;">
-              <div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);">P&L</div>
-              <div style="font-size:1.2rem;font-weight:700;color:var(--gold);" id="botPnl">₹0</div>
+            <div style="background:rgba(255,255,255,.035);border-radius:8px;padding:.5rem;text-align:center;">
+              <div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">P&L</div>
+              <div style="font-size:1.1rem;font-weight:700;color:var(--gold);" id="botPnl">₹0</div>
             </div>
           </div>
-          <button onclick="runBacktest()" id="backtestBtn" style="width:100%;padding:.6rem;background:rgba(34,211,238,.1);border:1px solid var(--cyan);color:var(--cyan);border-radius:.5rem;cursor:pointer;font-family:var(--fb);font-size:.85rem;margin-bottom:.75rem;">🧪 Run Backtest (1 year historical)</button>
+          <button onclick="runBacktest()" id="backtestBtn" class="btn btn-cyan" style="width:100%;justify-content:center;margin-bottom:.75rem;">&#x1f9ea; Run Backtest (1 year)</button>
           <div id="backtestResult" style="display:none;margin-bottom:.75rem;"></div>
-          <div id="botInfo" style="font-size:.82rem;color:var(--muted);">
-            <div style="padding:.3rem 0;">Last cycle: <span id="botLastCycle" style="color:#d0d0e0;">—</span></div>
-            <div style="padding:.3rem 0;">Cycles run: <span id="botCycleCount" style="color:#d0d0e0;">0</span></div>
-            <div style="padding:.3rem 0;">Last actions: <span id="botLastSummary" style="color:#d0d0e0;">—</span></div>
+          <div id="botInfo" style="font-size:.8rem;color:var(--muted);">
+            <div style="padding:.3rem 0;">Last cycle: <span id="botLastCycle" style="color:#ccc;">—</span></div>
+            <div style="padding:.3rem 0;">Cycles run: <span id="botCycleCount" style="color:#ccc;">0</span></div>
+            <div style="padding:.3rem 0;">Last actions: <span id="botLastSummary" style="color:#ccc;">—</span></div>
           </div>
         </div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
-          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.75rem;">Monitored Stocks</h3>
-          <p style="color:var(--muted);font-size:.78rem;margin-bottom:.75rem;">Add 3-10 stock symbols the bot will monitor and trade.</p>
+        <div class="card">
+          <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Monitored Stocks</h3>
+          <p style="color:var(--muted);font-size:.76rem;margin-bottom:.75rem;">Add stock symbols the bot will monitor and trade. Use <code style="color:var(--cyan);font-family:var(--fm);font-size:.75rem;">.NS</code> suffix for NSE (e.g. RELIANCE.NS) or use crypto pairs like <code style="color:var(--cyan);font-family:var(--fm);font-size:.75rem;">BTC-USD</code>.</p>
           <div style="display:flex;gap:.5rem;margin-bottom:.75rem;">
-            <input type="text" id="botStockInput" placeholder="e.g. RELIANCE.NS" style="flex:1;padding:.6rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fm);font-size:.85rem;outline:none;text-transform:uppercase;">
-            <button onclick="addBotStock()" style="padding:.6rem 1rem;background:var(--purple);color:#fff;border:none;border-radius:.5rem;cursor:pointer;font-weight:600;">Add</button>
+            <input type="text" class="input" id="botStockInput" placeholder="e.g. RELIANCE.NS or BTC-USD" style="text-transform:uppercase;">
+            <button class="btn btn-primary" onclick="addBotStock()">Add</button>
           </div>
-          <div id="botStockList" style="display:flex;flex-wrap:wrap;gap:.4rem;">
-            <div style="color:var(--muted);font-size:.82rem;">No stocks added yet.</div>
-          </div>
+          <div id="botStockList" style="display:flex;flex-wrap:wrap;gap:.4rem;"></div>
         </div>
       </div>
       <div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
-          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.75rem;">Bot Trade Log</h3>
-          <div id="botLog" style="font-size:.78rem;max-height:400px;overflow-y:auto;color:var(--muted);">
-            <div style="text-align:center;padding:1rem;">Bot not started yet.</div>
-          </div>
+        <div class="card" style="height:100%;">
+          <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Bot Trade Log</h3>
+          <div id="botLog" style="font-size:.78rem;max-height:420px;overflow-y:auto;color:var(--muted);"></div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- WALLET TAB -->
   <div class="tab-content" id="tab-wallet">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
       <div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;">
-          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.5rem;">Wallet Balance</h3>
-          <div style="font-family:var(--fh);font-size:2.2rem;font-weight:700;color:var(--cyan);" id="walletBalance">₹0</div>
-          <p style="color:var(--muted);font-size:.82rem;margin-top:.25rem;">Available for auto-invest & trading</p>
+        <div class="card" style="margin-bottom:1.5rem;">
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.3rem;">Wallet Balance</div>
+          <div style="font-family:var(--fh);font-size:2.4rem;font-weight:700;color:var(--cyan);" id="walletBalance">₹0</div>
+          <p style="color:var(--muted);font-size:.78rem;margin-top:.15rem;">Available for auto-invest & trading</p>
         </div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
-          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.75rem;">Deposit Funds</h3>
+        <div class="card">
+          <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Deposit Funds</h3>
           <div style="display:flex;gap:.5rem;margin-bottom:.5rem;">
-            <input type="number" id="depositAmount" placeholder="Amount" min="100" step="100" value="10000" style="flex:1;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
-            <button onclick="depositFunds()" id="depositBtn" style="padding:.65rem 1.25rem;background:var(--green);color:#000;border:none;border-radius:.5rem;font-weight:700;font-family:var(--fb);font-size:.85rem;cursor:pointer;">Deposit</button>
+            <input type="number" class="input" id="depositAmount" placeholder="Amount" min="100" step="100" value="10000">
+            <button class="btn btn-green" onclick="depositFunds()" id="depositBtn">Deposit</button>
           </div>
-          <div style="display:flex;gap:.3rem;flex-wrap:wrap;">
-            <button onclick="document.getElementById('depositAmount').value=5000;depositFunds()" style="padding:.3rem .7rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem;cursor:pointer;">₹5K</button>
-            <button onclick="document.getElementById('depositAmount').value=10000;depositFunds()" style="padding:.3rem .7rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem;cursor:pointer;">₹10K</button>
-            <button onclick="document.getElementById('depositAmount').value=50000;depositFunds()" style="padding:.3rem .7rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem;cursor:pointer;">₹50K</button>
-            <button onclick="document.getElementById('depositAmount').value=100000;depositFunds()" style="padding:.3rem .7rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem;cursor:pointer;">₹1L</button>
-            <button onclick="document.getElementById('depositAmount').value=500000;depositFunds()" style="padding:.3rem .7rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem;cursor:pointer;">₹5L</button>
+          <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.5rem;">
+            <button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .65rem;" onclick="document.getElementById('depositAmount').value=5000;depositFunds()">₹5K</button>
+            <button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .65rem;" onclick="document.getElementById('depositAmount').value=10000;depositFunds()">₹10K</button>
+            <button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .65rem;" onclick="document.getElementById('depositAmount').value=50000;depositFunds()">₹50K</button>
+            <button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .65rem;" onclick="document.getElementById('depositAmount').value=100000;depositFunds()">₹1L</button>
+            <button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .65rem;" onclick="document.getElementById('depositAmount').value=500000;depositFunds()">₹5L</button>
           </div>
-          <div id="depositMsg" style="margin-top:.5rem;font-size:.82rem;color:var(--green);display:none;"></div>
+          <div id="depositMsg" style="margin-top:.5rem;font-size:.8rem;color:var(--green);display:none;"></div>
         </div>
       </div>
       <div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;">
-          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.75rem;">Broker Connection</h3>
-          <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem;">Connect your Angel One account for live auto-invest & trading. <a href="https://smartapi.angelbroking.com/" target="_blank" style="color:var(--cyan);">Get API key</a></p>
-          <div id="brokerConnected" style="display:none;">
-            <div style="background:rgba(0,255,136,.08);border:1px solid var(--green);border-radius:.5rem;padding:.75rem;margin-bottom:1rem;">
-              <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;">
-                <span style="color:var(--green);font-size:1.2rem;">●</span>
-                <span style="font-weight:600;font-size:.9rem;">Connected</span>
-              </div>
-              <div style="font-size:.8rem;color:var(--muted);">Broker: <span id="brBroker">Angel One</span></div>
-              <div style="font-size:.8rem;color:var(--muted);">API Key: <span id="brApiKey">-</span></div>
-              <button onclick="disconnectBroker()" style="margin-top:.5rem;padding:.4rem .8rem;background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red);border-radius:.3rem;cursor:pointer;font-size:.78rem;">Disconnect</button>
+        <div class="card" style="margin-bottom:1.5rem;">
+          <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Broker Connection</h3>
+          <p style="color:var(--muted);font-size:.8rem;margin-bottom:.75rem;">Connect Angel One for live auto-invest & trading.</p>
+          <div id="brokerConnected" style="display:none;background:rgba(0,255,136,.08);border:1px solid var(--green);border-radius:8px;padding:.75rem;margin-bottom:.75rem;">
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;">
+              <span style="color:var(--green);font-size:1rem;">&#x2713;</span>
+              <span style="font-weight:600;font-size:.85rem;">Connected</span>
             </div>
+            <div style="font-size:.78rem;color:var(--muted);">Broker: <span id="brBroker">—</span></div>
+            <div style="font-size:.78rem;color:var(--muted);">API Key: <span id="brApiKey">—</span></div>
+            <button class="btn btn-red" style="margin-top:.5rem;font-size:.75rem;padding:.35rem .7rem;" onclick="disconnectBroker()">Disconnect</button>
           </div>
           <div id="brokerForm">
-            <div style="margin-bottom:.75rem;">
-              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">Broker</label>
-              <select id="brSelect" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
-                <option value="angel">Angel One (SmartAPI)</option>
-                <option value="zerodha">Zerodha (Kite)</option>
-                <option value="groww">Groww</option>
-                <option value="upstox">Upstox</option>
-              </select>
+            <div style="margin-bottom:.6rem;">
+              <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.25rem;">Broker</label>
+              <select id="brSelect"><option value="angel">Angel One (SmartAPI)</option><option value="zerodha">Zerodha (Kite)</option><option value="groww">Groww</option><option value="upstox">Upstox</option></select>
+            </div>
+            <div style="margin-bottom:.6rem;">
+              <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.25rem;">API Key</label>
+              <input type="text" class="input" id="brApiKeyInput" placeholder="SmartAPI key">
+            </div>
+            <div style="margin-bottom:.6rem;">
+              <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.25rem;">Client ID</label>
+              <input type="text" class="input" id="brClientIdInput" placeholder="e.g. A123456">
+            </div>
+            <div style="margin-bottom:.6rem;">
+              <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.25rem;">Password / PIN</label>
+              <input type="password" class="input" id="brPasswordInput" placeholder="Trading password">
             </div>
             <div style="margin-bottom:.75rem;">
-              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">API Key <span style="color:var(--cyan);font-size:.7rem;">(from SmartAPI dashboard)</span></label>
-              <input type="text" id="brApiKeyInput" placeholder="Your SmartAPI key" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fm);font-size:.85rem;outline:none;">
+              <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.25rem;">TOTP <span style="color:var(--muted);font-size:.7rem;">(optional)</span></label>
+              <input type="text" class="input" id="brTotpInput" placeholder="TOTP code">
             </div>
-            <div style="margin-bottom:.75rem;">
-              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">Client ID <span style="color:var(--cyan);font-size:.7rem;">(your Angel One trading ID)</span></label>
-              <input type="text" id="brClientIdInput" placeholder="e.g. A123456" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fm);font-size:.85rem;outline:none;">
-            </div>
-            <div style="margin-bottom:.75rem;">
-              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">Password / PIN</label>
-              <input type="password" id="brPasswordInput" placeholder="Your trading password" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;">
-            </div>
-            <div style="margin-bottom:1rem;">
-              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.3rem;">TOTP <span style="color:var(--muted);font-size:.7rem;">(optional, leave blank if using password)</span></label>
-              <input type="text" id="brTotpInput" placeholder="TOTP code" style="width:100%;padding:.65rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fm);font-size:.85rem;outline:none;">
-            </div>
-            <button onclick="connectBroker()" id="brConnectBtn" style="width:100%;padding:.7rem;background:var(--purple);color:#fff;border:none;border-radius:.5rem;font-weight:600;font-family:var(--fb);font-size:.9rem;cursor:pointer;">Connect Broker</button>
-            <div id="brMsg" style="margin-top:.5rem;font-size:.82rem;display:none;"></div>
+            <button class="btn btn-primary" onclick="connectBroker()" id="brConnectBtn" style="width:100%;justify-content:center;">Connect Broker</button>
+            <div id="brMsg" style="margin-top:.5rem;font-size:.8rem;display:none;"></div>
           </div>
         </div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;margin-top:1.5rem;">
-          <h3 style="font-family:var(--fh);font-size:1.1rem;margin-bottom:.5rem;">Transaction History</h3>
-          <div id="txnHistory" style="font-size:.82rem;color:var(--muted);max-height:200px;overflow-y:auto;">
-            <div style="text-align:center;padding:1rem;">Loading...</div>
-          </div>
+        <div class="card">
+          <h3 style="font-family:var(--fh);font-size:1rem;margin-bottom:.75rem;">Transaction History</h3>
+          <div id="txnHistory" style="font-size:.8rem;color:var(--muted);max-height:200px;overflow-y:auto;"></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- CRYPTO TAB -->
+  <div class="tab-content" id="tab-crypto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+      <h3 style="font-family:var(--fh);font-size:1.1rem;">&#xe3a6; Crypto Market</h3>
+      <span style="font-size:.78rem;color:var(--muted);">Live from Yahoo Finance</span>
+    </div>
+    <div class="crypto-grid" id="cryptoGrid">
+      <div style="text-align:center;padding:2rem;color:var(--muted);grid-column:1/-1;"><span class="loading-dots"></span> Loading crypto prices</div>
+    </div>
+    <div class="card">
+      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.5rem;">Add Crypto to Bot</div>
+      <p style="color:var(--muted);font-size:.78rem;margin-bottom:.75rem;">Click any symbol below to add it to the bot's monitored stocks.</p>
+      <div id="cryptoAddList" style="display:flex;flex-wrap:wrap;gap:.4rem;"></div>
     </div>
   </div>
 </div>
 
 <!-- ADAPT MODAL -->
-<div id="adaptModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeAdaptModal()">
-  <div style="background:#0b0719;border:1px solid var(--border);border-radius:1rem;padding:2rem;max-width:720px;width:90%;max-height:85vh;overflow-y:auto;position:relative;">
-    <button onclick="closeAdaptModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;">✖</button>
+<div id="adaptModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeAdaptModal()">
+  <div style="background:#0b0719;border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:720px;width:90%;max-height:85vh;overflow-y:auto;position:relative;animation:fadeUp .35s ease;">
+    <button onclick="closeAdaptModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;">&#x2715;</button>
     <h3 style="font-family:var(--fh);font-size:1.2rem;margin-bottom:.25rem;">Personal AI Agent</h3>
-    <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem;">Enter your company name — the AI will monitor products, finances, and suggest corrections</p>
+    <p style="color:var(--muted);font-size:.8rem;margin-bottom:1rem;">Enter a company name — AI monitors products, finances, and suggests corrections</p>
     <div style="display:flex;gap:.5rem;margin-bottom:1.5rem;">
-      <input type="text" id="adaptCompanyInput" placeholder="e.g. Reliance, Tesla, Adani" value="" style="flex:1;padding:.7rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:.5rem;color:var(--white);font-family:var(--fb);font-size:.9rem;outline:none;" onkeydown="if(event.key==='Enter')runPersonalAgent()">
-      <button onclick="runPersonalAgent()" id="adaptRunBtn" style="padding:.7rem 1.5rem;background:var(--cyan);color:#000;border:none;border-radius:.5rem;font-weight:700;font-family:var(--fb);font-size:.9rem;cursor:pointer;">Analyze</button>
+      <input type="text" class="input" id="adaptCompanyInput" placeholder="e.g. Reliance, Tesla, Adani" onkeydown="if(event.key==='Enter')runPersonalAgent()">
+      <button class="btn btn-cyan" onclick="runPersonalAgent()" id="adaptRunBtn">Analyze</button>
     </div>
     <div id="adaptModalBody" style="display:grid;gap:1rem;"></div>
   </div>
@@ -334,669 +340,416 @@ body{background:var(--bg);color:var(--white);font-family:var(--fb);min-height:10
 
 <script>
 var TOKEN = localStorage.getItem('darsoAdminToken') || '';
-var COMPANY = '';
+var BOT_STOCKS = [];
 
-function login() {
+function login(){
   var pass = document.getElementById('adminPass').value;
   if (!pass) return;
   TOKEN = pass;
-  // Verify by hitting stats endpoint
   verifyToken();
 }
-
-function verifyToken() {
-  fetch('/api/admin/stats?token=' + encodeURIComponent(TOKEN))
-    .then(function(r) { if (r.ok) return r.json(); throw new Error('Unauthorized'); })
-    .then(function(data) {
-      localStorage.setItem('darsoAdminToken', TOKEN);
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      renderDashboard(data);
+function verifyToken(){
+  fetch('/api/admin/stats?token='+encodeURIComponent(TOKEN))
+    .then(function(r){if(r.ok)return r.json();throw new Error('Unauthorized');})
+    .then(function(d){
+      localStorage.setItem('darsoAdminToken',TOKEN);
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('dashboard').style.display='block';
+      renderDashboard(d);
     })
-    .catch(function() {
-      document.getElementById('loginError').style.display = 'block';
-      TOKEN = '';
-      localStorage.removeItem('darsoAdminToken');
+    .catch(function(){
+      document.getElementById('loginError').style.display='block';
+      TOKEN='';localStorage.removeItem('darsoAdminToken');
     });
 }
-
-function logout() {
-  TOKEN = '';
-  localStorage.removeItem('darsoAdminToken');
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('adminPass').value = '';
-  document.getElementById('loginError').style.display = 'none';
+function logout(){
+  TOKEN='';localStorage.removeItem('darsoAdminToken');
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('adminPass').value='';
+  document.getElementById('loginError').style.display='none';
+}
+function refresh(){
+  fetch('/api/admin/stats?token='+encodeURIComponent(TOKEN))
+    .then(function(r){if(r.ok)return r.json();})
+    .then(function(d){if(d)renderDashboard(d);})
+    .catch(function(){});
+}
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
 }
 
-function refresh() {
-  fetch('/api/admin/stats?token=' + encodeURIComponent(TOKEN))
-    .then(function(r) { if (r.ok) return r.json(); })
-    .then(function(data) { if (data) renderDashboard(data); })
-    .catch(function() {});
+function renderDashboard(data){
+  document.getElementById('lastUpdated').textContent = 'Updated '+new Date().toLocaleTimeString();
+  document.getElementById('statTotal').textContent = (data.totalRequests||0).toLocaleString();
+  document.getElementById('statVisitors').textContent = data.uniqueVisitors||0;
+  document.getElementById('statEndpoints').textContent = Object.keys(data.endpoints||{}).length;
+  document.getElementById('statPages').textContent = Object.keys(data.pageViews||{}).length;
+
+  var hourly = data.hourly||{}, hours = Object.keys(hourly).sort();
+  var maxH = 0; hours.forEach(function(h){if(hourly[h]>maxH)maxH=hourly[h];});
+  var chartEl = document.getElementById('hourlyChart');
+  chartEl.innerHTML = hours.length ? '' : '<div style="color:var(--muted);font-size:.78rem;width:100%;text-align:center;padding:1rem 0;">No data yet</div>';
+  hours.forEach(function(h){
+    var val = hourly[h]||0, pct = maxH>0?(val/maxH*100):0;
+    chartEl.innerHTML += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="width:100%;height:'+Math.max(3,pct)+'px;background:linear-gradient(180deg,var(--purple),rgba(168,85,247,.3));border-radius:2px 2px 0 0;transition:height .3s;"></div><span style="font-size:.55rem;color:var(--muted);white-space:nowrap;">'+h.slice(11,16)+'</span></div>';
+  });
+
+  var pages = data.pageViews||{}, pEntries = Object.keys(pages).sort(function(a,b){return pages[b]-pages[a];});
+  var pt = document.querySelector('#pageTable tbody'); pt.innerHTML = '';
+  var totalV = pEntries.reduce(function(s,k){return s+pages[k];},0);
+  pEntries.forEach(function(p){
+    var pct = totalV>0?(pages[p]/totalV*100).toFixed(1):0;
+    pt.innerHTML += '<tr><td>'+(p==='/'?'Home':p)+'</td><td>'+pages[p]+'</td><td><div class="bar-cell"><div class="bar green" style="width:'+Math.max(2,pct*3)+'px;"></div>'+pct+'%</div></td></tr>';
+  });
+
+  var eps = data.endpoints||{}, epEntries = Object.keys(eps).sort(function(a,b){return eps[b]-eps[a];});
+  var et = document.querySelector('#endpointTable tbody'); et.innerHTML = '';
+  var totalEP = epEntries.reduce(function(s,k){return s+eps[k];},0);
+  epEntries.forEach(function(ep){
+    var pct = totalEP>0?(eps[ep]/totalEP*100).toFixed(1):0;
+    et.innerHTML += '<tr><td style="font-family:var(--fm);font-size:.76rem;">'+ep+'</td><td>'+eps[ep]+'</td><td><div class="bar-cell"><div class="bar" style="width:'+Math.max(2,pct*2)+'px;"></div>'+pct+'%</div></td></tr>';
+  });
+
+  var recent = data.recentRequests||[], rel = document.getElementById('recentRequests'); rel.innerHTML='';
+  if(!recent.length) {rel.innerHTML='<div style="padding:.5rem 0;color:var(--muted);font-size:.8rem;">No recent requests.</div>';return;}
+  recent.forEach(function(r){
+    var t=new Date(r.time).toLocaleTimeString(), m=r.method==='GET'?'<span style="color:var(--green);">GET</span>':'<span style="color:var(--gold);">POST</span>';
+    rel.innerHTML+='<div style="display:flex;gap:.75rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--fm);font-size:.72rem;"><span style="color:var(--muted);min-width:58px;">'+t+'</span>'+m+' <span style="color:#ccc;">'+esc(r.url)+'</span></div>';
+  });
 }
 
-function loadAdaptive() { }
+// === COMPANY ===
+var COMPANY = '';
+function runCompanyDeepDive(){
+  var name = document.getElementById('companyInput').value.trim();
+  if(!name)return; COMPANY=name;
+  document.getElementById('companyLoading').style.display='block';
+  document.getElementById('companyResult').style.display='none';
+  fetch('/api/company/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})})
+    .then(function(r){return r.json();})
+    .then(function(p){
+      document.getElementById('companyLoading').style.display='none';
+      if(p.error){document.getElementById('companyResult').innerHTML='<div style="color:var(--red);padding:.5rem;">'+esc(p.error)+'</div>';document.getElementById('companyResult').style.display='block';return;}
+      renderCompanyProfile(p);loadCompanyFinancials(name);
+    }).catch(function(){document.getElementById('companyLoading').style.display='none';});
+}
+function renderCompanyProfile(p){
+  var pData = p.profile||p;
+  var html = '<div class="card" style="margin-top:1rem;"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.5rem;">';
+  var fields = [
+    {l:'Name',v:pData.name},{l:'Ticker',v:pData.ticker},{l:'Sector',v:pData.sector},{l:'Industry',v:pData.industry},
+    {l:'HQ',v:pData.headquarters},{l:'Founded',v:pData.founded},{l:'Employees',v:pData.employees?pData.employees.toLocaleString():null},
+    {l:'Website',v:pData.website&&pData.website!=='N/A'?'<a href="'+esc(pData.website)+'" target="_blank" style="color:var(--cyan);">'+esc(pData.website)+'</a>':null}
+  ];
+  fields.forEach(function(f){if(f.v)html+='<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:.4rem .6rem;"><div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);letter-spacing:.1em;">'+f.l+'</div><div style="font-size:.85rem;color:#ccc;">'+f.v+'</div></div>';});
+  html += '</div>';
+  if(pData.description) html += '<p style="font-size:.85rem;line-height:1.7;color:#bbb;margin-top:.75rem;">'+esc(pData.description)+'</p>';
+  if(pData.keyPeople&&pData.keyPeople.length){
+    html += '<div style="margin-top:.75rem;"><div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);letter-spacing:.1em;margin-bottom:.4rem;">Key People</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.4rem;">';
+    pData.keyPeople.forEach(function(kp){html+='<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:.4rem .6rem;"><span style="font-size:.72rem;color:var(--muted);">'+esc(kp.title||'')+'</span><div style="font-size:.85rem;color:#ccc;">'+esc(kp.name||'')+'</div></div>';});
+    html += '</div></div>';
+  }
+  if(pData.segments&&pData.segments.length){
+    html+='<div style="margin-top:.75rem;"><div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);letter-spacing:.1em;margin-bottom:.4rem;">Segments</div><div style="display:flex;flex-wrap:wrap;gap:.4rem;">';
+    pData.segments.forEach(function(s){html+='<div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:6px;padding:.4rem .7rem;flex:1;min-width:140px;"><div style="display:flex;justify-content:space-between;font-size:.82rem;"><span style="font-weight:600;">'+esc(s.name)+'</span><span style="color:var(--cyan);font-family:var(--fm);">'+(s.revenuePct||0)+'%</span></div><div style="font-size:.72rem;color:var(--muted);">'+esc(s.description||'')+'</div></div>';});
+    html+='</div></div>';
+  }
+  if(pData.competitors&&pData.competitors.length){
+    html+='<div style="margin-top:.75rem;"><div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);letter-spacing:.1em;margin-bottom:.4rem;">Competitors</div><div style="display:flex;flex-wrap:wrap;gap:.3rem;">';
+    pData.competitors.forEach(function(c){html+='<span style="background:rgba(255,255,255,.06);padding:.2rem .5rem;border-radius:4px;font-size:.78rem;color:#ccc;">'+esc(c)+'</span>';});
+    html+='</div></div>';
+  }
+  html+='</div>';
+  document.getElementById('companyResult').innerHTML = html;
+  document.getElementById('companyResult').style.display = 'block';
+}
+function loadCompanyFinancials(name){
+  var el = document.getElementById('companyFinancialsResult');
+  el.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);"><span class="loading-dots"></span> Loading financials</div>';
+  fetch('/api/company/financials',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})})
+    .then(function(r){return r.json();})
+    .then(function(d){if(d.error){el.innerHTML='<div style="color:var(--red);padding:.5rem;">'+esc(d.error)+'</div>';return;} renderFinancials(d);})
+    .catch(function(){el.innerHTML='<div style="color:var(--red);padding:.5rem;">Error loading financials</div>';});
+}
+function renderFinancials(data){
+  var fin = data.financials||{}, ratios = data.ratios||{}, metrics = data.keyMetrics||{}, growth = data.growth||{};
+  var html = '<div class="card" style="margin-top:1rem;"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-family:var(--fm);margin-bottom:.75rem;">5-Year Financial Performance</div>';
+  html += '<div style="overflow-x:auto;"><table class="tbl" style="min-width:480px;"><thead><tr><th>Metric</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead><tbody>';
+  function addRow(label,obj,unit){
+    if(!obj)return; html+='<tr><td style="font-weight:500;">'+label+'</td>';
+    ['2020','2021','2022','2023','2024','2025'].forEach(function(y){
+      var v=obj[y]; if(v==null){html+='<td style="color:var(--muted);">-</td>';return;}
+      html+='<td>'+(unit==='pct'?v.toFixed(1)+'%':(v>=100?'$'+v.toFixed(1)+'B':'$'+(v*1000).toFixed(0)+'M'))+'</td>';
+    }); html+='</tr>';
+  }
+  addRow('Revenue',fin.revenue);addRow('Net Income',fin.netIncome);addRow('Op Income',fin.operatingIncome);
+  addRow('Total Assets',fin.totalAssets);addRow('Total Debt',fin.totalDebt);addRow('Free Cash Flow',fin.freeCashFlow);
+  addRow('Op Margin',fin.operatingMargin,'pct');addRow('Net Margin',fin.netMargin,'pct');
+  html += '</tbody></table></div>';
 
-function adaptNow() {
-  var ci = document.getElementById('companyInput');
-  var ac = document.getElementById('adaptCompanyInput');
-  ac.value = ci ? ci.value.trim() : '';
+  if(fin.revenueGrowth){
+    html+='<div style="margin-top:.75rem;"><div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);letter-spacing:.1em;margin-bottom:.4rem;">Revenue Growth</div><div style="display:flex;gap:.4rem;flex-wrap:wrap;">';
+    Object.keys(fin.revenueGrowth).forEach(function(y){var v=fin.revenueGrowth[y];if(v==null)return;html+='<span style="background:rgba(255,255,255,.04);padding:.25rem .5rem;border-radius:4px;font-size:.76rem;"><span style="color:var(--muted);">'+y+'</span> <span style="color:'+(v>=0?'var(--green)':'var(--red)')+';font-weight:600;">'+(v>=0?'+':'')+v.toFixed(1)+'%</span></span>';});
+    html+='</div></div>';
+  }
+  html+='<div style="margin-top:.75rem;"><div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);letter-spacing:.1em;margin-bottom:.4rem;">Key Ratios</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.4rem;">';
+  var ri = [
+    {l:'P/E',v:ratios.peRatio},{l:'Forward P/E',v:ratios.forwardPE},{l:'P/B',v:ratios.pbRatio},{l:'ROE',v:ratios.roe,u:'%'},
+    {l:'ROA',v:ratios.roa,u:'%'},{l:'D/E',v:ratios.debtToEquity},{l:'Current',v:ratios.currentRatio},{l:'Div Yield',v:ratios.dividendYield,u:'%'},
+    {l:'Beta',v:ratios.beta},{l:'Market Cap',v:metrics.marketCap}
+  ];
+  ri.forEach(function(i){if(i.v==null)return;html+='<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:.35rem .6rem;"><div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">'+i.l+'</div><div style="font-size:.85rem;color:#ccc;">'+(i.u?i.v+i.u:i.v)+'</div></div>';});
+  if(growth.revenueCagr5y!=null)html+='<div style="background:rgba(0,255,136,.08);border-radius:6px;padding:.35rem .6rem;"><div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">Rev CAGR 5Y</div><div style="font-size:.85rem;color:var(--green);font-weight:600;">'+growth.revenueCagr5y+'%</div></div>';
+  if(growth.earningsCagr5y!=null)html+='<div style="background:rgba(0,255,136,.08);border-radius:6px;padding:.35rem .6rem;"><div style="font-size:.62rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">Earnings CAGR 5Y</div><div style="font-size:.85rem;color:var(--green);font-weight:600;">'+growth.earningsCagr5y+'%</div></div>';
+  html += '</div></div></div>';
+  document.getElementById('companyFinancialsResult').innerHTML = html;
+}
+
+function adaptNow(){
+  var ci = document.getElementById('companyInput'), ac = document.getElementById('adaptCompanyInput');
+  ac.value = ci?ci.value.trim():'';
   document.getElementById('adaptModalBody').innerHTML = '';
   document.getElementById('adaptModal').style.display = 'flex';
-  setTimeout(function(){ ac.focus(); }, 100);
+  setTimeout(function(){ac.focus();},100);
 }
-
-function runPersonalAgent() {
+function runPersonalAgent(){
   var company = document.getElementById('adaptCompanyInput').value.trim();
-  if (!company) { document.getElementById('adaptCompanyInput').style.borderColor = 'var(--red)'; setTimeout(function(){document.getElementById('adaptCompanyInput').style.borderColor = '';},1500); return; }
-  var btn = document.getElementById('adaptRunBtn');
-  btn.textContent = 'Analyzing...';
-  btn.disabled = true;
-  var body = document.getElementById('adaptModalBody');
-  body.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.9rem;"><span class="loading-dots"></span> AI is analyzing ' + esc(company) + '...</div>';
-  fetch('/api/admin/adapt?token=' + encodeURIComponent(TOKEN) + '&company=' + encodeURIComponent(company))
-    .then(function(r){ return r.json(); })
-    .then(function(d) {
-      btn.textContent = 'Analyze';
-      btn.disabled = false;
-      if (d.error) { body.innerHTML = '<div style="color:var(--red);text-align:center;padding:1rem;">Error: ' + esc(d.error) + '</div>'; return; }
-      var html = '';
-      // Products
-      if (d.products && d.products.length) {
-        html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.25rem;">' +
-          '<h4 style="font-family:var(--fh);font-size:.95rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;"><span style="background:var(--cyan);color:#000;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">1</span> Product Analysis</h4>';
-        d.products.forEach(function(p) {
-          html += '<div style="margin-bottom:.75rem;padding:.75rem;background:rgba(255,255,255,.03);border-radius:.5rem;">' +
-            '<div style="font-weight:600;font-size:.9rem;margin-bottom:.3rem;">' + esc(p.name || '') + '</div>' +
-            (p.flaws ? '<div style="font-size:.8rem;color:var(--gold);margin-bottom:.25rem;">⚠ ' + esc(p.flaws) + '</div>' : '') +
-            (p.fix ? '<div style="font-size:.8rem;color:var(--green);">✓ Fix: ' + esc(p.fix) + '</div>' : '') +
-          '</div>';
-        });
-        html += '</div>';
-      }
-      // Financial Health
-      if (d.financialHealth) {
-        var fh = d.financialHealth;
-        var statusColor = fh.status === 'healthy' ? 'var(--green)' : fh.status === 'warning' ? 'var(--gold)' : 'var(--red)';
-        html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.25rem;">' +
-          '<h4 style="font-family:var(--fh);font-size:.95rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;"><span style="background:' + statusColor + ';color:#000;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">2</span> Financial Health <span style="font-size:.7rem;text-transform:uppercase;background:' + statusColor + ';color:#000;padding:.15rem .5rem;border-radius:.3rem;font-weight:700;">' + esc(fh.status || 'unknown') + '</span></h4>';
-        if (fh.redFlags && fh.redFlags.length) {
-          html += '<div style="margin-bottom:.5rem;"><div style="font-size:.8rem;font-weight:600;color:var(--red);margin-bottom:.3rem;">Red Flags</div>';
-          fh.redFlags.forEach(function(f) { html += '<div style="font-size:.8rem;color:#d0d0e0;padding:.2rem 0;">• ' + esc(f) + '</div>'; });
-          html += '</div>';
-        }
-        if (fh.corrections && fh.corrections.length) {
-          html += '<div><div style="font-size:.8rem;font-weight:600;color:var(--green);margin-bottom:.3rem;">Corrections</div>';
-          fh.corrections.forEach(function(c) { html += '<div style="font-size:.8rem;color:#d0d0e0;padding:.2rem 0;">→ ' + esc(c) + '</div>'; });
-          html += '</div>';
-        }
-        html += '</div>';
-      }
-      // Corrective Actions
-      if (d.correctiveActions && d.correctiveActions.length) {
-        html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.25rem;">' +
-          '<h4 style="font-family:var(--fh);font-size:.95rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;"><span style="background:var(--purple);color:#fff;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">3</span> Corrective Actions</h4>';
-        d.correctiveActions.forEach(function(a) { html += '<div style="font-size:.85rem;color:#d0d0e0;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.04);">• ' + esc(a) + '</div>'; });
-        html += '</div>';
-      }
-      // Monitoring
-      if (d.monitoring) {
-        html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.25rem;">' +
-          '<h4 style="font-family:var(--fh);font-size:.95rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;"><span style="background:var(--green);color:#000;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">4</span> Monitoring</h4>' +
-          '<div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem;">Frequency: <strong style="color:var(--cyan);">' + esc(d.monitoring.frequency || 'weekly') + '</strong></div>';
-        if (d.monitoring.metrics && d.monitoring.metrics.length) {
-          d.monitoring.metrics.forEach(function(m) { html += '<div style="font-size:.82rem;color:#d0d0e0;padding:.25rem 0;">📊 ' + esc(m) + '</div>'; });
-        }
-        html += '</div>';
-      }
-      if (!html) { html = '<div style="color:var(--muted);text-align:center;padding:1rem;">No analysis data returned.</div>'; }
-      body.innerHTML = html;
-    })
-    .catch(function(e) {
-      btn.textContent = 'Analyze';
-      btn.disabled = false;
-      body.innerHTML = '<div style="color:var(--red);text-align:center;padding:1rem;">Failed: ' + esc(e.message) + '</div>';
-    });
-}
-
-function closeAdaptModal() {
-  document.getElementById('adaptModal').style.display = 'none';
-}
-
-// ── WALLET & BROKER ────────────────────────────────────────────
-function loadWallet() {
-  fetch('/api/wallet/balance?token=' + encodeURIComponent(TOKEN))
-    .then(function(r){ return r.json(); })
+  if(!company)return;
+  var btn=document.getElementById('adaptRunBtn'), body=document.getElementById('adaptModalBody');
+  btn.textContent='Analyzing...';btn.disabled=true;
+  body.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);"><span class="loading-dots"></span> AI is analyzing '+esc(company)+'</div>';
+  fetch('/api/admin/adapt?token='+encodeURIComponent(TOKEN)+'&company='+encodeURIComponent(company))
+    .then(function(r){return r.json();})
     .then(function(d){
-      document.getElementById('walletBalance').textContent = '₹' + Number(d.cash || 0).toLocaleString();
-    });
-  fetch('/api/wallet/broker?token=' + encodeURIComponent(TOKEN))
-    .then(function(r){ return r.json(); })
+      btn.textContent='Analyze';btn.disabled=false;
+      if(d.error){body.innerHTML='<div style="color:var(--red);text-align:center;padding:1rem;">Error: '+esc(d.error)+'</div>';return;}
+      var html='';
+      if(d.products&&d.products.length){
+        html+='<div class="card"><h4 style="font-size:.9rem;margin-bottom:.6rem;"><span style="background:var(--cyan);color:#000;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;margin-right:.4rem;">1</span> Product Analysis</h4>';
+        d.products.forEach(function(p){html+='<div style="margin-bottom:.5rem;padding:.5rem;background:rgba(255,255,255,.03);border-radius:6px;"><div style="font-weight:600;font-size:.82rem;margin-bottom:.2rem;">'+esc(p.name||'')+'</div>'+(p.flaws?'<div style="font-size:.75rem;color:var(--gold);">&#9888; '+esc(p.flaws)+'</div>':'')+(p.fix?'<div style="font-size:.75rem;color:var(--green);">&#10003; Fix: '+esc(p.fix)+'</div>':'')+'</div>';});
+        html+='</div>';
+      }
+      if(d.financialHealth){
+        var fh=d.financialHealth, sc=fh.status==='healthy'?'var(--green)':fh.status==='warning'?'var(--gold)':'var(--red)';
+        html+='<div class="card"><h4 style="font-size:.9rem;margin-bottom:.6rem;"><span style="background:'+sc+';color:#000;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;margin-right:.4rem;">2</span> Financial Health <span style="font-size:.65rem;text-transform:uppercase;background:'+sc+';color:#000;padding:.1rem .4rem;border-radius:4px;font-weight:700;margin-left:.4rem;">'+esc(fh.status||'unknown')+'</span></h4>';
+        if(fh.redFlags&&fh.redFlags.length){fh.redFlags.forEach(function(f){html+='<div style="font-size:.78rem;color:#ccc;padding:.15rem 0;">&#9888; '+esc(f)+'</div>';});}
+        if(fh.corrections&&fh.corrections.length){fh.corrections.forEach(function(c){html+='<div style="font-size:.78rem;color:var(--green);padding:.15rem 0;">&#10003; '+esc(c)+'</div>';});}
+        html+='</div>';
+      }
+      if(d.correctiveActions&&d.correctiveActions.length){
+        html+='<div class="card"><h4 style="font-size:.9rem;margin-bottom:.6rem;"><span style="background:var(--purple);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;margin-right:.4rem;">3</span> Corrective Actions</h4>';
+        d.correctiveActions.forEach(function(a){html+='<div style="font-size:.8rem;color:#ccc;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);">&#9654; '+esc(a)+'</div>';});
+        html+='</div>';
+      }
+      if(d.monitoring){
+        html+='<div class="card"><h4 style="font-size:.9rem;margin-bottom:.6rem;"><span style="background:var(--green);color:#000;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;margin-right:.4rem;">4</span> Monitoring <span style="font-size:.75rem;color:var(--muted);font-weight:400;">('+esc(d.monitoring.frequency||'weekly')+')</span></h4>';
+        if(d.monitoring.metrics&&d.monitoring.metrics.length){d.monitoring.metrics.forEach(function(m){html+='<div style="font-size:.78rem;color:#ccc;padding:.15rem 0;">&#9654; '+esc(m)+'</div>';});}
+        html+='</div>';
+      }
+      if(!html)html='<div style="color:var(--muted);text-align:center;padding:1rem;">No analysis returned.</div>';
+      body.innerHTML=html;
+    }).catch(function(e){btn.textContent='Analyze';btn.disabled=false;body.innerHTML='<div style="color:var(--red);text-align:center;padding:1rem;">Failed: '+esc(e.message)+'</div>';});
+}
+function closeAdaptModal(){document.getElementById('adaptModal').style.display='none';}
+
+// === WALLET ===
+function loadWallet(){
+  fetch('/api/wallet/balance?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){document.getElementById('walletBalance').textContent='₹'+Number(d.cash||0).toLocaleString();});
+  fetch('/api/wallet/broker?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
     .then(function(d){
-      if (d.connected) {
-        document.getElementById('brokerConnected').style.display = 'block';
-        document.getElementById('brokerForm').style.display = 'none';
-      document.getElementById('brBroker').textContent = d.broker || 'Angel One';
-      document.getElementById('brApiKey').textContent = d.apiKey || '-';
+      if(d.connected){
+        document.getElementById('brokerConnected').style.display='block';
+        document.getElementById('brokerForm').style.display='none';
+        document.getElementById('brBroker').textContent=d.broker||'Angel One';
+        document.getElementById('brApiKey').textContent=d.apiKey||'-';
       }
     });
   loadTxnHistory();
 }
-
-function depositFunds() {
-  var amt = parseFloat(document.getElementById('depositAmount').value);
-  if (!amt || amt <= 0) { document.getElementById('depositAmount').focus(); return; }
-  var btn = document.getElementById('depositBtn');
-  btn.textContent = 'Processing...';
-  btn.disabled = true;
-  fetch('/api/wallet/deposit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount: amt, token: TOKEN })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    btn.textContent = 'Deposit';
-    btn.disabled = false;
-    if (d.error) { document.getElementById('depositMsg').style.display = 'block'; document.getElementById('depositMsg').style.color = 'var(--red)'; document.getElementById('depositMsg').textContent = d.error; return; }
-    document.getElementById('depositMsg').style.display = 'block';
-    document.getElementById('depositMsg').style.color = 'var(--green)';
-    document.getElementById('depositMsg').textContent = d.message || 'Deposited!';
-    document.getElementById('walletBalance').textContent = '₹' + Number(d.cash || 0).toLocaleString();
-    loadTxnHistory();
-  })
-  .catch(function(e){
-    btn.textContent = 'Deposit';
-    btn.disabled = false;
-    document.getElementById('depositMsg').style.display = 'block';
-    document.getElementById('depositMsg').style.color = 'var(--red)';
-    document.getElementById('depositMsg').textContent = 'Error: ' + e.message;
-  });
-}
-
-function connectBroker() {
-  var broker = document.getElementById('brSelect').value;
-  var apiKey = document.getElementById('brApiKeyInput').value.trim();
-  var clientId = document.getElementById('brClientIdInput').value.trim();
-  var password = document.getElementById('brPasswordInput').value.trim();
-  var totp = document.getElementById('brTotpInput').value.trim();
-  if (!apiKey) { document.getElementById('brMsg').style.display = 'block'; document.getElementById('brMsg').style.color = 'var(--red)'; document.getElementById('brMsg').textContent = 'API Key is required'; return; }
-  if (!clientId) { document.getElementById('brMsg').style.display = 'block'; document.getElementById('brMsg').style.color = 'var(--red)'; document.getElementById('brMsg').textContent = 'Client ID is required'; return; }
-  var btn = document.getElementById('brConnectBtn');
-  btn.textContent = 'Connecting...';
-  btn.disabled = true;
-  fetch('/api/wallet/broker', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ broker: broker, apiKey: apiKey, clientId: clientId, password: password, totp: totp, token: TOKEN })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    btn.textContent = 'Connect Broker';
-    btn.disabled = false;
-    if (d.error) { document.getElementById('brMsg').style.display = 'block'; document.getElementById('brMsg').style.color = 'var(--red)'; document.getElementById('brMsg').textContent = d.error; return; }
-    document.getElementById('brMsg').style.display = 'block';
-    document.getElementById('brMsg').style.color = 'var(--green)';
-    document.getElementById('brMsg').textContent = '✓ ' + d.broker + ' connected!';
-    document.getElementById('brokerConnected').style.display = 'block';
-    document.getElementById('brokerForm').style.display = 'none';
-    document.getElementById('brBroker').textContent = d.broker || 'Zerodha';
-    document.getElementById('brApiKey').textContent = d.apiKey || '-';
-  })
-  .catch(function(e){
-    btn.textContent = 'Connect Broker';
-    btn.disabled = false;
-    document.getElementById('brMsg').style.display = 'block';
-    document.getElementById('brMsg').style.color = 'var(--red)';
-    document.getElementById('brMsg').textContent = 'Error: ' + e.message;
-  });
-}
-
-function disconnectBroker() {
-  fetch('/api/wallet/broker', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: TOKEN }) })
-    .then(function(){ 
-      document.getElementById('brokerConnected').style.display = 'none';
-      document.getElementById('brokerForm').style.display = 'block';
-      document.getElementById('brMsg').style.display = 'none';
-    });
-}
-
-function loadTxnHistory() {
-  fetch('/api/portfolio/history?token=' + encodeURIComponent(TOKEN))
-    .then(function(r){ return r.json(); })
+function depositFunds(){
+  var amt=parseFloat(document.getElementById('depositAmount').value);
+  if(!amt||amt<=0)return;
+  var btn=document.getElementById('depositBtn');btn.textContent='Processing...';btn.disabled=true;
+  fetch('/api/wallet/deposit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:amt,token:TOKEN})})
+    .then(function(r){return r.json();})
     .then(function(d){
-      var el = document.getElementById('txnHistory');
-      var items = d.history || [];
-      if (!items.length) { el.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">No transactions yet.</div>'; return; }
-      var html = '';
-      items.slice().reverse().slice(0,20).forEach(function(t){
-        var type = t.type === 'deposit' ? 'Deposit' : (t.type === 'buy' ? 'Buy' : (t.type === 'sell' ? 'Sell' : t.type));
-        var c = t.type === 'deposit' ? 'var(--green)' : (t.type === 'buy' ? 'var(--cyan)' : 'var(--gold)');
-        html += '<div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
-          '<span style="color:' + c + ';font-weight:500;">' + type + '</span>' +
-          '<span style="color:#d0d0e0;">₹' + Number(t.amount || 0).toLocaleString() + '</span>' +
-          '<span style="color:var(--muted);font-size:.75rem;">' + (t.symbol || '') + '</span></div>';
-      });
-      el.innerHTML = html;
-    })
-    .catch(function(){ document.getElementById('txnHistory').innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">Could not load history.</div>'; });
+      btn.textContent='Deposit';btn.disabled=false;
+      var msg=document.getElementById('depositMsg');msg.style.display='block';
+      if(d.error){msg.style.color='var(--red)';msg.textContent=d.error;return;}
+      msg.style.color='var(--green)';msg.textContent=d.message||'Deposited!';
+      document.getElementById('walletBalance').textContent='₹'+Number(d.cash||0).toLocaleString();
+      loadTxnHistory();
+    }).catch(function(e){btn.textContent='Deposit';btn.disabled=false;});
 }
-
-// ── TRADING BOT ────────────────────────────────────────────────
-var BOT_STOCKS = [];
-
-function loadBot() {
-  fetch('/api/bot/config?token=' + encodeURIComponent(TOKEN))
-    .then(function(r){ return r.json(); })
+function connectBroker(){
+  var broker=document.getElementById('brSelect').value, apiKey=document.getElementById('brApiKeyInput').value.trim();
+  var clientId=document.getElementById('brClientIdInput').value.trim(), pwd=document.getElementById('brPasswordInput').value.trim();
+  var totp=document.getElementById('brTotpInput').value.trim();
+  if(!apiKey||!clientId){document.getElementById('brMsg').style.display='block';document.getElementById('brMsg').style.color='var(--red)';document.getElementById('brMsg').textContent='API Key and Client ID required';return;}
+  var btn=document.getElementById('brConnectBtn');btn.textContent='Connecting...';btn.disabled=true;
+  fetch('/api/wallet/broker',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({broker:broker,apiKey:apiKey,clientId:clientId,password:pwd,totp:totp,token:TOKEN})})
+    .then(function(r){return r.json();})
     .then(function(d){
-      BOT_STOCKS = d.stocks || [];
-      renderBotStockList();
-      var isRunning = d.running;
-      document.getElementById('botStatusBadge').textContent = isRunning ? '● Running' : 'Offline';
-      document.getElementById('botStatusBadge').style.color = isRunning ? 'var(--green)' : 'var(--muted)';
-      document.getElementById('botStatusBadge').style.background = isRunning ? 'rgba(0,255,136,.12)' : 'rgba(255,255,255,.06)';
-      document.getElementById('botStartBtn').disabled = isRunning;
-      document.getElementById('botTrainingMode').checked = d.training !== false;
-      document.getElementById('botCycleCount').textContent = d.cycleCount || 0;
-      document.getElementById('botLastSummary').textContent = d.lastSummary || '—';
-      document.getElementById('botLastCycle').textContent = d.lastCycle ? new Date(d.lastCycle).toLocaleTimeString() : '—';
-      var perf = d.performance || {};
-      document.getElementById('botWinRate').textContent = (perf.winRate || 0) + '%';
-      document.getElementById('botTotalTrades').textContent = perf.total || 0;
-      document.getElementById('botWinRate').style.color = perf.winRate >= 50 ? 'var(--green)' : 'var(--red)';
-      document.getElementById('botPnl').textContent = '₹' + (perf.pnl || 0).toLocaleString();
-      document.getElementById('botPnl').style.color = (perf.pnl || 0) >= 0 ? 'var(--green)' : 'var(--red)';
-      renderBotLog(d.log || []);
+      btn.textContent='Connect Broker';btn.disabled=false;
+      var msg=document.getElementById('brMsg');msg.style.display='block';
+      if(d.error){msg.style.color='var(--red)';msg.textContent=d.error;return;}
+      msg.style.color='var(--green)';msg.textContent='&#10003; '+d.broker+' connected!';
+      document.getElementById('brokerConnected').style.display='block';document.getElementById('brokerForm').style.display='none';
+      document.getElementById('brBroker').textContent=d.broker||'-';document.getElementById('brApiKey').textContent=d.apiKey||'-';
+    }).catch(function(e){btn.textContent='Connect Broker';btn.disabled=false;});
+}
+function disconnectBroker(){
+  fetch('/api/wallet/broker',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})})
+    .then(function(){document.getElementById('brokerConnected').style.display='none';document.getElementById('brokerForm').style.display='block';document.getElementById('brMsg').style.display='none';});
+}
+function loadTxnHistory(){
+  fetch('/api/portfolio/history?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var el=document.getElementById('txnHistory'), items=d.history||[];
+      if(!items.length){el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);">No transactions yet.</div>';return;}
+      el.innerHTML=items.slice().reverse().slice(0,20).map(function(t){
+        var type=t.type==='deposit'?'Deposit':t.type==='buy'?'Buy':t.type==='sell'?'Sell':t.type;
+        var c=t.type==='deposit'?'var(--green)':t.type==='buy'?'var(--cyan)':'var(--gold)';
+        return '<div style="display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="color:'+c+';font-weight:500;font-size:.8rem;">'+type+'</span><span style="color:#ccc;">₹'+Number(t.amount||0).toLocaleString()+'</span><span style="color:var(--muted);font-size:.72rem;">'+(t.symbol||'')+'</span></div>';
+      }).join('');
+    }).catch(function(){document.getElementById('txnHistory').innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);">Could not load history.</div>';});
+}
+
+// === BOT ===
+function loadBot(){
+  fetch('/api/bot/config?token='+encodeURIComponent(TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      BOT_STOCKS=d.stocks||[];renderBotStockList();
+      var on=d.running;
+      document.getElementById('botStatusBadge').textContent=on?'&#9679; Running':'Offline';
+      document.getElementById('botStatusBadge').style.color=on?'var(--green)':'var(--muted)';
+      document.getElementById('botStatusBadge').style.background=on?'rgba(0,255,136,.12)':'rgba(255,255,255,.06)';
+      document.getElementById('botStartBtn').disabled=on;
+      document.getElementById('botTrainingMode').checked=d.training!==false;
+      document.getElementById('botCycleCount').textContent=d.cycleCount||0;
+      document.getElementById('botLastSummary').textContent=d.lastSummary||'—';
+      document.getElementById('botLastCycle').textContent=d.lastCycle?new Date(d.lastCycle).toLocaleTimeString():'—';
+      var perf=d.performance||{};
+      document.getElementById('botWinRate').textContent=(perf.winRate||0)+'%';
+      document.getElementById('botWinRate').style.color=perf.winRate>=50?'var(--green)':'var(--red)';
+      document.getElementById('botTotalTrades').textContent=perf.total||0;
+      document.getElementById('botPnl').textContent='₹'+(perf.pnl||0).toLocaleString();
+      document.getElementById('botPnl').style.color=(perf.pnl||0)>=0?'var(--green)':'var(--red)';
+      renderBotLog(d.log||[]);
     });
 }
-
-function toggleTraining() {
-  var training = document.getElementById('botTrainingMode').checked;
-  fetch('/api/bot/training', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: TOKEN, training: training })
-  });
+function toggleTraining(){
+  var tr=document.getElementById('botTrainingMode').checked;
+  fetch('/api/bot/training',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,training:tr})});
 }
-
-function startBot() {
-  if (!BOT_STOCKS.length) { return; }
-  var training = document.getElementById('botTrainingMode').checked;
-  document.getElementById('botStartBtn').textContent = 'Starting...';
-  fetch('/api/bot/start', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: TOKEN, training: training })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if (d.error) { document.getElementById('botStartBtn').textContent = '▶ Start Bot'; return; }
-    loadBot();
-  })
-  .catch(function(){ document.getElementById('botStartBtn').textContent = '▶ Start Bot'; });
-}
-
-function runBacktest() {
-  if (!BOT_STOCKS.length) { return; }
-  var btn = document.getElementById('backtestBtn');
-  btn.textContent = 'Running backtest...';
-  btn.disabled = true;
-  document.getElementById('backtestResult').style.display = 'block';
-  document.getElementById('backtestResult').innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">Running AI against 1 year of data...</div>';
-  fetch('/api/bot/backtest', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: TOKEN, stocks: BOT_STOCKS })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    btn.textContent = '🧪 Run Backtest (1 year historical)';
-    btn.disabled = false;
-    var html = '<div style="background:rgba(255,255,255,.04);border-radius:.5rem;padding:.75rem;margin-bottom:.5rem;display:flex;gap:1rem;justify-content:space-around;">' +
-      '<div style="text-align:center;"><div style="font-size:.65rem;text-transform:uppercase;color:var(--muted);">Win Rate</div><div style="font-size:1.1rem;font-weight:700;' + (d.winRate >= 50 ? 'color:var(--green)' : 'color:var(--red)') + ';">' + d.winRate + '%</div></div>' +
-      '<div style="text-align:center;"><div style="font-size:.65rem;text-transform:uppercase;color:var(--muted);">Correct</div><div style="font-size:1.1rem;font-weight:700;color:var(--white);">' + d.wins + '/' + d.total + '</div></div>' +
-      '</div><div style="font-size:.78rem;max-height:200px;overflow-y:auto;">';
-    (d.results || []).forEach(function(r){
-      var c = r.correct ? 'var(--green)' : 'var(--red)';
-      html += '<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
-        '<span style="color:var(--white);font-family:var(--fm);">' + r.symbol + '</span>' +
-        '<span style="color:' + (r.action === 'BUY' ? 'var(--green)' : r.action === 'SELL' ? 'var(--red)' : 'var(--gold)') + ';">' + r.action + '</span>' +
-        '<span style="color:' + c + ';">' + r.profitPct + '%</span></div>';
+function startBot(){
+  if(!BOT_STOCKS.length)return;
+  var tr=document.getElementById('botTrainingMode').checked;
+  var btn=document.getElementById('botStartBtn');btn.textContent='Starting...';
+  var errEl=document.getElementById('botError');errEl.style.display='none';
+  fetch('/api/bot/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,training:tr})})
+    .then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.error||'Failed to start');});return r.json();})
+    .then(function(d){loadBot();})
+    .catch(function(e){
+      btn.textContent='&#9654; Start Bot';
+      errEl.textContent=e.message;errEl.style.display='block';
     });
-    html += '</div>';
-    document.getElementById('backtestResult').innerHTML = html;
-  })
-  .catch(function(){
-    btn.textContent = '🧪 Run Backtest (1 year historical)';
-    btn.disabled = false;
-  });
 }
-
-function stopBot() {
-  fetch('/api/bot/stop', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: TOKEN })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){ loadBot(); });
+function stopBot(){
+  fetch('/api/bot/stop',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})})
+    .then(function(r){return r.json();}).then(function(){loadBot();});
 }
-
-function renderBotLog(log) {
-  var el = document.getElementById('botLog');
-  if (!log || !log.length) { el.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">No trades yet.</div>'; return; }
-  el.innerHTML = log.slice().reverse().slice(0,50).map(function(l){
-    var c = l.type === 'BUY' ? 'var(--green)' : 'var(--red)';
-    return '<div style="display:flex;gap:.5rem;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--fm);">' +
-      '<span style="color:' + c + ';font-weight:600;min-width:40px;">' + l.type + '</span>' +
-      '<span style="color:var(--white);min-width:80px;">' + l.symbol + '</span>' +
-      '<span style="color:#d0d0e0;">' + (l.quantity||'') + ' @ ₹' + (l.price||0).toFixed(2) + '</span>' +
-      '<span style="color:var(--muted);font-size:.72rem;overflow:hidden;text-overflow:ellipsis;">' + (l.reason||'') + '</span></div>';
+function runBacktest(){
+  if(!BOT_STOCKS.length)return;
+  var btn=document.getElementById('backtestBtn');btn.textContent='Running...';btn.disabled=true;
+  document.getElementById('backtestResult').style.display='block';
+  document.getElementById('backtestResult').innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);"><span class="loading-dots"></span> Running AI against 1 year of data</div>';
+  fetch('/api/bot/backtest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,stocks:BOT_STOCKS})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btn.textContent='&#x1f9ea; Run Backtest (1 year)';btn.disabled=false;
+      var h='<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:.6rem;margin-bottom:.5rem;display:flex;gap:1rem;justify-content:space-around;">'+
+        '<div style="text-align:center;"><div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">Win Rate</div><div style="font-size:1rem;font-weight:700;'+(d.winRate>=50?'color:var(--green)':'color:var(--red)')+';">'+d.winRate+'%</div></div>'+
+        '<div style="text-align:center;"><div style="font-size:.6rem;text-transform:uppercase;color:var(--muted);font-family:var(--fm);">Correct</div><div style="font-size:1rem;font-weight:700;">'+d.wins+'/'+d.total+'</div></div></div>';
+      h+='<div style="font-size:.76rem;max-height:180px;overflow-y:auto;">';
+      (d.results||[]).forEach(function(r){
+        h+='<div style="display:flex;justify-content:space-between;padding:.25rem 0;border-bottom:1px solid rgba(255,255,255,.04);">'+
+          '<span style="font-family:var(--fm);">'+r.symbol+'</span>'+
+          '<span style="color:'+(r.action==='BUY'?'var(--green)':r.action==='SELL'?'var(--red)':'var(--gold)')+';">'+r.action+'</span>'+
+          '<span style="color:'+(r.correct?'var(--green)':'var(--red)')+';">'+r.profitPct+'%</span></div>';
+      });h+='</div>';
+      document.getElementById('backtestResult').innerHTML=h;
+    }).catch(function(){btn.textContent='&#x1f9ea; Run Backtest (1 year)';btn.disabled=false;});
+}
+function addBotStock(){
+  var input=document.getElementById('botStockInput'), sym=input.value.trim().toUpperCase();
+  if(!sym||BOT_STOCKS.includes(sym)||BOT_STOCKS.length>=10)return;
+  BOT_STOCKS.push(sym);input.value='';saveBotStocks();renderBotStockList();
+}
+function removeBotStock(sym){BOT_STOCKS=BOT_STOCKS.filter(function(s){return s!==sym;});saveBotStocks();renderBotStockList();}
+function saveBotStocks(){fetch('/api/bot/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,stocks:BOT_STOCKS})});}
+function renderBotStockList(){
+  var el=document.getElementById('botStockList');
+  if(!BOT_STOCKS.length){el.innerHTML='<div style="color:var(--muted);font-size:.8rem;">No stocks added yet.</div>';return;}
+  el.innerHTML=BOT_STOCKS.map(function(s){return '<div style="display:inline-flex;align-items:center;gap:.35rem;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);border-radius:6px;padding:.25rem .55rem;font-size:.78rem;"><span>'+s+'</span><button onclick="removeBotStock(\''+s+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:0;line-height:1;">&#x2715;</button></div>';}).join('');
+}
+function renderBotLog(log){
+  var el=document.getElementById('botLog');
+  if(!log||!log.length){el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--muted);">No trades yet.</div>';return;}
+  el.innerHTML=log.slice().reverse().slice(0,50).map(function(l){
+    var c=l.type==='BUY'?'var(--green)':'var(--red)';
+    return '<div style="display:flex;gap:.5rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--fm);font-size:.75rem;">'+
+      '<span style="color:'+c+';font-weight:600;min-width:36px;">'+l.type+'</span>'+
+      '<span style="min-width:72px;">'+l.symbol+'</span>'+
+      '<span style="color:#ccc;">'+(l.quantity||'')+' @ ₹'+(l.price||0).toFixed(2)+'</span>'+
+      '<span style="color:var(--muted);font-size:.7rem;overflow:hidden;text-overflow:ellipsis;">'+(l.reason||'')+'</span></div>';
   }).join('');
 }
 
-function runAdaptive() {
-  var btn = document.getElementById('adaptBtn');
-  btn.textContent = 'Analyzing...';
-  btn.disabled = true;
-  document.getElementById('adaptiveSuggestions').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);font-size:.9rem;"><span class="loading-dots"></span> AI is analyzing your usage data...</div>';
-  fetch('/api/admin/adapt?token=' + encodeURIComponent(TOKEN))
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      btn.textContent = 'Analyze & Suggest';
-      btn.disabled = false;
-      if (d.error) {
-        document.getElementById('adaptiveSuggestions').innerHTML = '<div style="grid-column:1/-1;background:var(--card);border:1px solid var(--red);border-radius:.75rem;padding:1.5rem;color:var(--red);">Error: ' + esc(d.error) + '</div>';
-        return;
-      }
-      var items = d.suggestions || [];
-      if (!items.length) {
-        document.getElementById('adaptiveSuggestions').innerHTML = '<div style="grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;color:var(--muted);">No suggestions generated yet.</div>';
-        return;
-      }
-      var html = '';
-      items.forEach(function(s, i) {
-        html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.25rem;">' +
-          '<div style="display:flex;align-items:flex-start;gap:.75rem;">' +
-            '<div style="background:var(--cyan);color:#000;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;">' + (i+1) + '</div>' +
-            '<div style="flex:1;">' +
-              '<div style="font-family:var(--fh);font-size:1rem;font-weight:600;margin-bottom:.4rem;">' + esc(s.title) + '</div>' +
-              '<div style="font-size:.85rem;color:#d0d0e0;line-height:1.6;">' + esc(s.reasoning) + '</div>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
+// === CRYPTO ===
+function loadCrypto(){
+  var grid=document.getElementById('cryptoGrid');
+  grid.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);grid-column:1/-1;"><span class="loading-dots"></span> Loading crypto prices</div>';
+  fetch('/api/crypto/prices')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d.prices||!d.prices.length){grid.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);grid-column:1/-1;">No crypto data available.</div>';return;}
+      grid.innerHTML='';
+      d.prices.forEach(function(c){
+        var chg=c.changePercent||0, up=chg>=0;
+        grid.innerHTML+='<div class="coin-card"><div class="name">'+esc(c.symbol).replace('-USD','')+' <span style="color:var(--muted);font-size:.65rem;">'+esc(c.symbol)+'</span></div>'+
+          '<div class="price">$'+(c.price||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'+
+          '<div class="chg '+(up?'up':'down')+'">'+(up?'+':'')+chg.toFixed(2)+'%</div></div>';
       });
-      document.getElementById('adaptiveSuggestions').innerHTML = html;
+      // Add-to-bot list
+      var addEl = document.getElementById('cryptoAddList');
+      addEl.innerHTML = d.prices.map(function(c){
+        var s = c.symbol;
+        return '<button class="btn btn-ghost" style="font-size:.75rem;padding:.3rem .6rem;" onclick="addCryptoSymbol(\''+s+'\')">'+s.replace('-USD','')+' &#43;</button>';
+      }).join('');
     })
-    .catch(function(e) {
-      btn.textContent = 'Analyze & Suggest';
-      btn.disabled = false;
-      document.getElementById('adaptiveSuggestions').innerHTML = '<div style="grid-column:1/-1;background:var(--card);border:1px solid var(--red);border-radius:.75rem;padding:1.5rem;color:var(--red);">Failed: ' + esc(e.message) + '</div>';
-    });
+    .catch(function(){grid.innerHTML='<div style="text-align:center;padding:2rem;color:var(--red);grid-column:1/-1;">Failed to load crypto prices.</div>';});
+}
+function addCryptoSymbol(sym){
+  if(BOT_STOCKS.includes(sym)||BOT_STOCKS.length>=10)return;
+  BOT_STOCKS.push(sym);saveBotStocks();renderBotStockList();
 }
 
-function renderDashboard(data) {
-  document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+// === UTILITY ===
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-  // Stat cards
-  animateNum('statTotal', data.totalRequests);
-  animateNum('statVisitors', data.uniqueVisitors);
-  var epCount = Object.keys(data.endpoints || {}).length;
-  document.getElementById('statEndpoints').textContent = epCount;
-  var pvCount = Object.keys(data.pageViews || {}).length;
-  document.getElementById('statPages').textContent = pvCount;
-
-  // Hourly chart
-  var hourly = data.hourly || {};
-  var hours = Object.keys(hourly).sort();
-  var maxH = 0;
-  hours.forEach(function(h) { if (hourly[h] > maxH) maxH = hourly[h]; });
-  var chartEl = document.getElementById('hourlyChart');
-  chartEl.innerHTML = '<div style="color:var(--muted);font-size:.78rem;width:100%;text-align:center;padding:1rem 0;">' + (hours.length ? '' : 'No data yet') + '</div>';
-  if (hours.length) {
-    chartEl.innerHTML = '';
-    hours.forEach(function(h) {
-      var val = hourly[h] || 0;
-      var pct = maxH > 0 ? (val / maxH * 100) : 0;
-      var label = h.slice(11, 16);
-      chartEl.innerHTML += '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:28px;">' +
-        '<div style="width:20px;height:' + Math.max(2, pct) + 'px;background:var(--purple);border-radius:2px 2px 0 0;transition:height .3s;"></div>' +
-        '<span style="font-size:.6rem;color:var(--muted);transform:rotate(-45deg);white-space:nowrap;">' + label + '</span></div>';
-    });
-  }
-
-  // Page views table
-  var pages = data.pageViews || {};
-  var pageEntries = Object.keys(pages).sort(function(a,b){return pages[b]-pages[a];});
-  var pageTbody = document.querySelector('#pageTable tbody');
-  pageTbody.innerHTML = '';
-  var totalViews = pageEntries.reduce(function(s,k){return s+pages[k];},0);
-  pageEntries.forEach(function(p) {
-    var pct = totalViews > 0 ? (pages[p] / totalViews * 100).toFixed(1) : 0;
-    var pageName = p === '/' || p === '' ? 'Home' : p;
-    var barW = Math.max(2, pct * 3);
-    pageTbody.innerHTML += '<tr><td>' + esc(pageName) + '</td><td>' + pages[p] + '</td><td><div class="bar-cell"><div class="bar green" style="width:' + barW + 'px;"></div>' + pct + '%</div></td></tr>';
-  });
-
-  // Endpoint table
-  var endpoints = data.endpoints || {};
-  var epEntries = Object.keys(endpoints).sort(function(a,b){return endpoints[b]-endpoints[a];});
-  var epTbody = document.querySelector('#endpointTable tbody');
-  epTbody.innerHTML = '';
-  var totalEP = epEntries.reduce(function(s,k){return s+endpoints[k];},0);
-  epEntries.forEach(function(ep) {
-    var pct = totalEP > 0 ? (endpoints[ep] / totalEP * 100).toFixed(1) : 0;
-    var barW = Math.max(2, pct * 2);
-    epTbody.innerHTML += '<tr><td style="font-family:var(--fm);font-size:.78rem;">' + esc(ep) + '</td><td>' + endpoints[ep] + '</td><td><div class="bar-cell"><div class="bar" style="width:' + barW + 'px;"></div>' + pct + '%</div></td></tr>';
-  });
-
-  // Recent requests
-  var recent = data.recentRequests || [];
-  var recentEl = document.getElementById('recentRequests');
-  recentEl.innerHTML = '';
-  if (!recent.length) {
-    recentEl.innerHTML = '<div style="padding:.5rem 0;color:var(--muted);">No recent requests.</div>';
-  } else {
-    recent.forEach(function(r) {
-      var t = new Date(r.time).toLocaleTimeString();
-      var m = r.method === 'GET' ? '<span style="color:var(--green);">GET</span>' : '<span style="color:var(--gold);">POST</span>';
-      recentEl.innerHTML += '<div style="display:flex;gap:.75rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--fm);font-size:.75rem;"><span style="color:var(--muted);min-width:60px;">' + t + '</span>' + m + ' <span style="color:#d0d0e0;">' + esc(r.url) + '</span></div>';
-    });
-  }
-}
-
-function animateNum(id, val) {
-  var el = document.getElementById(id);
-  var current = parseInt(el.textContent.replace(/,/g,'')) || 0;
-  if (current === val) { el.textContent = val.toLocaleString(); return; }
-  el.textContent = val.toLocaleString();
-}
-
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
-  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
-  btn.classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
-}
-
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// ── COMPANY DEEP-DIVE ────────────────────────────────────────────
-function runCompanyDeepDive() {
-  var name = document.getElementById('companyInput').value.trim();
-  if (!name) { return; }
-  COMPANY = name;
-  document.getElementById('companyLoading').style.display = 'block';
-  document.getElementById('companyResult').style.display = 'none';
-  document.getElementById('companyResult').innerHTML = '';
-
-  // Step 1: Get company profile
-  fetch('/api/company/profile', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: name })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(profile) {
-    document.getElementById('companyLoading').style.display = 'none';
-    if (profile.error) {
-      document.getElementById('companyResult').innerHTML = '<div style="color:var(--red);padding:1rem;">' + esc(profile.error) + '</div>';
-      document.getElementById('companyResult').style.display = 'block';
-      return;
-    }
-    renderCompanyProfile(profile);
-    // Step 2: Get financials
-    loadCompanyFinancials(name);
-  })
-  .catch(function(err) {
-    document.getElementById('companyLoading').style.display = 'none';
-    document.getElementById('companyResult').innerHTML = '<div style="color:var(--red);">Error: ' + esc(err.message) + '</div>';
-    document.getElementById('companyResult').style.display = 'block';
-  });
-}
-
-function renderCompanyProfile(p) {
-  var pData = p.profile || p;
-  var html = '<div class="cr-section"><h4>Company Profile</h4><div class="cr-grid">' +
-    '<div class="cr-field"><div class="cr-label">Name</div><div class="cr-val">' + esc(pData.name || '') + '</div></div>';
-  if (pData.ticker) html += '<div class="cr-field"><div class="cr-label">Ticker</div><div class="cr-val" style="font-family:var(--fm);color:var(--cyan);">' + esc(pData.ticker) + '</div></div>';
-  if (pData.sector) html += '<div class="cr-field"><div class="cr-label">Sector</div><div class="cr-val">' + esc(pData.sector) + '</div></div>';
-  if (pData.industry) html += '<div class="cr-field"><div class="cr-label">Industry</div><div class="cr-val">' + esc(pData.industry) + '</div></div>';
-  if (pData.headquarters) html += '<div class="cr-field"><div class="cr-label">Headquarters</div><div class="cr-val">' + esc(pData.headquarters) + '</div></div>';
-  if (pData.founded) html += '<div class="cr-field"><div class="cr-label">Founded</div><div class="cr-val">' + pData.founded + '</div></div>';
-  if (pData.employees) html += '<div class="cr-field"><div class="cr-label">Employees</div><div class="cr-val">' + pData.employees.toLocaleString() + '</div></div>';
-  if (pData.website && pData.website !== 'N/A') html += '<div class="cr-field"><div class="cr-label">Website</div><div class="cr-val"><a href="' + esc(pData.website) + '" target="_blank" style="color:var(--cyan);">' + esc(pData.website) + '</a></div></div>';
-  html += '</div></div>';
-
-  if (pData.description) {
-    html += '<div class="cr-section"><h4>Overview</h4><p style="font-size:.9rem;line-height:1.7;color:#d0d0e0;">' + esc(pData.description) + '</p></div>';
-  }
-
-  if (pData.keyPeople && pData.keyPeople.length) {
-    html += '<div class="cr-section"><h4>Key People</h4><div class="cr-grid">';
-    pData.keyPeople.forEach(function(kp) {
-      html += '<div class="cr-field"><div class="cr-label">' + esc(kp.title || '') + '</div><div class="cr-val">' + esc(kp.name || '') + '</div></div>';
-    });
-    html += '</div></div>';
-  }
-
-  if (pData.segments && pData.segments.length) {
-    html += '<div class="cr-section"><h4>Business Segments</h4><div style="display:flex;flex-wrap:wrap;gap:.5rem;">';
-    pData.segments.forEach(function(s) {
-      html += '<div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:.5rem;padding:.5rem .8rem;flex:1;min-width:150px;"><div style="display:flex;justify-content:space-between;margin-bottom:.15rem;"><span style="font-weight:600;font-size:.85rem;">' + esc(s.name) + '</span><span style="color:var(--cyan);font-family:var(--fm);font-size:.8rem;">' + (s.revenuePct || 0) + '%</span></div><div style="font-size:.75rem;color:var(--muted);">' + esc(s.description || '') + '</div></div>';
-    });
-    html += '</div></div>';
-  }
-
-  if (pData.competitors && pData.competitors.length) {
-    html += '<div class="cr-section"><h4>Competitors</h4><div style="display:flex;flex-wrap:wrap;gap:.3rem;">';
-    pData.competitors.forEach(function(c) {
-      html += '<span style="background:rgba(255,255,255,.06);padding:.25rem .6rem;border-radius:.3rem;font-size:.8rem;color:#d0d0e0;">' + esc(c) + '</span>';
-    });
-    html += '</div></div>';
-  }
-
-  var el = document.getElementById('companyResult');
-  el.innerHTML = html;
-  el.style.display = 'block';
-}
-
-function loadCompanyFinancials(name) {
-  var el = document.getElementById('companyFinancialsResult');
-  el.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);font-size:.85rem;">Loading 5-year financials...</div>';
-
-  fetch('/api/company/financials', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: name })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.error) {
-      el.innerHTML = '<div style="color:var(--red);padding:.5rem;">' + esc(data.error) + '</div>';
-      return;
-    }
-    renderFinancials(data);
-  })
-  .catch(function(err) {
-    el.innerHTML = '<div style="color:var(--red);">Error: ' + esc(err.message) + '</div>';
-  });
-}
-
-function renderFinancials(data) {
-  var fin = data.financials || {};
-  var ratios = data.ratios || {};
-  var metrics = data.keyMetrics || {};
-  var growth = data.growth || {};
-  var html = '<div class="cr-section"><h4>5-Year Financial Performance</h4>';
-
-  // Revenue table
-  html += '<div style="overflow-x:auto;margin-bottom:1rem;"><table class="endpoint-table" style="min-width:500px;"><thead><tr><th>Metric</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead><tbody>';
-  function addRow(label, obj, unit) {
-    if (!obj) return;
-    html += '<tr><td style="font-weight:500;">' + label + '</td>';
-    var years = ['2020','2021','2022','2023','2024','2025'];
-    years.forEach(function(y) {
-      var v = obj[y];
-      if (v == null) { html += '<td style="color:var(--muted);">—</td>'; return; }
-      var display = unit === 'pct' ? v.toFixed(1) + '%' : (v >= 100 ? '$' + v.toFixed(1) + 'B' : '$' + (v * 1000).toFixed(0) + 'M');
-      html += '<td>' + display + '</td>';
-    });
-    html += '</tr>';
-  }
-  addRow('Revenue', fin.revenue);
-  addRow('Net Income', fin.netIncome);
-  addRow('Operating Income', fin.operatingIncome);
-  addRow('Total Assets', fin.totalAssets);
-  addRow('Total Debt', fin.totalDebt);
-  addRow('Free Cash Flow', fin.freeCashFlow);
-  addRow('Operating Margin', fin.operatingMargin, 'pct');
-  addRow('Net Margin', fin.netMargin, 'pct');
-  html += '</tbody></table></div>';
-
-  // Revenue growth
-  if (fin.revenueGrowth) {
-    html += '<h4 style="font-family:var(--fm);font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.5rem;">Revenue Growth</h4><div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">';
-    Object.keys(fin.revenueGrowth).forEach(function(y) {
-      var v = fin.revenueGrowth[y];
-      if (v == null) return;
-      var c = v >= 0 ? 'var(--green)' : 'var(--red)';
-      html += '<span style="background:rgba(255,255,255,.04);padding:.3rem .6rem;border-radius:.3rem;font-size:.8rem;"><span style="color:var(--muted);">' + y + '</span> <span style="color:' + c + ';font-weight:600;">' + (v >= 0 ? '+' : '') + v.toFixed(1) + '%</span></span>';
-    });
-    html += '</div>';
-  }
-
-  // Key ratios
-  html += '<div class="cr-section"><h4>Key Ratios & Metrics</h4><div class="cr-grid">';
-  var ratioItems = [
-    {l:'P/E Ratio', v: ratios.peRatio},
-    {l:'Forward P/E', v: ratios.forwardPE},
-    {l:'P/B Ratio', v: ratios.pbRatio},
-    {l:'ROE', v: ratios.roe, u:'%'},
-    {l:'ROA', v: ratios.roa, u:'%'},
-    {l:'Debt/Equity', v: ratios.debtToEquity},
-    {l:'Current Ratio', v: ratios.currentRatio},
-    {l:'Div Yield', v: ratios.dividendYield, u:'%'},
-    {l:'Beta', v: ratios.beta},
-  ];
-  ratioItems.forEach(function(item) {
-    if (item.v == null) return;
-    var val = item.u ? item.v + item.u : item.v;
-    html += '<div class="cr-field"><div class="cr-label">' + item.l + '</div><div class="cr-val">' + val + '</div></div>';
-  });
-  if (metrics.marketCap) html += '<div class="cr-field"><div class="cr-label">Market Cap</div><div class="cr-val">' + esc(metrics.marketCap) + '</div></div>';
-  if (growth.revenueCagr5y != null) html += '<div class="cr-field"><div class="cr-label">Revenue CAGR (5Y)</div><div class="cr-val" style="color:var(--green);">' + growth.revenueCagr5y + '%</div></div>';
-  if (growth.earningsCagr5y != null) html += '<div class="cr-field"><div class="cr-label">Earnings CAGR (5Y)</div><div class="cr-val" style="color:var(--green);">' + growth.earningsCagr5y + '%</div></div>';
-  html += '</div></div>';
-
-  el = document.getElementById('companyFinancialsResult');
-  el.innerHTML = html;
-}
-
-// ── INIT ──────────────────────────────────────────────────────────
-if (TOKEN) { verifyToken(); }
-setInterval(refresh, 15000);
+// === INIT ===
+if(TOKEN)verifyToken();
+setInterval(refresh,15000);
 </script>
 </body>
 </html>

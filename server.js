@@ -1259,34 +1259,21 @@ async function runBotCycle() {
   var config = loadBotConfig();
   if (!config.running || !config.stocks.length) return;
   if (!OPENROUTER_API_KEY) return;
-  var symbols = config.stocks.join(',');
   var quotes = {};
   var indicatorsData = {};
-  try {
-    var res = await fetch('https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(symbols));
-    var data = await res.json();
-    (data.quoteResponse && data.quoteResponse.result || []).forEach(function(q){ quotes[q.symbol] = q; });
-  } catch(e) {}
-  // Update price change for pending decisions before evaluation
-  var pending = config.pendingDecisions || [];
-  for (var p of pending) {
-    var q = quotes[p.symbol] || {};
-    var currentPrice = q.regularMarketPrice || 0;
-    if (currentPrice && p.price) {
-      p.priceChange = ((currentPrice - p.price) / p.price) * 100;
-    }
-  }
-  config.pendingDecisions = pending;
-  // Evaluate past decisions
-  config = evaluatePastDecisions(config);
+  // Fetch quotes + indicators for each stock via v8 chart API
   for (var s of config.stocks) {
     try {
       var cRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(s) + '?interval=1d&range=6mo');
       var cData = await cRes.json();
       var ch = cData.chart && cData.chart.result && cData.chart.result[0];
-      if (ch && ch.timestamp && ch.indicators && ch.indicators.quote && ch.indicators.quote[0]) {
-        var closes = ch.indicators.quote[0].close || [];
-        indicatorsData[s] = computeIndicators(closes.filter(function(v){return v!=null;}));
+      if (ch) {
+        var meta = ch.meta || {};
+        quotes[s] = { symbol: meta.symbol || s, regularMarketPrice: meta.regularMarketPrice };
+        if (ch.timestamp && ch.indicators && ch.indicators.quote && ch.indicators.quote[0]) {
+          var closes = ch.indicators.quote[0].close || [];
+          indicatorsData[s] = computeIndicators(closes.filter(function(v){return v!=null;}));
+        }
       }
     } catch(e) {}
   }
@@ -1294,7 +1281,7 @@ async function runBotCycle() {
   config.stocks.forEach(function(s){
     var q = quotes[s] || {};
     var ind = indicatorsData[s] || {};
-    context += s + ': Price=$' + (q.regularMarketPrice || 'N/A') + ' Change=' + (q.regularMarketChangePercent || 0).toFixed(2) + '%' +
+    context += s + ': Price=$' + (q.regularMarketPrice || 'N/A') +
       ' RSI=' + (ind.rsi || 'N/A') + ' MACD=' + (ind.macd || 'N/A') + ' SMA50=' + (ind.sma50 || 'N/A') + ' SMA200=' + (ind.sma200 || 'N/A') +
       ' SMA50Above200=' + (ind.sma50Above200 ? 'Yes' : 'No') + '\n';
   });
@@ -1390,6 +1377,7 @@ async function handleBotToggle(req, res, start) {
   if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
   var config = loadBotConfig();
   if (start && !config.stocks.length) { sendJson(res, 400, { error: 'No stocks configured' }); return; }
+  if (start && !OPENROUTER_API_KEY) { sendJson(res, 500, { error: 'OpenRouter API key not set — add OPENROUTER_API_KEY to .env' }); return; }
   if (payload.training !== undefined) config.training = payload.training;
   config.running = start;
   if (start) {
@@ -1430,6 +1418,39 @@ async function handleAdminStats(req, res, url) {
     hourly: t.hourlyCounts || {},
     recentRequests: recentRequests
   });
+}
+
+async function handleCryptoPrices(req, res) {
+  var symbols = ['BTC-USD','ETH-USD','SOL-USD','XRP-USD','ADA-USD','DOGE-USD','DOT-USD','LINK-USD','AVAX-USD'];
+  try {
+    var results = await Promise.all(symbols.map(async function(sym){
+      try {
+        var r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?interval=1d&range=5d');
+        var d = await r.json();
+        var meta = d.chart && d.chart.result && d.chart.result[0] && d.chart.result[0].meta;
+        if (!meta) return null;
+        var quotes = d.chart.result[0].indicators && d.chart.result[0].indicators.quote && d.chart.result[0].indicators.quote[0];
+        var closes = quotes ? quotes.close || [] : [];
+        var prevClose = closes[closes.length - 2] || meta.previousClose || meta.chartPreviousClose || meta.regularMarketPrice;
+        var change = meta.regularMarketPrice - prevClose;
+        var changePercent = prevClose > 0 ? (change / prevClose * 100) : 0;
+        return {
+          symbol: meta.symbol || sym,
+          name: meta.shortName || meta.longName || sym,
+          price: meta.regularMarketPrice,
+          change: change,
+          changePercent: changePercent,
+          marketCap: meta.marketCap,
+          volume: meta.regularMarketVolume,
+          high: meta.regularMarketDayHigh,
+          low: meta.regularMarketDayLow
+        };
+      } catch(e) { return null; }
+    }));
+    sendJson(res, 200, { prices: results.filter(function(r){return r !== null;}) });
+  } catch(e) {
+    sendJson(res, 500, { error: 'Failed to fetch crypto prices' });
+  }
 }
 
 async function handleAdminAdapt(req, res, url) {
@@ -1955,6 +1976,10 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'POST' && req.url === '/api/predict/chart') {
     handleChartPredict(req, res).catch(err => sendJson(res, 500, { error: err.message }));
+    return;
+  }
+  if (req.method === 'GET' && req.url === '/api/crypto/prices') {
+    handleCryptoPrices(req, res).catch(err => sendJson(res, 500, { error: err.message }));
     return;
   }
   if (req.method === 'GET' && (req.url === '/admin' || req.url === '/admin.html')) {
