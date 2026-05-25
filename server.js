@@ -1411,11 +1411,12 @@ async function runBotCycle() {
   config.pendingDecisions = pending;
   config = evaluatePastDecisions(config);
   BOT_STATUS = 'Calling AI for trading decisions...';
-  var context = 'Current market data and technical indicators for monitored stocks:\n\n';
+  var context = 'Market data (stocks with valid data only):\n\n';
   config.stocks.forEach(function(s){
     var q = quotes[s] || {};
     var ind = indicatorsData[s] || {};
-    var price = q.regularMarketPrice || 'N/A';
+    var price = q.regularMarketPrice;
+    if (!price) return; // skip stocks with no price data
     var chg = q.regularMarketChangePercent || 0;
     context += s + ': Price=$' + price + ' Chg=' + (typeof chg==='number'?chg.toFixed(1)+'%':'N/A') +
       ' RSI=' + (ind.rsi || 'N/A') + ' MACD=' + (ind.macd || 'N/A') + ' MACD_Signal=' + (ind.macdSignal || 'N/A') + ' MACD_Hist=' + (ind.macdHistogram || 'N/A') +
@@ -1425,6 +1426,9 @@ async function runBotCycle() {
       ' Range20d=' + (ind.range20 ? '$' + ind.range20.toFixed(2) + ' (' + ind.range20Pct.toFixed(1) + '%)' : 'N/A') +
       ' PricePosIn20dRange=' + (ind.posInRange != null ? ind.posInRange.toFixed(0) + '%' : 'N/A') + '\n';
   });
+  if (context === 'Market data (stocks with valid data only):\n\n') {
+    context += '(No real-time data available. Use technical judgment based on last known prices.)\n';
+  }
   // === Market Regime Detector ===
   var uptrendCount = 0, totalWithData = 0, avgRsi = 0, rsiCount = 0;
   config.stocks.forEach(function(s){
@@ -1470,18 +1474,15 @@ async function runBotCycle() {
     'Continue current approach. Market regime: ' + regime + '.\n\nAvailable strategies:\n  ' + allStrategies;
   var prompt = 'You are an expert algorithmic trading AI. Past performance: ' + (perf.total||0) + ' trades, win rate ' + (perf.winRate||0) + '%, P&L ₹' + (perf.pnl||0).toFixed(0) + '. ' + urgency + '\n\n' +
     strategyGuidance + '\n\n' +
-    'RISK GUIDELINES (suggestions, not hard rules):\n' +
-    '1. Avoid buying stocks with RSI > 65 (overbought).\n' +
-    '2. Avoid selling stocks with RSI < 35 (oversold).\n' +
-    '3. Prefer BUY when SMA50 > SMA200 (uptrend) OR RSI < 35 (oversold bounce).\n' +
-    '4. Prefer SELL when SMA50 < SMA200 (downtrend) OR RSI > 65 (overbought).\n' +
-    '5. Max 3 BUY signals per cycle. At least 1 BUY or SELL if you see any opportunity.\n' +
-    '6. If win rate < 50%, use HALF the usual quantity on every trade until win rate recovers.\n' +
-    '7. If the bot has 0 trades so far (total=0), try to make at least 1-2 trades this cycle to get started. Start with small quantities.\n\n' +
+    'RULES:\n' +
+    '1. Max 3 BUY signals per cycle. At least 1 trade if you see any opportunity.\n' +
+    '2. If win rate < 50%, use HALF the usual quantity.\n' +
+    '3. If 0 trades so far, make 1-3 trades this cycle to start (small quantities 5-15).\n' +
+    '4. Pending decisions are already active — do NOT repeat them.\n\n' +
     'Recent decisions:\n' + recentStr + '\n\n' +
-    'Active pending decisions (NOT YET SCORED — do NOT repeat these):\n' + pendingSummary + '\n\n' +
+    'Active pending:\n' + pendingSummary + '\n\n' +
     'Market data:\n\n' + context +
-    '\nRespond ONLY with JSON array: [{"symbol":"...","action":"BUY|SELL|HOLD","reason":"(which strategy # + key indicator values)","quantity":N}]. BUY=enter quantity (10-50 suggested), SELL=quantity to sell (0=all), HOLD=quantity 0. Max 3 BUY signals. No markdown.';
+    '\nRespond ONLY with JSON array: [{"symbol":"...","action":"BUY|SELL|HOLD","reason":"(strategy # + indicators)","quantity":N}]. BUY=quantity 5-50, SELL=0 for all, HOLD=0. Max 3 BUYs. No markdown.';
 
   var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
