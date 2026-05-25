@@ -6,5 +6,61 @@
     "price": 33.529998779296875,
     "amount": 29975.818908691406,
     "time": 1779691576373
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "BTC",
+    "quantity": 894,
+    "price": 33.529998779296875,
+    "amount": 29975.818908691406,
+    "time": 1779692286703
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "BTC",
+    "quantity": 760,
+    "price": 33.529998779296875,
+    "amount": 25482.799072265625,
+    "time": 1779692465550
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "MSFT",
+    "quantity": 71,
+    "price": 418.57000732421875,
+    "amount": 29718.47052001953,
+    "time": 1779692536006
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "MSFT",
+    "quantity": 61,
+    "price": 418.57000732421875,
+    "amount": 25532.770446777344,
+    "time": 1779692715946
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "MSFT",
+    "quantity": 51,
+    "price": 418.57000732421875,
+    "amount": 21347.070373535156,
+    "time": 1779692895270
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "MSFT",
+    "quantity": 44,
+    "price": 418.57000732421875,
+    "amount": 18417.080322265625,
+    "time": 1779693075005
+  },
+  {
+    "type": "bot_buy",
+    "symbol": "MSFT",
+    "quantity": 37,
+    "price": 418.57000732421875,
+    "amount": 15487.090270996094,
+    "time": 1779693255520
   }
 ]

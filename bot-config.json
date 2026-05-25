@@ -2,12 +2,9 @@
   "stocks": [
     "AAPL",
     "TSLA",
-    "BTC",
-    "ETH",
-    "SOL",
-    "XRP",
-    "ADA",
-    "HDFC BANK LIMITED"
+    "NVDA",
+    "MSFT",
+    "GOOGL"
   ],
   "running": true,
   "training": true,
@@ -15,18 +12,18 @@
     "total": 0,
     "wins": 0,
     "losses": 0,
-    "winRate": "0.0",
+    "winRate": 0,
     "pnl": 0
   },
-  "cycleCount": 22,
+  "cycleCount": 29,
   "pendingDecisions": [
     {
-      "symbol": "BTC",
+      "symbol": "MSFT",
       "action": "BUY",
-      "quantity": 894,
-      "price": 33.529998779296875,
+      "quantity": 71,
+      "price": 418.57000732421875,
       "priceChange": 0,
-      "age": 0
+      "age": 4
     }
   ],
   "log": [
@@ -214,6 +211,125 @@
       "quantity": 0,
       "price": 0,
       "reason": "Portfolio: ₹200000 (Cash: ₹170024 · Holdings: ₹29976)"
+    },
+    {
+      "cycle": 23,
+      "type": "BUY",
+      "symbol": "BTC",
+      "quantity": 894,
+      "price": 33.529998779296875,
+      "reason": "Auto-fallback #1 — best momentum score: RSI=48.536566955429905 MACDh=0.01",
+      "data": "BTC ₹33.529998779296875 RSI=48.5 MACD=-0.01 SMA50=33.6 SMA200=33.8 Trend=DOWN Vol=9K RangePos=-29%"
+    },
+    {
+      "cycle": 23,
+      "type": "PORTFOLIO",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "Portfolio: ₹200000 (Cash: ₹170024 · Holdings: ₹29976)"
+    },
+    {
+      "cycle": 24,
+      "type": "BUY",
+      "symbol": "BTC",
+      "quantity": 760,
+      "price": 33.529998779296875,
+      "reason": "Auto-fallback #1 — best momentum score: RSI=48.536566955429905 MACDh=0.01",
+      "data": "BTC ₹33.529998779296875 RSI=48.5 MACD=-0.01 SMA50=33.6 SMA200=33.8 Trend=DOWN Vol=9K RangePos=-29%"
+    },
+    {
+      "cycle": 24,
+      "type": "PORTFOLIO",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "Portfolio: ₹200000 (Cash: ₹144541 · Holdings: ₹55459)"
+    },
+    {
+      "cycle": 25,
+      "type": "BUY",
+      "symbol": "MSFT",
+      "quantity": 71,
+      "price": 418.57000732421875,
+      "reason": "Auto-fallback #1 — best momentum score: RSI=49.3500767741111 MACDh=0.02",
+      "data": "MSFT ₹418.57000732421875 RSI=49.4 MACD=0.04 SMA50=418.6 SMA200=418.7 Trend=DOWN Vol=66K RangePos=54%"
+    },
+    {
+      "cycle": 25,
+      "type": "PORTFOLIO",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "Portfolio: ₹200000 (Cash: ₹170282 · Holdings: ₹29718)"
+    },
+    {
+      "cycle": 26,
+      "type": "BUY",
+      "symbol": "MSFT",
+      "quantity": 61,
+      "price": 418.57000732421875,
+      "reason": "Auto-fallback #1 — best momentum score: RSI=49.3500767741111 MACDh=0.02",
+      "data": "MSFT ₹418.57000732421875 RSI=49.4 MACD=0.04 SMA50=418.6 SMA200=418.7 Trend=DOWN Vol=66K RangePos=54%"
+    },
+    {
+      "cycle": 26,
+      "type": "PORTFOLIO",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "Portfolio: ₹200000 (Cash: ₹144749 · Holdings: ₹55251)"
+    },
+    {
+      "cycle": 27,
+      "type": "BUY",
+      "symbol": "MSFT",
+      "quantity": 51,
+      "price": 418.57000732421875,
+      "reason": "Auto-fallback #1 — best momentum score: RSI=49.3500767741111 MACDh=0.02",
+      "data": "MSFT ₹418.57000732421875 RSI=49.4 MACD=0.04 SMA50=418.6 SMA200=418.7 Trend=DOWN Vol=66K RangePos=54%"
+    },
+    {
+      "cycle": 27,
+      "type": "PORTFOLIO",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "Portfolio: ₹200000 (Cash: ₹123402 · Holdings: ₹76598)"
+    },
+    {
+      "cycle": 28,
+      "type": "BUY",
+      "symbol": "MSFT",
+      "quantity": 44,
+      "price": 418.57000732421875,
+      "reason": "Auto-fallback #1 — best momentum score: RSI=49.3500767741111 MACDh=0.02",
+      "data": "MSFT ₹418.57000732421875 RSI=49.4 MACD=0.04 SMA50=418.6 SMA200=418.7 Trend=DOWN Vol=66K RangePos=54%"
+    },
+    {
+      "cycle": 28,
+      "type": "PORTFOLIO",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "Portfolio: ₹200000 (Cash: ₹104985 · Holdings: ₹95015)"
+    },
+    {
+      "cycle": 29,
+      "type": "BUY",
+      "symbol": "MSFT",
+      "quantity": 37,
+      "price": 418.57000732421875,
+      "reason": "Auto-fallback #1 — best momentum score: RSI=49.3500767741111 MACDh=0.02",
+      "data": "MSFT ₹418.57000732421875 RSI=49.4 MACD=0.04 SMA50=418.6 SMA200=418.7 Trend=DOWN Vol=66K RangePos=54%"
+    },
+    {
+      "cycle": 29,
+      "type": "PORTFOLIO",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "Portfolio: ₹200000 (Cash: ₹89498 · Holdings: ₹110502)"
     }
   ],
   "strategyPerformance": {
@@ -221,14 +337,15 @@
       "name": "Auto-fallback #1 — best momentum score: RSI=48.536566955429905 MACDh=0.01",
       "wins": 0,
       "losses": 0,
-      "total": 1
+      "total": 1,
+      "winRate": "0.0"
     }
   },
   "consecutiveLosses": {},
-  "lastRegime": "Bearish 📉",
-  "lastCycle": 1779691576373,
-  "lastSummary": "BTC:BUY",
-  "startedAt": 1779691574306,
+  "lastRegime": "Mixed",
+  "lastCycle": 1779693255520,
+  "lastSummary": "MSFT:BUY",
+  "startedAt": 1779692533997,
   "maxDrawdown": 15,
   "circuitBreakerTripped": false,
   "initialCapital": 200000

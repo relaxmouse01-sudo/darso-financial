@@ -1301,13 +1301,12 @@ function evaluatePastDecisions(config) {
     if (p.age >= 2) {
       var priceChangePct = p.priceChange || 0;
       // If price hasn't changed (same trading day), keep pending up to 5 cycles then force-score as neutral
-      if (priceChangePct === 0 && !p._force && p.age < 6) { newPending.push(p); continue; }
+      if (priceChangePct === 0 && !p._force && p.age < 2) { newPending.push(p); continue; }
       perf.total++;
       var rupeePnl = priceChangePct / 100 * (p.price || 0) * (p.quantity || 0);
       var isWin = (p.action === 'BUY' && priceChangePct > 0) || (p.action === 'SELL' && priceChangePct < 0);
       if (priceChangePct === 0) {
-        // Neutral — no data yet, count as neither win nor loss (just skip PnL impact)
-        perf.total--;
+        // Neutral — count as trade but no win/loss or P&L impact
       } else if (isWin) {
         perf.wins++; perf.pnl = (perf.pnl || 0) + Math.abs(rupeePnl);
         if (p.reason) { var m = p.reason.match(/#(\d+)/); if (m) { consecLosses[m[1]] = 0; if (stratPerf[m[1]]) { stratPerf[m[1]].wins = (stratPerf[m[1]].wins||0) + 1; } } }
@@ -1497,11 +1496,14 @@ async function runBotCycle() {
   var hasAction = decisions.some(function(d){ return d.action === 'BUY' || d.action === 'SELL'; });
   if (!hasAction) {
     var bestStock = null, bestScore = -Infinity;
+    var heldSymbols = (portfolio.holdings || []).map(function(h){ return h.symbol; });
     for (var s of config.stocks) {
       var q = quotes[s];
       var ind = indicatorsData[s];
       if (!q || !q.regularMarketPrice || !ind) continue;
       var score = (ind.rsi ? (50 - Math.abs(ind.rsi - 50)) : 0) + (ind.macdHistogram > 0 ? 20 : -10) + (ind.sma50Above200 === true ? 15 : ind.sma50Above200 === false ? -15 : 0);
+      // Prefer stocks not already held
+      if (heldSymbols.indexOf(s) >= 0) score -= 50;
       if (score > bestScore) { bestScore = score; bestStock = { symbol: s, price: q.regularMarketPrice, ind: ind }; }
     }
     if (bestStock) {
