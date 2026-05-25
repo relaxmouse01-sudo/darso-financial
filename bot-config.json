@@ -6,10 +6,11 @@
     "ETH",
     "SOL",
     "XRP",
-    "ADA"
+    "ADA",
+    "HDFC BANK LIMITED"
   ],
-  "running": true,
-  "training": true,
+  "running": false,
+  "training": false,
   "performance": {
     "total": 0,
     "wins": 0,
@@ -17,7 +18,7 @@
     "winRate": "0.0",
     "pnl": 0
   },
-  "cycleCount": 15,
+  "cycleCount": 21,
   "pendingDecisions": [],
   "log": [
     {
@@ -139,14 +140,63 @@
       "quantity": 0,
       "price": 0,
       "reason": "No trade signals (HOLD all) · Portfolio: ₹2601961"
+    },
+    {
+      "cycle": 16,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹100000"
+    },
+    {
+      "cycle": 17,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹100000"
+    },
+    {
+      "cycle": 18,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹200000"
+    },
+    {
+      "cycle": 19,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹200000"
+    },
+    {
+      "cycle": 20,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹200000"
+    },
+    {
+      "cycle": 21,
+      "type": "CYCLE",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "No trade signals (HOLD all) · Portfolio: ₹200000"
     }
   ],
   "strategyPerformance": {},
   "consecutiveLosses": {},
   "lastRegime": "Bearish 📉",
-  "lastCycle": 1779685465190,
+  "lastCycle": 1779686893367,
   "lastSummary": "",
-  "startedAt": 1779685462796,
+  "startedAt": 1779686350916,
   "maxDrawdown": 15,
-  "circuitBreakerTripped": false
+  "circuitBreakerTripped": false,
+  "initialCapital": 200000
 }

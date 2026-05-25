@@ -1472,17 +1472,11 @@ async function runBotCycle() {
     var strategyGuidance = isLosing ?
     'STRATEGY SWITCH REQUIRED — current approach failing. Market regime: ' + regime + '. Banned strategies (3+ losses): ' + (bannedStrats.length ? '#' + bannedStrats.join(', #') : 'none') + '.\n\nAvailable strategies:\n  ' + allStrategies + '\n\nSelect ONE strategy per stock. Write strategy number + name in reason.' :
     'Continue current approach. Market regime: ' + regime + '.\n\nAvailable strategies:\n  ' + allStrategies;
-  var prompt = 'You are an expert algorithmic trading AI. Past performance: ' + (perf.total||0) + ' trades, win rate ' + (perf.winRate||0) + '%, P&L ₹' + (perf.pnl||0).toFixed(0) + '. ' + urgency + '\n\n' +
+  var prompt = 'You are an expert algorithmic trader. Performance: ' + (perf.total||0) + ' trades, ' + (perf.winRate||0) + '% win rate, P&L ₹' + (perf.pnl||0).toFixed(0) + '. ' + urgency + '\n\n' +
     strategyGuidance + '\n\n' +
-    'RULES:\n' +
-    '1. Max 3 BUY signals per cycle. At least 1 trade if you see any opportunity.\n' +
-    '2. If win rate < 50%, use HALF the usual quantity.\n' +
-    '3. If 0 trades so far, make 1-3 trades this cycle to start (small quantities 5-15).\n' +
-    '4. Pending decisions are already active — do NOT repeat them.\n\n' +
-    'Recent decisions:\n' + recentStr + '\n\n' +
-    'Active pending:\n' + pendingSummary + '\n\n' +
     'Market data:\n\n' + context +
-    '\nRespond ONLY with JSON array: [{"symbol":"...","action":"BUY|SELL|HOLD","reason":"(strategy # + indicators)","quantity":N}]. BUY=quantity 5-50, SELL=0 for all, HOLD=0. Max 3 BUYs. No markdown.';
+    '\nReturn JSON array of trades. At least 1 BUY or SELL per cycle. HOLD only if absolutely nothing is tradeable.\n' +
+    '[{"symbol":"...","action":"BUY|SELL|HOLD","reason":"# strategy + indicators","quantity":N}] BUY qty 5-30, SELL qty=0 for all. Max 3 BUYs.';
 
   var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -1495,6 +1489,22 @@ async function runBotCycle() {
   var decisions;
   try { decisions = JSON.parse(content); } catch(e) { decisions = []; }
   if (!Array.isArray(decisions)) decisions = [];
+  // Force at least 1 BUY if AI returned nothing but HOLD
+  var hasAction = decisions.some(function(d){ return d.action === 'BUY' || d.action === 'SELL'; });
+  if (!hasAction) {
+    var bestStock = null, bestScore = -Infinity;
+    for (var s of config.stocks) {
+      var q = quotes[s];
+      var ind = indicatorsData[s];
+      if (!q || !q.regularMarketPrice || !ind) continue;
+      var score = (ind.rsi ? (50 - Math.abs(ind.rsi - 50)) : 0) + (ind.macdHistogram > 0 ? 20 : -10) + (ind.sma50Above200 === true ? 15 : ind.sma50Above200 === false ? -15 : 0);
+      if (score > bestScore) { bestScore = score; bestStock = { symbol: s, price: q.regularMarketPrice, ind: ind }; }
+    }
+    if (bestStock) {
+      var qty = Math.max(1, Math.floor(portfolio.cash * 0.15 / bestStock.price));
+      if (qty > 0) decisions.push({ symbol: bestStock.symbol, action: 'BUY', quantity: qty, reason: 'Auto-fallback #1 — best momentum score: RSI=' + (bestStock.ind.rsi||'N/A') + ' MACDh=' + (bestStock.ind.macdHistogram||0).toFixed(2) });
+    }
+  }
   BOT_STATUS = 'Processing ' + decisions.length + ' AI decisions...';
   var portfolio = loadPortfolio();
   var history = loadPortfolioHistory();
