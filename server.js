@@ -1309,9 +1309,13 @@ function evaluatePastDecisions(config) {
         // Neutral — count as trade but no win/loss or P&L impact
       } else if (isWin) {
         perf.wins++; perf.pnl = (perf.pnl || 0) + Math.abs(rupeePnl);
+        config.losingStreak = 0;
+        config.lossStreakCooldownUntil = 0;
         if (p.reason) { var m = p.reason.match(/#(\d+)/); if (m) { consecLosses[m[1]] = 0; if (stratPerf[m[1]]) { stratPerf[m[1]].wins = (stratPerf[m[1]].wins||0) + 1; } } }
       } else {
         perf.losses++; perf.pnl = (perf.pnl || 0) - Math.abs(rupeePnl);
+        config.losingStreak = (config.losingStreak||0) + 1;
+        if (config.losingStreak >= 3 && !config.lossStreakCooldownUntil) config.lossStreakCooldownUntil = (config.cycleCount||0) + 3;
         if (p.reason) { var m = p.reason.match(/#(\d+)/); if (m) { consecLosses[m[1]] = (consecLosses[m[1]] || 0) + 1; if (stratPerf[m[1]]) { stratPerf[m[1]].losses = (stratPerf[m[1]].losses||0) + 1; } } }
       }
     } else {
@@ -1371,14 +1375,26 @@ async function runBacktest(req, res) {
   sendJson(res, 200, { results: results, total: results.length, wins: wins, winRate: results.length ? (wins/results.length*100).toFixed(1) : 0 });
 }
 
+function isIndianMarketOpen() {
+  var now = new Date();
+  var ist = new Date(now.getTime() + 5.5 * 3600000);
+  var day = ist.getUTCDay();
+  var min = ist.getUTCHours() * 60 + ist.getUTCMinutes();
+  return day >= 1 && day <= 5 && min >= 555 && min < 900;
+}
+
 async function runBotCycle() {
   var config = loadBotConfig();
   if (!config.running || !config.stocks.length) return;
   if (!OPENROUTER_API_KEY) return;
+  var marketOpen = isIndianMarketOpen();
+  var activeStocks = marketOpen ? config.stocks.slice() : config.stocks.filter(function(s){ return s.indexOf('-USD') >= 0; });
+  var marketStatus = marketOpen ? 'INDIAN MARKET OPEN (9:15AM-3:00PM IST) — all stocks + crypto' : 'INDIAN MARKET CLOSED — crypto only';
+  if (!activeStocks.length) return;
   var quotes = {};
   var indicatorsData = {};
   // Fetch quotes + indicators for each stock
-  for (var s of config.stocks) {
+  for (var s of activeStocks) {
     try {
       var cRes, cData, ch;
       // Try intraday 1m first, fall back to 5m, then daily
@@ -1409,28 +1425,96 @@ async function runBotCycle() {
   }
   config.pendingDecisions = pending;
   config = evaluatePastDecisions(config);
-  BOT_STATUS = 'Calling AI for trading decisions...';
-  var context = 'Market data (stocks with valid data only):\n\n';
-  config.stocks.forEach(function(s){
+  var portfolio = loadPortfolio();
+  BOT_STATUS = 'AI Screener scanning ' + activeStocks.length + ' stocks...';
+  // Build full market data for screener
+  var fullContext = '';
+  var stockCount = 0;
+  activeStocks.forEach(function(s){
     var q = quotes[s] || {};
     var ind = indicatorsData[s] || {};
     var price = q.regularMarketPrice;
-    if (!price) return; // skip stocks with no price data
+    if (!price) return;
+    stockCount++;
+    var chg = q.regularMarketChangePercent || 0;
+    fullContext += s + ': Price=$' + price + ' Chg=' + (typeof chg==='number'?chg.toFixed(1)+'%':'N/A') +
+      ' RSI=' + (ind.rsi || 'N/A') + ' MACD_Hist=' + (ind.macdHistogram || 'N/A') +
+      ' SMA50Above200=' + (ind.sma50Above200 ? 'Yes' : 'No') +
+      ' Range20d=' + (ind.range20 ? '$' + ind.range20.toFixed(2) + ' (' + ind.range20Pct.toFixed(1) + '%)' : 'N/A') +
+      ' PricePosIn20dRange=' + (ind.posInRange != null ? ind.posInRange.toFixed(0) + '%' : 'N/A') + '\n';
+  });
+  if (!stockCount) fullContext = '(No real-time data available.)\n';
+  // AI #1: Screener — picks best candidates from all stocks
+  var screenedSymbols = [];
+  var screenerPrompt = 'You are a stock screener. From ' + stockCount + ' stocks below, pick the 10 with the strongest BUY signals based on RSI, MACD momentum, trend (SMA50/200), and price position. Consider both mean-reversion (oversold) and momentum (strong uptrend) setups.\n\n' + fullContext + '\nReturn ONLY a JSON array of symbol strings. No markdown, no explanation. Example: ["AAPL","TSLA"]';
+  try {
+    var sUpstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + OPENROUTER_API_KEY, 'Content-Type': 'application/json', 'HTTP-Referer': 'http://localhost:3000' },
+      body: JSON.stringify({ model: OPENROUTER_MODEL, messages: [{ role: 'user', content: screenerPrompt }], temperature: 0.3, max_tokens: 300 }),
+    });
+    var sBody = await sUpstream.json();
+    var sContent = (sBody.choices && sBody.choices[0] && sBody.choices[0].message && sBody.choices[0].message.content) || '';
+    sContent = sContent.replace(/```json|```/g, '').trim();
+    var parsed = JSON.parse(sContent);
+    if (Array.isArray(parsed)) screenedSymbols = parsed;
+  } catch(e) {}
+  // Always include held positions so trader can decide to sell
+  var heldSymbols = (portfolio.holdings || []).map(function(h){ return h.symbol; });
+  heldSymbols.forEach(function(s){ if (screenedSymbols.indexOf(s) < 0) screenedSymbols.push(s); });
+  // Build focused context from screened candidates
+  BOT_STATUS = 'AI Trader analyzing ' + screenedSymbols.length + ' candidates...';
+  var candidateCount = 0;
+  var context = 'Screened candidates:\n\n';
+  screenedSymbols.forEach(function(s){
+    var q = quotes[s] || {};
+    var ind = indicatorsData[s] || {};
+    var price = q.regularMarketPrice;
+    if (!price) return;
+    candidateCount++;
     var chg = q.regularMarketChangePercent || 0;
     context += s + ': Price=$' + price + ' Chg=' + (typeof chg==='number'?chg.toFixed(1)+'%':'N/A') +
-      ' RSI=' + (ind.rsi || 'N/A') + ' MACD=' + (ind.macd || 'N/A') + ' MACD_Signal=' + (ind.macdSignal || 'N/A') + ' MACD_Hist=' + (ind.macdHistogram || 'N/A') +
-      ' SMA50=' + (ind.sma50 || 'N/A') + ' SMA200=' + (ind.sma200 || 'N/A') +
+      ' RSI=' + (ind.rsi || 'N/A') + ' MACD_Hist=' + (ind.macdHistogram || 'N/A') +
       ' SMA50Above200=' + (ind.sma50Above200 ? 'Yes' : 'No') +
       ' Vol20dAvg=' + (ind.avgVolume ? Math.round(ind.avgVolume).toLocaleString() : 'N/A') +
       ' Range20d=' + (ind.range20 ? '$' + ind.range20.toFixed(2) + ' (' + ind.range20Pct.toFixed(1) + '%)' : 'N/A') +
       ' PricePosIn20dRange=' + (ind.posInRange != null ? ind.posInRange.toFixed(0) + '%' : 'N/A') + '\n';
   });
-  if (context === 'Market data (stocks with valid data only):\n\n') {
-    context += '(No real-time data available. Use technical judgment based on last known prices.)\n';
+  // Fallback: if screener produced no usable candidates, use algorithmic scoring
+  if (!candidateCount) {
+    BOT_STATUS = 'Screener returned no candidates — algorithmic fallback...';
+    var scored = [];
+    activeStocks.forEach(function(s){
+      var q = quotes[s] || {};
+      var ind = indicatorsData[s] || {};
+      var price = q.regularMarketPrice;
+      if (!price) return;
+      var rsi = ind.rsi || 50;
+      var macdHist = ind.macdHistogram || 0;
+      var trendUp = ind.sma50Above200 === true ? 1 : ind.sma50Above200 === false ? -1 : 0;
+      var posInRange = ind.posInRange != null ? ind.posInRange : 50;
+      var score = Math.abs(rsi - 50) * 0.5 + Math.abs(macdHist) * 3 + trendUp * 10 + Math.abs(posInRange - 50) * 0.3 + (ind.avgVolume ? Math.min(ind.avgVolume / 1000000, 10) : 0);
+      scored.push({ symbol: s, score: score, q: q, ind: ind });
+    });
+    scored.sort(function(a,b){ return b.score - a.score; });
+    var topCandidates = scored.slice(0, 15);
+    context = 'Algorithmic top ' + topCandidates.length + ' candidates:\n\n';
+    topCandidates.forEach(function(c){
+      var s = c.symbol, q = c.q, ind = c.ind;
+      var price = q.regularMarketPrice;
+      var chg = q.regularMarketChangePercent || 0;
+      context += s + ': Price=$' + price + ' Chg=' + (typeof chg==='number'?chg.toFixed(1)+'%':'N/A') +
+        ' RSI=' + (ind.rsi || 'N/A') + ' MACD_Hist=' + (ind.macdHistogram || 'N/A') +
+        ' SMA50Above200=' + (ind.sma50Above200 ? 'Yes' : 'No') +
+        ' Vol20dAvg=' + (ind.avgVolume ? Math.round(ind.avgVolume).toLocaleString() : 'N/A') +
+        ' Range20d=' + (ind.range20 ? '$' + ind.range20.toFixed(2) + ' (' + ind.range20Pct.toFixed(1) + '%)' : 'N/A') +
+        ' PricePosIn20dRange=' + (ind.posInRange != null ? ind.posInRange.toFixed(0) + '%' : 'N/A') + ' Score=' + c.score.toFixed(0) + '\n';
+    });
+    screenedSymbols = topCandidates.map(function(c){ return c.symbol; });
   }
   // === Market Regime Detector ===
   var uptrendCount = 0, totalWithData = 0, avgRsi = 0, rsiCount = 0;
-  config.stocks.forEach(function(s){
+  activeStocks.forEach(function(s){
     var ind = indicatorsData[s] || {};
     if (ind.sma50Above200 !== null) { uptrendCount += ind.sma50Above200 ? 1 : 0; totalWithData++; }
     if (ind.rsi != null) { avgRsi += ind.rsi; rsiCount++; }
@@ -1473,9 +1557,10 @@ async function runBotCycle() {
     'Continue current approach. Market regime: ' + regime + '.\n\nAvailable strategies:\n  ' + allStrategies;
   var prompt = 'You are an expert algorithmic trader. Performance: ' + (perf.total||0) + ' trades, ' + (perf.winRate||0) + '% win rate, P&L ₹' + (perf.pnl||0).toFixed(0) + '. ' + urgency + '\n\n' +
     strategyGuidance + '\n\n' +
+    'Market status: ' + marketStatus + '\n\n' +
     'Market data:\n\n' + context +
-    '\nReturn JSON array of trades. At least 1 BUY or SELL per cycle. HOLD only if absolutely nothing is tradeable.\n' +
-    '[{"symbol":"...","action":"BUY|SELL|HOLD","reason":"# strategy + indicators","quantity":N}] BUY qty 5-30, SELL qty=0 for all. Max 3 BUYs.';
+    '\nReturn JSON array of trades. BUY qty 5-15, SELL qty=0 for all. Max 2 BUYs. These are pre-screened candidates — pick the best 1-2 trades.\n' +
+    '[{"symbol":"...","action":"BUY|SELL|HOLD","reason":"# strategy + indicators","quantity":N,"confidence":"HIGH|MEDIUM|LOW"}]';
 
   var upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -1488,36 +1573,41 @@ async function runBotCycle() {
   var decisions;
   try { decisions = JSON.parse(content); } catch(e) { decisions = []; }
   if (!Array.isArray(decisions)) decisions = [];
-  var portfolio = loadPortfolio();
   var history = loadPortfolioHistory();
   var log = config.log || [];
   config.cycleCount = (config.cycleCount || 0) + 1;
-  // Force at least 1 BUY if AI returned nothing but HOLD
-  var hasAction = decisions.some(function(d){ return d.action === 'BUY' || d.action === 'SELL'; });
-  if (!hasAction) {
-    var bestStock = null, bestScore = -Infinity;
-    var heldSymbols = (portfolio.holdings || []).map(function(h){ return h.symbol; });
-    for (var s of config.stocks) {
-      var q = quotes[s];
-      var ind = indicatorsData[s];
-      if (!q || !q.regularMarketPrice || !ind) continue;
-      var score = (ind.rsi ? (50 - Math.abs(ind.rsi - 50)) : 0) + (ind.macdHistogram > 0 ? 20 : -10) + (ind.sma50Above200 === true ? 15 : ind.sma50Above200 === false ? -15 : 0);
-      // Prefer stocks not already held
-      if (heldSymbols.indexOf(s) >= 0) score -= 50;
-      if (score > bestScore) { bestScore = score; bestStock = { symbol: s, price: q.regularMarketPrice, ind: ind }; }
-    }
-    if (bestStock) {
-      var qty = Math.max(1, Math.floor(portfolio.cash * 0.15 / bestStock.price));
-      if (qty > 0) decisions.push({ symbol: bestStock.symbol, action: 'BUY', quantity: qty, reason: 'Auto-fallback #1 — best momentum score: RSI=' + (bestStock.ind.rsi||'N/A') + ' MACDh=' + (bestStock.ind.macdHistogram||0).toFixed(2) });
-    }
-  }
   BOT_STATUS = 'Processing ' + decisions.length + ' AI decisions...';
   var brokerConfig = loadBrokerConfig();
   var useReal = !config.training && brokerConfig && brokerConfig.connected && brokerConfig.broker === 'angel' && brokerConfig.apiKey && brokerConfig.clientId && brokerConfig.password;
+  if ((config.losingStreak||0) >= 3 && (config.lossStreakCooldownUntil||0) <= (config.cycleCount||0)) { config.losingStreak = 0; config.lossStreakCooldownUntil = 0; }
+  var skipLossStreak = (config.losingStreak||0) >= 3 && (config.lossStreakCooldownUntil||0) > (config.cycleCount||0);
+  if (skipLossStreak) {
+    log.push({ cycle: config.cycleCount, type: 'CYCLE', symbol: '—', quantity: 0, price: 0, reason: 'Loss streak breaker active (' + config.losingStreak + ' losses) — skipping trades' });
+    config.log = log.slice(-100);
+    config.lastCycle = Date.now();
+    config.lastSummary = 'LOSS STREAK BREAKER — ' + config.losingStreak + ' consecutive losses';
+    saveBotConfig(config);
+    BOT_LAST_RUN = Date.now();
+    BOT_STATUS = 'Loss streak breaker — ' + config.losingStreak + ' losses, skipping cycle';
+    savePortfolio(portfolio);
+    savePortfolioHistory(history);
+    var valueSnapshots = loadPortfolioValueHistory();
+    valueSnapshots.push({ time: Date.now(), value: portfolio.cash });
+    if (valueSnapshots.length > 2000) valueSnapshots = valueSnapshots.slice(-2000);
+    savePortfolioValueHistory(valueSnapshots);
+    return;
+  }
   for (var d of decisions) {
+    if (d.confidence === 'LOW') continue;
     var q = quotes[d.symbol] || {};
     var price = q.regularMarketPrice || 0;
     if (!price) continue;
+    // Cap single trade to 25% of cash
+    if (d.action === 'BUY' && d.quantity > 0) {
+      var maxQty = Math.floor(portfolio.cash * 0.25 / price);
+      if (d.quantity > maxQty) d.quantity = maxQty;
+      if (d.quantity <= 0) continue;
+    }
     var snap = d.symbol + ' ₹' + price;
     var ind = indicatorsData[d.symbol] || {};
     if (ind.rsi) snap += ' RSI=' + ind.rsi.toFixed(1);
@@ -1637,7 +1727,7 @@ async function handleBotConfigSave(req, res) {
   var payload = await readJson(req);
   if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
   var config = loadBotConfig();
-  config.stocks = Array.isArray(payload.stocks) ? payload.stocks.slice(0, 10) : config.stocks;
+  config.stocks = Array.isArray(payload.stocks) ? payload.stocks.slice(0, 200) : config.stocks;
   saveBotConfig(config);
   sendJson(res, 200, { stocks: config.stocks.length });
 }
@@ -1769,7 +1859,7 @@ async function handleBotCircuitBreaker(req, res) {
   var payload = await readJson(req);
   if (payload.token !== ADMIN_PASSWORD) { sendJson(res, 401, { error: 'Unauthorized' }); return; }
   var config = loadBotConfig();
-  config.maxDrawdown = payload.maxDrawdown || 15;
+  config.maxDrawdown = payload.maxDrawdown !== undefined && payload.maxDrawdown !== null ? payload.maxDrawdown : 15;
   config.circuitBreakerTripped = false;
   config.initialCapital = undefined; // reset on reconfig
   saveBotConfig(config);
