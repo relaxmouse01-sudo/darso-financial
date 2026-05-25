@@ -9,8 +9,8 @@
     "ADA",
     "HDFC BANK LIMITED"
   ],
-  "running": false,
-  "training": false,
+  "running": true,
+  "training": true,
   "performance": {
     "total": 0,
     "wins": 0,
@@ -18,8 +18,17 @@
     "winRate": "0.0",
     "pnl": 0
   },
-  "cycleCount": 21,
-  "pendingDecisions": [],
+  "cycleCount": 22,
+  "pendingDecisions": [
+    {
+      "symbol": "BTC",
+      "action": "BUY",
+      "quantity": 894,
+      "price": 33.529998779296875,
+      "priceChange": 0,
+      "age": 0
+    }
+  ],
   "log": [
     {
       "cycle": 1,
@@ -188,14 +197,38 @@
       "quantity": 0,
       "price": 0,
       "reason": "No trade signals (HOLD all) · Portfolio: ₹200000"
+    },
+    {
+      "cycle": 22,
+      "type": "BUY",
+      "symbol": "BTC",
+      "quantity": 894,
+      "price": 33.529998779296875,
+      "reason": "Auto-fallback #1 — best momentum score: RSI=48.536566955429905 MACDh=0.01",
+      "data": "BTC ₹33.529998779296875 RSI=48.5 MACD=-0.01 SMA50=33.6 SMA200=33.8 Trend=DOWN Vol=9K RangePos=-29%"
+    },
+    {
+      "cycle": 22,
+      "type": "PORTFOLIO",
+      "symbol": "—",
+      "quantity": 0,
+      "price": 0,
+      "reason": "Portfolio: ₹200000 (Cash: ₹170024 · Holdings: ₹29976)"
     }
   ],
-  "strategyPerformance": {},
+  "strategyPerformance": {
+    "1": {
+      "name": "Auto-fallback #1 — best momentum score: RSI=48.536566955429905 MACDh=0.01",
+      "wins": 0,
+      "losses": 0,
+      "total": 1
+    }
+  },
   "consecutiveLosses": {},
   "lastRegime": "Bearish 📉",
-  "lastCycle": 1779686893367,
-  "lastSummary": "",
-  "startedAt": 1779686350916,
+  "lastCycle": 1779691576373,
+  "lastSummary": "BTC:BUY",
+  "startedAt": 1779691574306,
   "maxDrawdown": 15,
   "circuitBreakerTripped": false,
   "initialCapital": 200000

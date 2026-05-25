@@ -1489,6 +1489,10 @@ async function runBotCycle() {
   var decisions;
   try { decisions = JSON.parse(content); } catch(e) { decisions = []; }
   if (!Array.isArray(decisions)) decisions = [];
+  var portfolio = loadPortfolio();
+  var history = loadPortfolioHistory();
+  var log = config.log || [];
+  config.cycleCount = (config.cycleCount || 0) + 1;
   // Force at least 1 BUY if AI returned nothing but HOLD
   var hasAction = decisions.some(function(d){ return d.action === 'BUY' || d.action === 'SELL'; });
   if (!hasAction) {
@@ -1506,10 +1510,6 @@ async function runBotCycle() {
     }
   }
   BOT_STATUS = 'Processing ' + decisions.length + ' AI decisions...';
-  var portfolio = loadPortfolio();
-  var history = loadPortfolioHistory();
-  var log = config.log || [];
-  config.cycleCount = (config.cycleCount || 0) + 1;
   var brokerConfig = loadBrokerConfig();
   var useReal = !config.training && brokerConfig && brokerConfig.connected && brokerConfig.broker === 'angel' && brokerConfig.apiKey && brokerConfig.clientId && brokerConfig.password;
   for (var d of decisions) {
